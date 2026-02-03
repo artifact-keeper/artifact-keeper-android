@@ -45,8 +45,6 @@ fun RepositoriesScreen(onRepoClick: (String) -> Unit = {}) {
     LaunchedEffect(Unit) { loadRepositories() }
 
     Column(modifier = Modifier.fillMaxSize()) {
-        TopAppBar(title = { Text("Repositories") })
-
         when {
             isLoading -> {
                 Box(

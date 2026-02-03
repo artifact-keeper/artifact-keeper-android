@@ -53,8 +53,6 @@ fun SearchScreen() {
     }
 
     Column(modifier = Modifier.fillMaxSize()) {
-        TopAppBar(title = { Text("Search") })
-
         OutlinedTextField(
             value = searchQuery,
             onValueChange = { searchQuery = it },

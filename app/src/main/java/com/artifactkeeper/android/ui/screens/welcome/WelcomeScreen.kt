@@ -18,6 +18,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.artifactkeeper.android.R
+import com.artifactkeeper.android.data.ServerManager
 import com.artifactkeeper.android.data.api.ApiClient
 import kotlinx.coroutines.launch
 
@@ -121,8 +122,14 @@ fun WelcomeScreen(onConnected: () -> Unit) {
                         try {
                             ApiClient.configure(url)
                             ApiClient.api.listRepositories(page = 1, perPage = 1)
-                            // Connection succeeded -- save and proceed
+                            // Connection succeeded -- save and register with ServerManager
                             prefs.edit().putString("server_url", url).apply()
+                            val host = try {
+                                java.net.URI(url).host ?: url
+                            } catch (_: Exception) {
+                                url
+                            }
+                            ServerManager.addServer(name = host, url = url)
                             onConnected()
                         } catch (e: Exception) {
                             val detail = e.message ?: "Unknown error"

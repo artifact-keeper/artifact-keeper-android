@@ -51,8 +51,6 @@ fun PackagesScreen() {
     LaunchedEffect(Unit) { loadPackages() }
 
     Column(modifier = Modifier.fillMaxSize()) {
-        TopAppBar(title = { Text("Packages") })
-
         OutlinedTextField(
             value = searchQuery,
             onValueChange = { searchQuery = it },

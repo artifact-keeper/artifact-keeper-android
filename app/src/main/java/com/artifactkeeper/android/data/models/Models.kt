@@ -147,3 +147,282 @@ data class UserInfo(
     val email: String? = null,
     @SerialName("is_admin") val isAdmin: Boolean = false,
 )
+
+// --- Admin ---
+@Serializable
+data class AdminUser(
+    val id: String,
+    val username: String,
+    val email: String? = null,
+    @SerialName("display_name") val displayName: String? = null,
+    @SerialName("auth_provider") val authProvider: String? = null,
+    @SerialName("is_active") val isActive: Boolean,
+    @SerialName("is_admin") val isAdmin: Boolean,
+    @SerialName("must_change_password") val mustChangePassword: Boolean? = null,
+    @SerialName("last_login_at") val lastLoginAt: String? = null,
+    @SerialName("created_at") val createdAt: String
+)
+
+@Serializable
+data class AdminUserListResponse(
+    val items: List<AdminUser>,
+    val pagination: Pagination? = null
+)
+
+@Serializable
+data class CreateUserRequest(
+    val username: String,
+    val email: String,
+    val password: String? = null,
+    @SerialName("display_name") val displayName: String? = null,
+    @SerialName("is_admin") val isAdmin: Boolean? = null
+)
+
+@Serializable
+data class CreateUserResponse(
+    val user: AdminUser,
+    @SerialName("generated_password") val generatedPassword: String? = null
+)
+
+@Serializable
+data class AdminGroup(
+    val id: String,
+    val name: String,
+    val description: String? = null,
+    @SerialName("member_count") val memberCount: Int,
+    @SerialName("created_at") val createdAt: String,
+    @SerialName("updated_at") val updatedAt: String? = null
+)
+
+@Serializable
+data class AdminGroupListResponse(
+    val items: List<AdminGroup>,
+    val pagination: Pagination? = null
+)
+
+@Serializable
+data class CreateGroupRequest(
+    val name: String,
+    val description: String? = null
+)
+
+@Serializable
+data class SSOProvider(
+    val id: String,
+    val name: String,
+    @SerialName("provider_type") val providerType: String,
+    val enabled: Boolean,
+    @SerialName("client_id") val clientId: String? = null,
+    @SerialName("issuer_url") val issuerUrl: String? = null,
+    @SerialName("created_at") val createdAt: String
+)
+
+@Serializable
+data class SSOProviderListResponse(
+    val items: List<SSOProvider>,
+    val pagination: Pagination? = null
+)
+
+// --- Integration ---
+@Serializable
+data class PeerInstance(
+    val id: String,
+    val name: String,
+    @SerialName("endpoint_url") val endpointUrl: String,
+    val status: String,
+    val region: String? = null,
+    @SerialName("cache_size_bytes") val cacheSizeBytes: Long,
+    @SerialName("cache_used_bytes") val cacheUsedBytes: Long,
+    @SerialName("cache_usage_percent") val cacheUsagePercent: Double,
+    @SerialName("last_heartbeat_at") val lastHeartbeatAt: String? = null,
+    @SerialName("last_sync_at") val lastSyncAt: String? = null,
+    @SerialName("created_at") val createdAt: String,
+    @SerialName("api_key") val apiKey: String,
+    @SerialName("is_local") val isLocal: Boolean
+)
+
+@Serializable
+data class PeerListResponse(
+    val items: List<PeerInstance>,
+    val total: Long
+)
+
+@Serializable
+data class RegisterPeerRequest(
+    val name: String,
+    @SerialName("endpoint_url") val endpointUrl: String,
+    val region: String? = null,
+    @SerialName("api_key") val apiKey: String
+)
+
+@Serializable
+data class PeerConnection(
+    val id: String,
+    @SerialName("target_peer_id") val targetPeerId: String,
+    val status: String,
+    @SerialName("latency_ms") val latencyMs: Int? = null,
+    @SerialName("bandwidth_estimate_bps") val bandwidthEstimateBps: Long? = null,
+    @SerialName("shared_artifacts_count") val sharedArtifactsCount: Int,
+    @SerialName("shared_chunks_count") val sharedChunksCount: Int,
+    @SerialName("bytes_transferred_total") val bytesTransferredTotal: Long,
+    @SerialName("transfer_success_count") val transferSuccessCount: Int,
+    @SerialName("transfer_failure_count") val transferFailureCount: Int,
+    @SerialName("last_probed_at") val lastProbedAt: String? = null,
+    @SerialName("last_transfer_at") val lastTransferAt: String? = null
+)
+
+@Serializable
+data class Webhook(
+    val id: String,
+    val name: String,
+    val url: String,
+    val events: List<String>,
+    @SerialName("is_enabled") val isEnabled: Boolean,
+    @SerialName("repository_id") val repositoryId: String? = null,
+    @SerialName("last_triggered_at") val lastTriggeredAt: String? = null,
+    @SerialName("created_at") val createdAt: String
+)
+
+@Serializable
+data class WebhookListResponse(
+    val items: List<Webhook>,
+    val total: Long
+)
+
+@Serializable
+data class CreateWebhookRequest(
+    val name: String,
+    val url: String,
+    val events: List<String>,
+    val secret: String? = null
+)
+
+@Serializable
+data class TestWebhookResponse(
+    val success: Boolean,
+    @SerialName("status_code") val statusCode: Int? = null,
+    @SerialName("response_body") val responseBody: String? = null,
+    val error: String? = null
+)
+
+// --- Security Policies ---
+@Serializable
+data class SecurityPolicy(
+    val id: String,
+    val name: String,
+    @SerialName("repository_id") val repositoryId: String? = null,
+    @SerialName("max_severity") val maxSeverity: String,
+    @SerialName("block_unscanned") val blockUnscanned: Boolean,
+    @SerialName("block_on_fail") val blockOnFail: Boolean,
+    @SerialName("is_enabled") val isEnabled: Boolean,
+    @SerialName("created_at") val createdAt: String,
+    @SerialName("updated_at") val updatedAt: String
+)
+
+@Serializable
+data class CreatePolicyRequest(
+    val name: String,
+    @SerialName("repository_id") val repositoryId: String? = null,
+    @SerialName("max_severity") val maxSeverity: String,
+    @SerialName("block_unscanned") val blockUnscanned: Boolean,
+    @SerialName("block_on_fail") val blockOnFail: Boolean
+)
+
+@Serializable
+data class UpdatePolicyRequest(
+    val name: String,
+    @SerialName("max_severity") val maxSeverity: String,
+    @SerialName("block_unscanned") val blockUnscanned: Boolean,
+    @SerialName("block_on_fail") val blockOnFail: Boolean,
+    @SerialName("is_enabled") val isEnabled: Boolean
+)
+
+@Serializable
+data class TriggerScanRequest(
+    @SerialName("artifact_id") val artifactId: String? = null,
+    @SerialName("repository_id") val repositoryId: String? = null
+)
+
+@Serializable
+data class TriggerScanResponse(
+    val message: String,
+    @SerialName("artifacts_queued") val artifactsQueued: Int
+)
+
+// --- Operations ---
+@Serializable
+data class AdminStats(
+    @SerialName("total_repositories") val totalRepositories: Int = 0,
+    @SerialName("total_artifacts") val totalArtifacts: Int = 0,
+    @SerialName("total_users") val totalUsers: Int = 0,
+    @SerialName("total_groups") val totalGroups: Int = 0,
+    @SerialName("total_storage_bytes") val totalStorageBytes: Long = 0,
+    @SerialName("total_downloads") val totalDownloads: Long = 0
+)
+
+@Serializable
+data class StorageBreakdownItem(
+    @SerialName("repository_id") val repositoryId: String,
+    @SerialName("repository_key") val repositoryKey: String,
+    val format: String,
+    @SerialName("storage_bytes") val storageBytes: Long,
+    @SerialName("artifact_count") val artifactCount: Int
+)
+
+@Serializable
+data class DownloadTrendItem(
+    val date: String,
+    val count: Long
+)
+
+@Serializable
+data class StorageGrowthItem(
+    val date: String,
+    @SerialName("total_bytes") val totalBytes: Long
+)
+
+@Serializable
+data class HealthResponse(
+    val status: String,
+    val checks: Map<String, HealthCheck> = emptyMap()
+)
+
+@Serializable
+data class HealthCheck(
+    val status: String,
+    @SerialName("response_time_ms") val responseTimeMs: Long? = null
+)
+
+@Serializable
+data class HealthLogEntry(
+    val id: String,
+    val service: String,
+    val status: String,
+    @SerialName("response_time_ms") val responseTimeMs: Long? = null,
+    @SerialName("checked_at") val checkedAt: String
+)
+
+@Serializable
+data class AlertState(
+    val id: String,
+    val name: String,
+    val severity: String,
+    val status: String,
+    val message: String,
+    @SerialName("triggered_at") val triggeredAt: String
+)
+
+// --- Multi-server ---
+@Serializable
+data class SavedServer(
+    val id: String,
+    val name: String,
+    val url: String,
+    val addedAt: Long  // epoch millis
+)
+
+@Serializable
+data class AssignRepoRequest(
+    @SerialName("repository_id") val repositoryId: String,
+    @SerialName("replication_mode") val replicationMode: String = "pull"
+)

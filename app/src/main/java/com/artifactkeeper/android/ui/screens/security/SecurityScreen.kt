@@ -62,8 +62,6 @@ fun SecurityScreen() {
     LaunchedEffect(Unit) { loadData() }
 
     Column(modifier = Modifier.fillMaxSize()) {
-        TopAppBar(title = { Text("Security") })
-
         when {
             isLoading -> {
                 Box(

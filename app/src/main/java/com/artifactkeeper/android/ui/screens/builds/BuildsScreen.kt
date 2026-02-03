@@ -68,8 +68,6 @@ fun BuildsScreen() {
     LaunchedEffect(Unit) { loadBuilds() }
 
     Column(modifier = Modifier.fillMaxSize()) {
-        TopAppBar(title = { Text("Builds") })
-
         OutlinedTextField(
             value = searchQuery,
             onValueChange = { searchQuery = it },
