@@ -6,10 +6,12 @@ import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import com.artifactkeeper.android.data.api.ApiClient
 import com.artifactkeeper.android.ui.screens.builds.BuildsScreen
 import com.artifactkeeper.android.ui.screens.dashboard.DashboardScreen
 import com.artifactkeeper.android.ui.screens.packages.PackagesScreen
@@ -18,10 +20,53 @@ import com.artifactkeeper.android.ui.screens.repositories.RepositoryDetailScreen
 import com.artifactkeeper.android.ui.screens.search.SearchScreen
 import com.artifactkeeper.android.ui.screens.security.SecurityScreen
 import com.artifactkeeper.android.ui.screens.settings.SettingsScreen
+import com.artifactkeeper.android.ui.screens.welcome.WelcomeScreen
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ArtifactKeeperNavHost() {
+    val context = LocalContext.current
+    val prefs = remember {
+        context.getSharedPreferences("artifact_keeper_prefs", android.content.Context.MODE_PRIVATE)
+    }
+
+    // Restore saved server URL and auth token on app start
+    var isConfigured by remember {
+        val savedUrl = prefs.getString("server_url", null)
+        val savedToken = prefs.getString("auth_token", null)
+        if (!savedUrl.isNullOrBlank()) {
+            ApiClient.configure(savedUrl, savedToken)
+        }
+        mutableStateOf(savedUrl?.isNotBlank() == true)
+    }
+
+    if (!isConfigured) {
+        WelcomeScreen(
+            onConnected = {
+                isConfigured = true
+            },
+        )
+    } else {
+        MainAppScaffold(
+            onDisconnect = {
+                prefs.edit()
+                    .remove("server_url")
+                    .remove("auth_token")
+                    .remove("user_id")
+                    .remove("user_username")
+                    .remove("user_email")
+                    .remove("user_is_admin")
+                    .apply()
+                ApiClient.clearConfig()
+                isConfigured = false
+            },
+        )
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun MainAppScaffold(onDisconnect: () -> Unit) {
     val navController = rememberNavController()
     var selectedTab by remember { mutableIntStateOf(0) }
 
@@ -95,6 +140,7 @@ fun ArtifactKeeperNavHost() {
             composable("settings") {
                 SettingsScreen(
                     onBack = { navController.popBackStack() },
+                    onDisconnect = onDisconnect,
                 )
             }
         }

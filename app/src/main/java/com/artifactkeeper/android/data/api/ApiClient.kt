@@ -9,8 +9,10 @@ import retrofit2.Retrofit
 
 object ApiClient {
     private val json = Json { ignoreUnknownKeys = true }
-    private var _baseUrl = "http://10.0.2.2:30080/"
+    private var _baseUrl = ""
     private var _token: String? = null
+
+    val isConfigured: Boolean get() = _baseUrl.isNotBlank()
 
     private fun buildClient(): OkHttpClient {
         return OkHttpClient.Builder()
@@ -29,8 +31,9 @@ object ApiClient {
     }
 
     private fun buildRetrofit(): Retrofit {
+        val url = _baseUrl.ifBlank { "http://localhost/" }
         return Retrofit.Builder()
-            .baseUrl(_baseUrl)
+            .baseUrl(url)
             .client(buildClient())
             .addConverterFactory(json.asConverterFactory("application/json".toMediaType()))
             .build()
@@ -46,6 +49,12 @@ object ApiClient {
     fun configure(baseUrl: String, token: String? = null) {
         _baseUrl = if (baseUrl.endsWith("/")) baseUrl else "$baseUrl/"
         _token = token
+        api = buildRetrofit().create(ArtifactKeeperApi::class.java)
+    }
+
+    fun clearConfig() {
+        _baseUrl = ""
+        _token = null
         api = buildRetrofit().create(ArtifactKeeperApi::class.java)
     }
 

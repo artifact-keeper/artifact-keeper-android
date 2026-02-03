@@ -18,33 +18,29 @@ import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun SettingsScreen(onBack: () -> Unit) {
+fun SettingsScreen(onBack: () -> Unit, onDisconnect: () -> Unit = {}) {
     val context = LocalContext.current
     val prefs = remember {
         context.getSharedPreferences("artifact_keeper_prefs", android.content.Context.MODE_PRIVATE)
     }
-    var serverUrl by remember { mutableStateOf(prefs.getString("server_url", ApiClient.baseUrl) ?: ApiClient.baseUrl) }
+    var serverUrl by remember { mutableStateOf(prefs.getString("server_url", "") ?: "") }
     var username by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     var currentUser by remember { mutableStateOf<UserInfo?>(null) }
     var isLoggingIn by remember { mutableStateOf(false) }
     var loginError by remember { mutableStateOf<String?>(null) }
     var serverSaved by remember { mutableStateOf(false) }
+    var showDisconnectDialog by remember { mutableStateOf(false) }
     val coroutineScope = rememberCoroutineScope()
 
-    // Restore token on load
+    // Restore auth user info on load
     LaunchedEffect(Unit) {
-        val savedUrl = prefs.getString("server_url", null)
         val savedToken = prefs.getString("auth_token", null)
         val savedUsername = prefs.getString("user_username", null)
         val savedEmail = prefs.getString("user_email", null)
         val savedIsAdmin = prefs.getBoolean("user_is_admin", false)
         val savedUserId = prefs.getString("user_id", null)
 
-        if (savedUrl != null) {
-            serverUrl = savedUrl
-            ApiClient.configure(savedUrl, savedToken)
-        }
         if (savedToken != null && savedUsername != null && savedUserId != null) {
             currentUser = UserInfo(
                 id = savedUserId,
@@ -53,6 +49,35 @@ fun SettingsScreen(onBack: () -> Unit) {
                 isAdmin = savedIsAdmin,
             )
         }
+    }
+
+    // Disconnect confirmation dialog
+    if (showDisconnectDialog) {
+        AlertDialog(
+            onDismissRequest = { showDisconnectDialog = false },
+            title = { Text("Disconnect from server?") },
+            text = {
+                Text("This will remove the server configuration and sign you out. You will need to set up the server connection again.")
+            },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        showDisconnectDialog = false
+                        onDisconnect()
+                    },
+                    colors = ButtonDefaults.textButtonColors(
+                        contentColor = MaterialTheme.colorScheme.error,
+                    ),
+                ) {
+                    Text("Disconnect")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showDisconnectDialog = false }) {
+                    Text("Cancel")
+                }
+            },
+        )
     }
 
     Column(modifier = Modifier.fillMaxSize()) {
@@ -85,7 +110,7 @@ fun SettingsScreen(onBack: () -> Unit) {
                 },
                 modifier = Modifier.fillMaxWidth(),
                 label = { Text("Server URL") },
-                placeholder = { Text("http://10.0.2.2:30080") },
+                placeholder = { Text("https://artifacts.example.com") },
                 singleLine = true,
             )
 
@@ -243,6 +268,19 @@ fun SettingsScreen(onBack: () -> Unit) {
                     }
                     Text("Login")
                 }
+            }
+
+            HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
+
+            // Disconnect button
+            OutlinedButton(
+                onClick = { showDisconnectDialog = true },
+                modifier = Modifier.fillMaxWidth(),
+                colors = ButtonDefaults.outlinedButtonColors(
+                    contentColor = MaterialTheme.colorScheme.error,
+                ),
+            ) {
+                Text("Change Server / Disconnect")
             }
 
             Spacer(modifier = Modifier.weight(1f))
