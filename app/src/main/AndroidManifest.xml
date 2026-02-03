@@ -4,6 +4,8 @@
     <application
         android:name=".ArtifactKeeperApp"
         android:allowBackup="true"
+        android:icon="@mipmap/ic_launcher"
+        android:roundIcon="@mipmap/ic_launcher_round"
         android:label="Artifact Keeper"
         android:supportsRtl="true"
         android:theme="@style/Theme.ArtifactKeeper">
