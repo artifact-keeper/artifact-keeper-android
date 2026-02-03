@@ -75,3 +75,75 @@ data class RepositoryListResponse(
     val items: List<Repository>,
     val pagination: Pagination? = null,
 )
+
+@Serializable
+data class Artifact(
+    val id: String,
+    @SerialName("repository_id") val repositoryId: String,
+    val name: String,
+    val path: String,
+    val version: String? = null,
+    @SerialName("content_type") val contentType: String,
+    @SerialName("size_bytes") val sizeBytes: Long,
+    @SerialName("download_count") val downloadCount: Int,
+    @SerialName("checksum_sha256") val checksumSha256: String,
+    @SerialName("created_at") val createdAt: String,
+)
+
+@Serializable
+data class ArtifactListResponse(
+    val items: List<Artifact>,
+    val pagination: Pagination? = null,
+)
+
+@Serializable
+data class RepoSecurityScore(
+    val id: String,
+    @SerialName("repository_id") val repositoryId: String,
+    val grade: String,
+    val score: Int,
+    @SerialName("critical_count") val criticalCount: Int,
+    @SerialName("high_count") val highCount: Int,
+    @SerialName("medium_count") val mediumCount: Int,
+    @SerialName("low_count") val lowCount: Int,
+)
+
+@Serializable
+data class ScanResult(
+    val id: String,
+    @SerialName("artifact_id") val artifactId: String,
+    @SerialName("scan_type") val scanType: String,
+    val status: String,
+    @SerialName("findings_count") val findingsCount: Int,
+    @SerialName("critical_count") val criticalCount: Int,
+    @SerialName("high_count") val highCount: Int,
+    @SerialName("medium_count") val mediumCount: Int,
+    @SerialName("low_count") val lowCount: Int,
+    @SerialName("started_at") val startedAt: String? = null,
+    @SerialName("completed_at") val completedAt: String? = null,
+    @SerialName("error_message") val errorMessage: String? = null,
+)
+
+@Serializable
+data class ScanListResponse(
+    val items: List<ScanResult>,
+    val total: Int,
+)
+
+@Serializable
+data class LoginRequest(val username: String, val password: String)
+
+@Serializable
+data class LoginResponse(
+    @SerialName("access_token") val accessToken: String,
+    @SerialName("refresh_token") val refreshToken: String? = null,
+    val user: UserInfo,
+)
+
+@Serializable
+data class UserInfo(
+    val id: String,
+    val username: String,
+    val email: String? = null,
+    @SerialName("is_admin") val isAdmin: Boolean = false,
+)

@@ -1,5 +1,6 @@
 package com.artifactkeeper.android.ui.screens.repositories
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -18,7 +19,7 @@ import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun RepositoriesScreen() {
+fun RepositoriesScreen(onRepoClick: (String) -> Unit = {}) {
     var repositories by remember { mutableStateOf<List<Repository>>(emptyList()) }
     var isLoading by remember { mutableStateOf(true) }
     var isRefreshing by remember { mutableStateOf(false) }
@@ -97,7 +98,7 @@ fun RepositoriesScreen() {
                         verticalArrangement = Arrangement.spacedBy(12.dp),
                     ) {
                         items(repositories, key = { it.id }) { repo ->
-                            RepositoryCard(repo)
+                            RepositoryCard(repo, onClick = { onRepoClick(repo.key) })
                         }
                     }
                 }
@@ -107,8 +108,12 @@ fun RepositoriesScreen() {
 }
 
 @Composable
-private fun RepositoryCard(repo: Repository) {
-    Card(modifier = Modifier.fillMaxWidth()) {
+private fun RepositoryCard(repo: Repository, onClick: () -> Unit) {
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable(onClick = onClick),
+    ) {
         Column(modifier = Modifier.padding(16.dp)) {
             Row(
                 modifier = Modifier.fillMaxWidth(),

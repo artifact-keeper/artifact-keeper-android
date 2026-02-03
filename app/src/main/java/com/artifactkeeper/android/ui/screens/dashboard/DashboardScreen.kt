@@ -5,6 +5,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Build
 import androidx.compose.material.icons.filled.Folder
 import androidx.compose.material.icons.filled.Inventory2
+import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -17,7 +18,7 @@ import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun DashboardScreen() {
+fun DashboardScreen(onSettingsClick: () -> Unit = {}) {
     var repoCount by remember { mutableStateOf<Long?>(null) }
     var packageCount by remember { mutableStateOf<Long?>(null) }
     var buildCount by remember { mutableStateOf<Long?>(null) }
@@ -25,8 +26,10 @@ fun DashboardScreen() {
     var errorMessage by remember { mutableStateOf<String?>(null) }
     val coroutineScope = rememberCoroutineScope()
 
-    LaunchedEffect(Unit) {
+    fun loadDashboard() {
         coroutineScope.launch {
+            isLoading = true
+            errorMessage = null
             try {
                 val repos = async { ApiClient.api.listRepositories(perPage = 1) }
                 val packages = async { ApiClient.api.listPackages(perPage = 1) }
@@ -43,8 +46,17 @@ fun DashboardScreen() {
         }
     }
 
+    LaunchedEffect(Unit) { loadDashboard() }
+
     Column(modifier = Modifier.fillMaxSize()) {
-        TopAppBar(title = { Text("Artifact Keeper") })
+        TopAppBar(
+            title = { Text("Artifact Keeper") },
+            actions = {
+                IconButton(onClick = onSettingsClick) {
+                    Icon(Icons.Default.Settings, contentDescription = "Settings")
+                }
+            },
+        )
 
         if (isLoading) {
             Box(
@@ -65,7 +77,7 @@ fun DashboardScreen() {
                         style = MaterialTheme.typography.bodyLarge,
                     )
                     Spacer(modifier = Modifier.height(8.dp))
-                    TextButton(onClick = {}) {
+                    TextButton(onClick = { loadDashboard() }) {
                         Text("Retry")
                     }
                 }
