@@ -1,8 +1,11 @@
-package com.artifactkeeper.android.ui.screens.repositories
+package com.artifactkeeper.android.ui.screens.packages
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Download
+import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.*
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.*
@@ -11,29 +14,33 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.artifactkeeper.android.data.api.ApiClient
-import com.artifactkeeper.android.data.models.Repository
+import com.artifactkeeper.android.data.models.PackageItem
 import com.artifactkeeper.android.ui.util.formatBytes
+import com.artifactkeeper.android.ui.util.formatDownloadCount
 import com.artifactkeeper.android.ui.util.formatRelativeTime
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun RepositoriesScreen() {
-    var repositories by remember { mutableStateOf<List<Repository>>(emptyList()) }
+fun PackagesScreen() {
+    var packages by remember { mutableStateOf<List<PackageItem>>(emptyList()) }
     var isLoading by remember { mutableStateOf(true) }
     var isRefreshing by remember { mutableStateOf(false) }
     var errorMessage by remember { mutableStateOf<String?>(null) }
+    var searchQuery by remember { mutableStateOf("") }
     val coroutineScope = rememberCoroutineScope()
 
-    fun loadRepositories(refresh: Boolean = false) {
+    fun loadPackages(refresh: Boolean = false) {
         coroutineScope.launch {
             if (refresh) isRefreshing = true else isLoading = true
             errorMessage = null
             try {
-                val response = ApiClient.api.listRepositories()
-                repositories = response.items
+                val response = ApiClient.api.listPackages(
+                    search = searchQuery.ifBlank { null },
+                )
+                packages = response.items
             } catch (e: Exception) {
-                errorMessage = e.message ?: "Failed to load repositories"
+                errorMessage = e.message ?: "Failed to load packages"
             } finally {
                 isLoading = false
                 isRefreshing = false
@@ -41,10 +48,23 @@ fun RepositoriesScreen() {
         }
     }
 
-    LaunchedEffect(Unit) { loadRepositories() }
+    LaunchedEffect(Unit) { loadPackages() }
 
     Column(modifier = Modifier.fillMaxSize()) {
-        TopAppBar(title = { Text("Repositories") })
+        TopAppBar(title = { Text("Packages") })
+
+        OutlinedTextField(
+            value = searchQuery,
+            onValueChange = { searchQuery = it },
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp, vertical = 8.dp),
+            placeholder = { Text("Search packages...") },
+            leadingIcon = { Icon(Icons.Default.Search, contentDescription = "Search") },
+            singleLine = true,
+        )
+
+        LaunchedEffect(searchQuery) { loadPackages() }
 
         when {
             isLoading -> {
@@ -67,19 +87,19 @@ fun RepositoriesScreen() {
                             style = MaterialTheme.typography.bodyLarge,
                         )
                         Spacer(modifier = Modifier.height(8.dp))
-                        TextButton(onClick = { loadRepositories() }) {
+                        TextButton(onClick = { loadPackages() }) {
                             Text("Retry")
                         }
                     }
                 }
             }
-            repositories.isEmpty() -> {
+            packages.isEmpty() -> {
                 Box(
                     modifier = Modifier.fillMaxSize(),
                     contentAlignment = Alignment.Center,
                 ) {
                     Text(
-                        text = "No repositories found",
+                        text = "No packages found",
                         style = MaterialTheme.typography.bodyLarge,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
@@ -88,7 +108,7 @@ fun RepositoriesScreen() {
             else -> {
                 PullToRefreshBox(
                     isRefreshing = isRefreshing,
-                    onRefresh = { loadRepositories(refresh = true) },
+                    onRefresh = { loadPackages(refresh = true) },
                     modifier = Modifier.fillMaxSize(),
                 ) {
                     LazyColumn(
@@ -96,8 +116,8 @@ fun RepositoriesScreen() {
                         contentPadding = PaddingValues(16.dp),
                         verticalArrangement = Arrangement.spacedBy(12.dp),
                     ) {
-                        items(repositories, key = { it.id }) { repo ->
-                            RepositoryCard(repo)
+                        items(packages, key = { it.id }) { pkg ->
+                            PackageCard(pkg)
                         }
                     }
                 }
@@ -107,16 +127,20 @@ fun RepositoriesScreen() {
 }
 
 @Composable
-private fun RepositoryCard(repo: Repository) {
-    Card(modifier = Modifier.fillMaxWidth()) {
-        Column(modifier = Modifier.padding(16.dp)) {
+private fun PackageCard(pkg: PackageItem) {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+    ) {
+        Column(
+            modifier = Modifier.padding(16.dp),
+        ) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 Text(
-                    text = repo.name,
+                    text = pkg.name,
                     style = MaterialTheme.typography.titleMedium,
                     modifier = Modifier.weight(1f),
                     maxLines = 1,
@@ -125,29 +149,22 @@ private fun RepositoryCard(repo: Repository) {
                 Spacer(modifier = Modifier.width(8.dp))
                 AssistChip(
                     onClick = {},
-                    label = { Text(repo.format.uppercase(), style = MaterialTheme.typography.labelSmall) },
+                    label = { Text(pkg.format.uppercase(), style = MaterialTheme.typography.labelSmall) },
                 )
             }
 
             Spacer(modifier = Modifier.height(4.dp))
 
-            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                AssistChip(
-                    onClick = {},
-                    label = { Text(repo.repoType, style = MaterialTheme.typography.labelSmall) },
-                )
-                if (repo.isPublic) {
-                    AssistChip(
-                        onClick = {},
-                        label = { Text("Public", style = MaterialTheme.typography.labelSmall) },
-                    )
-                }
-            }
+            Text(
+                text = "v${pkg.version}",
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.primary,
+            )
 
-            if (!repo.description.isNullOrBlank()) {
+            if (!pkg.description.isNullOrBlank()) {
                 Spacer(modifier = Modifier.height(4.dp))
                 Text(
-                    text = repo.description,
+                    text = pkg.description,
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     maxLines = 2,
@@ -163,18 +180,27 @@ private fun RepositoryCard(repo: Repository) {
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
             ) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(
+                        Icons.Default.Download,
+                        contentDescription = "Downloads",
+                        modifier = Modifier.size(16.dp),
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                    Spacer(modifier = Modifier.width(4.dp))
+                    Text(
+                        text = formatDownloadCount(pkg.downloadCount),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
                 Text(
-                    text = "${repo.artifactCount} artifact${if (repo.artifactCount != 1) "s" else ""}",
+                    text = formatBytes(pkg.sizeBytes),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
                 Text(
-                    text = formatBytes(repo.storageUsedBytes),
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
-                Text(
-                    text = formatRelativeTime(repo.createdAt),
+                    text = formatRelativeTime(pkg.createdAt),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )

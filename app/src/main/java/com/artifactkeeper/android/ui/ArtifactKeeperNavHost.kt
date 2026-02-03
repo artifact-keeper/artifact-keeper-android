@@ -9,10 +9,11 @@ import androidx.compose.ui.Modifier
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import com.artifactkeeper.android.ui.screens.builds.BuildsScreen
 import com.artifactkeeper.android.ui.screens.dashboard.DashboardScreen
+import com.artifactkeeper.android.ui.screens.packages.PackagesScreen
 import com.artifactkeeper.android.ui.screens.repositories.RepositoriesScreen
 import com.artifactkeeper.android.ui.screens.search.SearchScreen
-import com.artifactkeeper.android.ui.screens.security.SecurityScreen
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -23,7 +24,8 @@ fun ArtifactKeeperNavHost() {
     val tabs = listOf(
         Triple("dashboard", "Dashboard", Icons.Default.Home),
         Triple("repos", "Repos", Icons.Default.Folder),
-        Triple("security", "Security", Icons.Default.Shield),
+        Triple("packages", "Packages", Icons.Default.Inventory2),
+        Triple("builds", "Builds", Icons.Default.Build),
         Triple("search", "Search", Icons.Default.Search),
     )
 
@@ -55,7 +57,8 @@ fun ArtifactKeeperNavHost() {
         ) {
             composable("dashboard") { DashboardScreen() }
             composable("repos") { RepositoriesScreen() }
-            composable("security") { SecurityScreen() }
+            composable("packages") { PackagesScreen() }
+            composable("builds") { BuildsScreen() }
             composable("search") { SearchScreen() }
         }
     }

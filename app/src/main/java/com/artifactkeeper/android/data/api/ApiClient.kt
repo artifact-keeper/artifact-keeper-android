@@ -21,4 +21,6 @@ object ApiClient {
         .client(okHttpClient)
         .addConverterFactory(json.asConverterFactory("application/json".toMediaType()))
         .build()
+
+    val api: ArtifactKeeperApi = retrofit.create(ArtifactKeeperApi::class.java)
 }
