@@ -42,6 +42,7 @@ import com.artifactkeeper.android.ui.screens.repositories.RepositoriesScreen
 import com.artifactkeeper.android.ui.screens.repositories.RepositoryDetailScreen
 import com.artifactkeeper.android.ui.screens.search.SearchScreen
 import com.artifactkeeper.android.ui.screens.security.PoliciesScreen
+import com.artifactkeeper.android.ui.screens.security.ScanFindingsScreen
 import com.artifactkeeper.android.ui.screens.security.ScansScreen
 import com.artifactkeeper.android.ui.screens.security.SecurityScreen
 import com.artifactkeeper.android.ui.screens.settings.SettingsScreen
@@ -387,25 +388,33 @@ private fun IntegrationSection(isCompact: Boolean, accountActions: @Composable (
 private fun SecuritySection(isCompact: Boolean, accountActions: @Composable () -> Unit) {
     val subTabs = listOf("Dashboard", "Scans", "Policies")
     var selectedTab by remember { mutableIntStateOf(0) }
+    var selectedScanId by remember { mutableStateOf<String?>(null) }
 
     Column(modifier = Modifier.fillMaxSize()) {
-        TopAppBar(title = { Text("Security") }, actions = { accountActions() })
-        ScrollableTabRow(
-            selectedTabIndex = selectedTab,
-            edgePadding = if (isCompact) 4.dp else 16.dp,
-        ) {
-            subTabs.forEachIndexed { index, title ->
-                Tab(
-                    selected = selectedTab == index,
-                    onClick = { selectedTab = index },
-                    text = { Text(title, maxLines = 1) },
-                )
+        if (selectedScanId != null) {
+            ScanFindingsScreen(
+                scanId = selectedScanId!!,
+                onBack = { selectedScanId = null },
+            )
+        } else {
+            TopAppBar(title = { Text("Security") }, actions = { accountActions() })
+            ScrollableTabRow(
+                selectedTabIndex = selectedTab,
+                edgePadding = if (isCompact) 4.dp else 16.dp,
+            ) {
+                subTabs.forEachIndexed { index, title ->
+                    Tab(
+                        selected = selectedTab == index,
+                        onClick = { selectedTab = index },
+                        text = { Text(title, maxLines = 1) },
+                    )
+                }
             }
-        }
-        when (selectedTab) {
-            0 -> SecurityScreen()
-            1 -> ScansScreen()
-            2 -> PoliciesScreen()
+            when (selectedTab) {
+                0 -> SecurityScreen()
+                1 -> ScansScreen(onScanClick = { selectedScanId = it })
+                2 -> PoliciesScreen()
+            }
         }
     }
 }

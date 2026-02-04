@@ -28,6 +28,7 @@ import com.artifactkeeper.android.data.models.RepoSecurityScore
 import com.artifactkeeper.android.data.models.Repository
 import com.artifactkeeper.android.data.models.RepositoryListResponse
 import com.artifactkeeper.android.data.models.SSOProvider
+import com.artifactkeeper.android.data.models.ScanFindingListResponse
 import com.artifactkeeper.android.data.models.ScanListResponse
 import com.artifactkeeper.android.data.models.SecurityPolicy
 import com.artifactkeeper.android.data.models.StorageBreakdownItem
@@ -92,6 +93,12 @@ interface ArtifactKeeperApi {
         @Query("page") page: Int = 1,
         @Query("per_page") perPage: Int = 20,
     ): ScanListResponse
+
+    @GET("/api/v1/security/scans/{scanId}/findings")
+    suspend fun getScanFindings(
+        @Path("scanId") scanId: String,
+        @Query("per_page") perPage: Int = 200,
+    ): ScanFindingListResponse
 
     @POST("/api/v1/auth/login")
     suspend fun login(@Body request: LoginRequest): LoginResponse

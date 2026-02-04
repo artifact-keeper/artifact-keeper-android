@@ -120,9 +120,38 @@ data class ScanResult(
     @SerialName("high_count") val highCount: Int,
     @SerialName("medium_count") val mediumCount: Int,
     @SerialName("low_count") val lowCount: Int,
+    @SerialName("artifact_name") val artifactName: String? = null,
+    @SerialName("artifact_version") val artifactVersion: String? = null,
     @SerialName("started_at") val startedAt: String? = null,
     @SerialName("completed_at") val completedAt: String? = null,
     @SerialName("error_message") val errorMessage: String? = null,
+)
+
+@Serializable
+data class ScanFinding(
+    val id: String,
+    @SerialName("scan_result_id") val scanResultId: String,
+    @SerialName("artifact_id") val artifactId: String,
+    val severity: String,
+    val title: String,
+    val description: String? = null,
+    @SerialName("cve_id") val cveId: String? = null,
+    @SerialName("affected_component") val affectedComponent: String? = null,
+    @SerialName("affected_version") val affectedVersion: String? = null,
+    @SerialName("fixed_version") val fixedVersion: String? = null,
+    val source: String? = null,
+    @SerialName("source_url") val sourceUrl: String? = null,
+    @SerialName("is_acknowledged") val isAcknowledged: Boolean = false,
+    @SerialName("acknowledged_by") val acknowledgedBy: String? = null,
+    @SerialName("acknowledged_reason") val acknowledgedReason: String? = null,
+    @SerialName("acknowledged_at") val acknowledgedAt: String? = null,
+    @SerialName("created_at") val createdAt: String? = null,
+)
+
+@Serializable
+data class ScanFindingListResponse(
+    val items: List<ScanFinding>,
+    val pagination: Pagination? = null,
 )
 
 @Serializable

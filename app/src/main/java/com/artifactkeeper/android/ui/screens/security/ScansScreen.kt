@@ -1,6 +1,7 @@
 package com.artifactkeeper.android.ui.screens.security
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -35,7 +36,7 @@ private val StatusPending = Color(0xFFFAAD14)
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun ScansScreen() {
+fun ScansScreen(onScanClick: (String) -> Unit = {}) {
     var scans by remember { mutableStateOf<List<ScanResult>>(emptyList()) }
     var isLoading by remember { mutableStateOf(true) }
     var errorMessage by remember { mutableStateOf<String?>(null) }
@@ -109,7 +110,7 @@ fun ScansScreen() {
                         }
                     } else {
                         items(scans, key = { it.id }) { scan ->
-                            ScanCard(scan)
+                            ScanCard(scan, onClick = { onScanClick(scan.id) })
                         }
                     }
                 }
@@ -169,11 +170,11 @@ fun ScansScreen() {
 }
 
 @Composable
-private fun ScanCard(scan: ScanResult) {
+private fun ScanCard(scan: ScanResult, onClick: () -> Unit = {}) {
     val scanIcon = scanTypeIcon(scan.scanType)
     val statusColor = statusColor(scan.status)
 
-    Card(modifier = Modifier.fillMaxWidth()) {
+    Card(modifier = Modifier.fillMaxWidth().clickable(onClick = onClick)) {
         Column(modifier = Modifier.padding(16.dp)) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
