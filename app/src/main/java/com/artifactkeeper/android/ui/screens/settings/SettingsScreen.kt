@@ -103,7 +103,20 @@ fun SettingsScreen(onBack: () -> Unit, onDisconnect: () -> Unit = {}) {
             confirmButton = {
                 TextButton(
                     onClick = {
+                        val wasActive = server.id == activeServerId
                         ServerManager.removeServer(server.id)
+                        if (wasActive) {
+                            // Clear auth credentials for the removed server
+                            currentUser = null
+                            ApiClient.setToken(null)
+                            prefs.edit()
+                                .remove("auth_token")
+                                .remove("user_id")
+                                .remove("user_username")
+                                .remove("user_email")
+                                .remove("user_is_admin")
+                                .apply()
+                        }
                         showRemoveDialog = null
                         // Check the updated server list directly from ServerManager
                         if (ServerManager.getServers().isEmpty()) {
