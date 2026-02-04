@@ -1,11 +1,17 @@
 package com.artifactkeeper.android.data.api
 
+import com.artifactkeeper.android.BuildConfig
 import com.jakewharton.retrofit2.converter.kotlinx.serialization.asConverterFactory
 import kotlinx.serialization.json.Json
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.Retrofit
+import java.security.SecureRandom
+import java.security.cert.X509Certificate
+import javax.net.ssl.SSLContext
+import javax.net.ssl.TrustManager
+import javax.net.ssl.X509TrustManager
 
 object ApiClient {
     private val json = Json { ignoreUnknownKeys = true }
@@ -15,7 +21,7 @@ object ApiClient {
     val isConfigured: Boolean get() = _baseUrl.isNotBlank()
 
     private fun buildClient(): OkHttpClient {
-        return OkHttpClient.Builder()
+        val builder = OkHttpClient.Builder()
             .addInterceptor(HttpLoggingInterceptor().apply {
                 level = HttpLoggingInterceptor.Level.BODY
             })
@@ -27,7 +33,20 @@ object ApiClient {
                 } ?: chain.request()
                 chain.proceed(request)
             }
-            .build()
+
+        if (BuildConfig.DEBUG) {
+            val trustAllManager = object : X509TrustManager {
+                override fun checkClientTrusted(chain: Array<X509Certificate>, authType: String) {}
+                override fun checkServerTrusted(chain: Array<X509Certificate>, authType: String) {}
+                override fun getAcceptedIssuers(): Array<X509Certificate> = arrayOf()
+            }
+            val sslContext = SSLContext.getInstance("TLS")
+            sslContext.init(null, arrayOf<TrustManager>(trustAllManager), SecureRandom())
+            builder.sslSocketFactory(sslContext.socketFactory, trustAllManager)
+            builder.hostnameVerifier { _, _ -> true }
+        }
+
+        return builder.build()
     }
 
     private fun buildRetrofit(): Retrofit {

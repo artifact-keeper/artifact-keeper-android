@@ -11,6 +11,10 @@ android {
     namespace = "com.artifactkeeper.android"
     compileSdk = 35
 
+    buildFeatures {
+        buildConfig = true
+    }
+
     defaultConfig {
         applicationId = "com.artifactkeeper.android"
         minSdk = 28
