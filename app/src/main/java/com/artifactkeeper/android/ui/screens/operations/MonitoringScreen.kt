@@ -131,7 +131,7 @@ fun MonitoringScreen() {
                             }
                         }
 
-                        items(healthChecks, key = { it.key }) { (name, check) ->
+                        items(healthChecks, key = { "check-${it.key}" }) { (name, check) ->
                             ServiceHealthCard(name, check)
                         }
 
@@ -154,7 +154,7 @@ fun MonitoringScreen() {
                             }
                         }
 
-                        items(alerts, key = { it.serviceName }) { alert ->
+                        items(alerts, key = { "alert-${it.serviceName}" }) { alert ->
                             AlertCard(alert)
                         }
 
@@ -177,7 +177,8 @@ fun MonitoringScreen() {
                             }
                         }
 
-                        items(healthLog, key = { "${it.serviceName}-${it.checkedAt}" }) { entry ->
+                        items(healthLog.size) { index ->
+                            val entry = healthLog[index]
                             HealthLogCard(entry)
                         }
 
