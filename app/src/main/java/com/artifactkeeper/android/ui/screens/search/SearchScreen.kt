@@ -5,6 +5,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Download
+import androidx.compose.material.icons.filled.Inventory2
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -13,16 +14,15 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.artifactkeeper.android.data.api.ApiClient
-import com.artifactkeeper.android.data.models.PackageItem
+import com.artifactkeeper.android.data.models.Repository
 import com.artifactkeeper.android.ui.util.formatBytes
-import com.artifactkeeper.android.ui.util.formatDownloadCount
 import kotlinx.coroutines.delay
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SearchScreen() {
     var searchQuery by remember { mutableStateOf("") }
-    var results by remember { mutableStateOf<List<PackageItem>>(emptyList()) }
+    var repoResults by remember { mutableStateOf<List<Repository>>(emptyList()) }
     var isSearching by remember { mutableStateOf(false) }
     var hasSearched by remember { mutableStateOf(false) }
     var errorMessage by remember { mutableStateOf<String?>(null) }
@@ -30,7 +30,7 @@ fun SearchScreen() {
     // Debounced search
     LaunchedEffect(searchQuery) {
         if (searchQuery.isBlank()) {
-            results = emptyList()
+            repoResults = emptyList()
             hasSearched = false
             return@LaunchedEffect
         }
@@ -38,11 +38,11 @@ fun SearchScreen() {
         isSearching = true
         errorMessage = null
         try {
-            val response = ApiClient.api.listPackages(
+            val repos = ApiClient.api.listRepositories(
                 search = searchQuery,
                 perPage = 50,
             )
-            results = response.items
+            repoResults = repos.items
             hasSearched = true
         } catch (e: Exception) {
             errorMessage = e.message ?: "Search failed"
@@ -59,7 +59,7 @@ fun SearchScreen() {
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(horizontal = 16.dp, vertical = 8.dp),
-            placeholder = { Text("Search packages...") },
+            placeholder = { Text("Search repositories...") },
             leadingIcon = { Icon(Icons.Default.Search, contentDescription = "Search") },
             singleLine = true,
         )
@@ -88,7 +88,6 @@ fun SearchScreen() {
                 }
             }
             !hasSearched -> {
-                // Empty state before any search
                 Box(
                     modifier = Modifier.fillMaxSize(),
                     contentAlignment = Alignment.Center,
@@ -102,20 +101,20 @@ fun SearchScreen() {
                         )
                         Spacer(modifier = Modifier.height(16.dp))
                         Text(
-                            text = "Search for packages",
+                            text = "Search repositories",
                             style = MaterialTheme.typography.bodyLarge,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                         )
                         Spacer(modifier = Modifier.height(4.dp))
                         Text(
-                            text = "Enter a name to find packages across all repositories",
+                            text = "Find repositories by name, key, or format",
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
                         )
                     }
                 }
             }
-            results.isEmpty() -> {
+            repoResults.isEmpty() -> {
                 Box(
                     modifier = Modifier.fillMaxSize(),
                     contentAlignment = Alignment.Center,
@@ -133,8 +132,8 @@ fun SearchScreen() {
                     contentPadding = PaddingValues(16.dp),
                     verticalArrangement = Arrangement.spacedBy(12.dp),
                 ) {
-                    items(results, key = { it.id }) { pkg ->
-                        SearchResultCard(pkg)
+                    items(repoResults, key = { it.id }) { repo ->
+                        SearchResultCard(repo)
                     }
                 }
             }
@@ -143,7 +142,7 @@ fun SearchScreen() {
 }
 
 @Composable
-private fun SearchResultCard(pkg: PackageItem) {
+private fun SearchResultCard(repo: Repository) {
     Card(modifier = Modifier.fillMaxWidth()) {
         Column(modifier = Modifier.padding(16.dp)) {
             Row(
@@ -152,7 +151,7 @@ private fun SearchResultCard(pkg: PackageItem) {
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 Text(
-                    text = pkg.name,
+                    text = repo.name,
                     style = MaterialTheme.typography.titleMedium,
                     modifier = Modifier.weight(1f),
                     maxLines = 1,
@@ -161,26 +160,29 @@ private fun SearchResultCard(pkg: PackageItem) {
                 Spacer(modifier = Modifier.width(8.dp))
                 AssistChip(
                     onClick = {},
-                    label = { Text(pkg.format.uppercase(), style = MaterialTheme.typography.labelSmall) },
+                    label = { Text(repo.format.uppercase(), style = MaterialTheme.typography.labelSmall) },
                 )
             }
 
             Spacer(modifier = Modifier.height(4.dp))
 
-            Row(
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                Text(
-                    text = "v${pkg.version}",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.primary,
-                )
-                Text(
-                    text = pkg.repositoryKey,
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
+            Text(
+                text = repo.key,
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+
+            repo.description?.let { desc ->
+                if (desc.isNotBlank()) {
+                    Spacer(modifier = Modifier.height(4.dp))
+                    Text(
+                        text = desc,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        maxLines = 2,
+                        overflow = TextOverflow.Ellipsis,
+                    )
+                }
             }
 
             Spacer(modifier = Modifier.height(8.dp))
@@ -193,20 +195,20 @@ private fun SearchResultCard(pkg: PackageItem) {
             ) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Icon(
-                        Icons.Default.Download,
-                        contentDescription = "Downloads",
+                        Icons.Default.Inventory2,
+                        contentDescription = "Storage",
                         modifier = Modifier.size(16.dp),
                         tint = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
                     Spacer(modifier = Modifier.width(4.dp))
                     Text(
-                        text = formatDownloadCount(pkg.downloadCount),
+                        text = formatBytes(repo.storageUsedBytes),
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
                 }
                 Text(
-                    text = formatBytes(pkg.sizeBytes),
+                    text = repo.repoType,
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )

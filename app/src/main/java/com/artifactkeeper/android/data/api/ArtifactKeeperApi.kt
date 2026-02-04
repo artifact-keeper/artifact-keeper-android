@@ -69,6 +69,7 @@ interface ArtifactKeeperApi {
     suspend fun listRepositories(
         @Query("page") page: Int = 1,
         @Query("per_page") perPage: Int = 50,
+        @Query("search") search: String? = null,
     ): RepositoryListResponse
 
     @GET("/api/v1/repositories/{key}")
