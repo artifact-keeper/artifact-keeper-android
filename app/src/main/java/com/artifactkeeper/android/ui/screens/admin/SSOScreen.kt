@@ -36,7 +36,7 @@ fun SSOScreen() {
             if (refresh) isRefreshing = true else isLoading = true
             errorMessage = null
             try {
-                providers = ApiClient.api.listSSOProviders().items
+                providers = ApiClient.api.listSSOProviders()
             } catch (e: Exception) {
                 errorMessage = e.message ?: "Failed to load SSO providers"
             } finally {
@@ -133,12 +133,12 @@ private fun SSOProviderCard(provider: SSOProvider) {
                 .padding(16.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            // Enabled/disabled dot
+            // Active dot
             Box(
                 modifier = Modifier
                     .size(10.dp)
                     .clip(CircleShape)
-                    .background(if (provider.enabled) Color(0xFF52C41A) else Color(0xFFBFBFBF)),
+                    .background(Color(0xFF52C41A)),
             )
 
             Spacer(modifier = Modifier.width(12.dp))
@@ -165,9 +165,9 @@ private fun SSOProviderCard(provider: SSOProvider) {
                         )
                     }
                 }
-                if (provider.issuerUrl != null) {
+                if (provider.loginUrl != null) {
                     Text(
-                        text = provider.issuerUrl,
+                        text = provider.loginUrl,
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         maxLines = 1,
@@ -176,9 +176,9 @@ private fun SSOProviderCard(provider: SSOProvider) {
             }
 
             Text(
-                text = if (provider.enabled) "Enabled" else "Disabled",
+                text = "Enabled",
                 style = MaterialTheme.typography.labelSmall,
-                color = if (provider.enabled) Color(0xFF52C41A) else MaterialTheme.colorScheme.onSurfaceVariant,
+                color = Color(0xFF52C41A),
             )
         }
     }

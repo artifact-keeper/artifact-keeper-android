@@ -27,7 +27,7 @@ import com.artifactkeeper.android.data.models.RegisterPeerRequest
 import com.artifactkeeper.android.data.models.RepoSecurityScore
 import com.artifactkeeper.android.data.models.Repository
 import com.artifactkeeper.android.data.models.RepositoryListResponse
-import com.artifactkeeper.android.data.models.SSOProviderListResponse
+import com.artifactkeeper.android.data.models.SSOProvider
 import com.artifactkeeper.android.data.models.ScanListResponse
 import com.artifactkeeper.android.data.models.SecurityPolicy
 import com.artifactkeeper.android.data.models.StorageBreakdownItem
@@ -121,7 +121,7 @@ interface ArtifactKeeperApi {
 
     // --- Admin: SSO ---
     @GET("api/v1/admin/sso/providers")
-    suspend fun listSSOProviders(): SSOProviderListResponse
+    suspend fun listSSOProviders(): List<SSOProvider>
 
     // --- Admin: Stats ---
     @GET("api/v1/admin/stats")

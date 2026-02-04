@@ -215,10 +215,7 @@ data class SSOProvider(
     val id: String,
     val name: String,
     @SerialName("provider_type") val providerType: String,
-    val enabled: Boolean,
-    @SerialName("client_id") val clientId: String? = null,
-    @SerialName("issuer_url") val issuerUrl: String? = null,
-    @SerialName("created_at") val createdAt: String
+    @SerialName("login_url") val loginUrl: String? = null,
 )
 
 @Serializable
