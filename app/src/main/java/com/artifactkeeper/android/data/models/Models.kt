@@ -407,12 +407,12 @@ data class HealthLogEntry(
 
 @Serializable
 data class AlertState(
-    val id: String,
-    val name: String,
-    val severity: String,
-    val status: String,
-    val message: String,
-    @SerialName("triggered_at") val triggeredAt: String
+    @SerialName("service_name") val serviceName: String,
+    @SerialName("current_status") val currentStatus: String,
+    @SerialName("consecutive_failures") val consecutiveFailures: Int = 0,
+    @SerialName("last_alert_sent_at") val lastAlertSentAt: String? = null,
+    @SerialName("suppressed_until") val suppressedUntil: String? = null,
+    @SerialName("updated_at") val updatedAt: String,
 )
 
 // --- Multi-server ---

@@ -22,10 +22,6 @@ import com.artifactkeeper.android.data.models.AlertState
 import com.artifactkeeper.android.data.models.HealthCheck
 import com.artifactkeeper.android.data.models.HealthLogEntry
 import com.artifactkeeper.android.data.models.HealthResponse
-import com.artifactkeeper.android.ui.theme.Critical
-import com.artifactkeeper.android.ui.theme.High
-import com.artifactkeeper.android.ui.theme.Low
-import com.artifactkeeper.android.ui.theme.Medium
 import com.artifactkeeper.android.ui.util.formatRelativeTime
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -158,7 +154,7 @@ fun MonitoringScreen() {
                             }
                         }
 
-                        items(alerts, key = { it.id }) { alert ->
+                        items(alerts, key = { it.serviceName }) { alert ->
                             AlertCard(alert)
                         }
 
@@ -240,13 +236,8 @@ private fun ServiceHealthCard(name: String, check: HealthCheck) {
 
 @Composable
 private fun AlertCard(alert: AlertState) {
-    val severityColor = when (alert.severity.lowercase()) {
-        "critical" -> Critical
-        "high" -> High
-        "medium" -> Medium
-        "low" -> Low
-        else -> MaterialTheme.colorScheme.outline
-    }
+    val isHealthy = alert.currentStatus.lowercase() == "healthy"
+    val statusColor = if (isHealthy) StatusOk else StatusFail
 
     Card(modifier = Modifier.fillMaxWidth()) {
         Column(modifier = Modifier.padding(16.dp)) {
@@ -254,51 +245,52 @@ private fun AlertCard(alert: AlertState) {
                 modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
+                Box(
+                    modifier = Modifier
+                        .size(12.dp)
+                        .clip(CircleShape)
+                        .background(statusColor),
+                )
+
+                Spacer(modifier = Modifier.width(12.dp))
+
                 Text(
-                    text = alert.name,
+                    text = alert.serviceName.replaceFirstChar { it.uppercase() },
                     style = MaterialTheme.typography.titleSmall,
                     modifier = Modifier.weight(1f),
                 )
+
                 Box(
                     modifier = Modifier
                         .clip(RoundedCornerShape(4.dp))
-                        .background(severityColor.copy(alpha = 0.15f))
+                        .background(statusColor.copy(alpha = 0.15f))
                         .padding(horizontal = 8.dp, vertical = 4.dp),
                 ) {
                     Text(
-                        text = alert.severity.uppercase(),
+                        text = alert.currentStatus.uppercase(),
                         style = MaterialTheme.typography.labelSmall,
                         fontWeight = FontWeight.SemiBold,
-                        color = severityColor,
+                        color = statusColor,
                     )
                 }
+            }
+
+            if (alert.consecutiveFailures > 0) {
+                Spacer(modifier = Modifier.height(4.dp))
+                Text(
+                    text = "Consecutive failures: ${alert.consecutiveFailures}",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.error,
+                )
             }
 
             Spacer(modifier = Modifier.height(4.dp))
 
             Text(
-                text = alert.message,
-                style = MaterialTheme.typography.bodySmall,
+                text = formatRelativeTime(alert.updatedAt),
+                style = MaterialTheme.typography.labelSmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
-
-            Spacer(modifier = Modifier.height(4.dp))
-
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-            ) {
-                Text(
-                    text = "Status: ${alert.status}",
-                    style = MaterialTheme.typography.labelSmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
-                Text(
-                    text = formatRelativeTime(alert.triggeredAt),
-                    style = MaterialTheme.typography.labelSmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
-            }
         }
     }
 }
