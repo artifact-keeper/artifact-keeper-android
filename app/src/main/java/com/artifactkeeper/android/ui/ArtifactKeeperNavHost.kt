@@ -25,6 +25,8 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.artifactkeeper.android.data.ServerManager
 import com.artifactkeeper.android.data.api.ApiClient
+import com.artifactkeeper.android.data.models.UserInfo
+import com.artifactkeeper.android.ui.components.AccountMenu
 import com.artifactkeeper.android.ui.screens.admin.GroupsScreen
 import com.artifactkeeper.android.ui.screens.admin.SSOScreen
 import com.artifactkeeper.android.ui.screens.admin.UsersScreen
@@ -119,10 +121,59 @@ private fun MainAppScaffold(
     widthSizeClass: WindowWidthSizeClass,
     onDisconnect: () -> Unit,
 ) {
+    val context = LocalContext.current
+    val prefs = remember {
+        context.getSharedPreferences("artifact_keeper_prefs", android.content.Context.MODE_PRIVATE)
+    }
     val navController = rememberNavController()
     var selectedTab by remember { mutableIntStateOf(0) }
     val useRail = widthSizeClass == WindowWidthSizeClass.Expanded
     val isCompact = widthSizeClass == WindowWidthSizeClass.Compact
+
+    // Shared auth state
+    var currentUser by remember { mutableStateOf<UserInfo?>(null) }
+    LaunchedEffect(Unit) {
+        val savedToken = prefs.getString("auth_token", null)
+        val savedUsername = prefs.getString("user_username", null)
+        val savedUserId = prefs.getString("user_id", null)
+        val savedEmail = prefs.getString("user_email", null)
+        val savedIsAdmin = prefs.getBoolean("user_is_admin", false)
+        if (savedToken != null && savedUsername != null && savedUserId != null) {
+            currentUser = UserInfo(
+                id = savedUserId,
+                username = savedUsername,
+                email = savedEmail,
+                isAdmin = savedIsAdmin,
+            )
+        }
+    }
+
+    val accountActions: @Composable () -> Unit = {
+        AccountMenu(
+            currentUser = currentUser,
+            onLoggedIn = { user, token ->
+                currentUser = user
+                prefs.edit()
+                    .putString("auth_token", token)
+                    .putString("user_id", user.id)
+                    .putString("user_username", user.username)
+                    .putString("user_email", user.email)
+                    .putBoolean("user_is_admin", user.isAdmin)
+                    .apply()
+            },
+            onLoggedOut = {
+                currentUser = null
+                ApiClient.setToken(null)
+                prefs.edit()
+                    .remove("auth_token")
+                    .remove("user_id")
+                    .remove("user_username")
+                    .remove("user_email")
+                    .remove("user_is_admin")
+                    .apply()
+            },
+        )
+    }
 
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = navBackStackEntry?.destination?.route
@@ -164,12 +215,13 @@ private fun MainAppScaffold(
                     ArtifactsSection(
                         isCompact = false,
                         onRepoClick = { key -> navController.navigate("repos/$key") },
+                        accountActions = accountActions,
                     )
                 }
-                composable("integration") { IntegrationSection(isCompact = false) }
-                composable("security") { SecuritySection(isCompact = false) }
-                composable("operations") { OperationsSection(isCompact = false) }
-                composable("admin") { AdminSection(isCompact = false, onDisconnect = onDisconnect) }
+                composable("integration") { IntegrationSection(isCompact = false, accountActions = accountActions) }
+                composable("security") { SecuritySection(isCompact = false, accountActions = accountActions) }
+                composable("operations") { OperationsSection(isCompact = false, accountActions = accountActions) }
+                composable("admin") { AdminSection(isCompact = false, onDisconnect = onDisconnect, accountActions = accountActions) }
                 composable("repos/{key}") { backStackEntry ->
                     val key = backStackEntry.arguments?.getString("key") ?: return@composable
                     RepositoryDetailScreen(
@@ -220,12 +272,13 @@ private fun MainAppScaffold(
                     ArtifactsSection(
                         isCompact = isCompact,
                         onRepoClick = { key -> navController.navigate("repos/$key") },
+                        accountActions = accountActions,
                     )
                 }
-                composable("integration") { IntegrationSection(isCompact = isCompact) }
-                composable("security") { SecuritySection(isCompact = isCompact) }
-                composable("operations") { OperationsSection(isCompact = isCompact) }
-                composable("admin") { AdminSection(isCompact = isCompact, onDisconnect = onDisconnect) }
+                composable("integration") { IntegrationSection(isCompact = isCompact, accountActions = accountActions) }
+                composable("security") { SecuritySection(isCompact = isCompact, accountActions = accountActions) }
+                composable("operations") { OperationsSection(isCompact = isCompact, accountActions = accountActions) }
+                composable("admin") { AdminSection(isCompact = isCompact, onDisconnect = onDisconnect, accountActions = accountActions) }
                 composable("repos/{key}") { backStackEntry ->
                     val key = backStackEntry.arguments?.getString("key") ?: return@composable
                     RepositoryDetailScreen(
@@ -244,13 +297,17 @@ private fun MainAppScaffold(
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun ArtifactsSection(isCompact: Boolean, onRepoClick: (String) -> Unit) {
+private fun ArtifactsSection(
+    isCompact: Boolean,
+    onRepoClick: (String) -> Unit,
+    accountActions: @Composable () -> Unit,
+) {
     val subTabs = if (isCompact) listOf("Repos", "Pkgs", "Builds", "Search")
                   else listOf("Repositories", "Packages", "Builds", "Search")
     var selectedTab by remember { mutableIntStateOf(0) }
 
     Column(modifier = Modifier.fillMaxSize()) {
-        TopAppBar(title = { Text("Artifacts") })
+        TopAppBar(title = { Text("Artifacts") }, actions = { accountActions() })
         ScrollableTabRow(
             selectedTabIndex = selectedTab,
             edgePadding = if (isCompact) 4.dp else 16.dp,
@@ -274,12 +331,12 @@ private fun ArtifactsSection(isCompact: Boolean, onRepoClick: (String) -> Unit) 
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun IntegrationSection(isCompact: Boolean) {
+private fun IntegrationSection(isCompact: Boolean, accountActions: @Composable () -> Unit) {
     val subTabs = listOf("Peers", "Replication", "Webhooks")
     var selectedTab by remember { mutableIntStateOf(0) }
 
     Column(modifier = Modifier.fillMaxSize()) {
-        TopAppBar(title = { Text("Integration") })
+        TopAppBar(title = { Text("Integration") }, actions = { accountActions() })
         ScrollableTabRow(
             selectedTabIndex = selectedTab,
             edgePadding = if (isCompact) 4.dp else 16.dp,
@@ -302,12 +359,12 @@ private fun IntegrationSection(isCompact: Boolean) {
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun SecuritySection(isCompact: Boolean) {
+private fun SecuritySection(isCompact: Boolean, accountActions: @Composable () -> Unit) {
     val subTabs = listOf("Dashboard", "Scans", "Policies")
     var selectedTab by remember { mutableIntStateOf(0) }
 
     Column(modifier = Modifier.fillMaxSize()) {
-        TopAppBar(title = { Text("Security") })
+        TopAppBar(title = { Text("Security") }, actions = { accountActions() })
         ScrollableTabRow(
             selectedTabIndex = selectedTab,
             edgePadding = if (isCompact) 4.dp else 16.dp,
@@ -330,13 +387,13 @@ private fun SecuritySection(isCompact: Boolean) {
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun OperationsSection(isCompact: Boolean) {
+private fun OperationsSection(isCompact: Boolean, accountActions: @Composable () -> Unit) {
     val subTabs = if (isCompact) listOf("Stats", "Health", "Metrics")
                   else listOf("Analytics", "Monitoring", "Telemetry")
     var selectedTab by remember { mutableIntStateOf(0) }
 
     Column(modifier = Modifier.fillMaxSize()) {
-        TopAppBar(title = { Text("Operations") })
+        TopAppBar(title = { Text("Operations") }, actions = { accountActions() })
         ScrollableTabRow(
             selectedTabIndex = selectedTab,
             edgePadding = if (isCompact) 4.dp else 16.dp,
@@ -359,12 +416,12 @@ private fun OperationsSection(isCompact: Boolean) {
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun AdminSection(isCompact: Boolean, onDisconnect: () -> Unit) {
+private fun AdminSection(isCompact: Boolean, onDisconnect: () -> Unit, accountActions: @Composable () -> Unit) {
     val subTabs = listOf("Users", "Groups", "SSO", "Settings")
     var selectedTab by remember { mutableIntStateOf(0) }
 
     Column(modifier = Modifier.fillMaxSize()) {
-        TopAppBar(title = { Text("Admin") })
+        TopAppBar(title = { Text("Admin") }, actions = { accountActions() })
         ScrollableTabRow(
             selectedTabIndex = selectedTab,
             edgePadding = if (isCompact) 4.dp else 16.dp,
