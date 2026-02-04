@@ -7,6 +7,7 @@ import com.artifactkeeper.android.data.models.AlertState
 import com.artifactkeeper.android.data.models.ArtifactListResponse
 import com.artifactkeeper.android.data.models.AssignRepoRequest
 import com.artifactkeeper.android.data.models.BuildListResponse
+import com.artifactkeeper.android.data.models.ChangePasswordRequest
 import com.artifactkeeper.android.data.models.CreateGroupRequest
 import com.artifactkeeper.android.data.models.CreatePolicyRequest
 import com.artifactkeeper.android.data.models.CreateUserRequest
@@ -205,6 +206,10 @@ interface ArtifactKeeperApi {
 
     @GET("api/v1/admin/monitoring/alerts")
     suspend fun getAlerts(): List<AlertState>
+
+    // --- Password ---
+    @POST("api/v1/admin/users/{id}/password")
+    suspend fun changePassword(@Path("id") userId: String, @Body request: ChangePasswordRequest)
 
     // --- Health ---
     @GET("health")

@@ -46,6 +46,7 @@ import com.artifactkeeper.android.ui.screens.security.ScanFindingsScreen
 import com.artifactkeeper.android.ui.screens.security.ScansScreen
 import com.artifactkeeper.android.ui.screens.security.SecurityScreen
 import com.artifactkeeper.android.ui.screens.settings.SettingsScreen
+import com.artifactkeeper.android.ui.screens.auth.ChangePasswordScreen
 import com.artifactkeeper.android.ui.screens.welcome.WelcomeScreen
 
 private data class BottomTab(
@@ -143,6 +144,8 @@ private fun MainAppScaffold(
 
     // Shared auth state
     var currentUser by remember { mutableStateOf<UserInfo?>(null) }
+    var mustChangePassword by remember { mutableStateOf(false) }
+    var changePasswordUserId by remember { mutableStateOf("") }
     LaunchedEffect(Unit) {
         val savedToken = prefs.getString("auth_token", null)
         val savedUsername = prefs.getString("user_username", null)
@@ -162,7 +165,7 @@ private fun MainAppScaffold(
     val accountActions: @Composable () -> Unit = {
         AccountMenu(
             currentUser = currentUser,
-            onLoggedIn = { user, token ->
+            onLoggedIn = { user, token, forceChangePassword ->
                 currentUser = user
                 prefs.edit()
                     .putString("auth_token", token)
@@ -171,6 +174,10 @@ private fun MainAppScaffold(
                     .putString("user_email", user.email)
                     .putBoolean("user_is_admin", user.isAdmin)
                     .apply()
+                if (forceChangePassword) {
+                    changePasswordUserId = user.id
+                    mustChangePassword = true
+                }
             },
             onLoggedOut = {
                 currentUser = null
@@ -211,6 +218,28 @@ private fun MainAppScaffold(
     }
 
     val showNav = currentRoute in allSectionRoutes || currentRoute == null
+
+    if (mustChangePassword) {
+        ChangePasswordScreen(
+            userId = changePasswordUserId,
+            onPasswordChanged = {
+                mustChangePassword = false
+            },
+            onLogout = {
+                mustChangePassword = false
+                currentUser = null
+                ApiClient.setToken(null)
+                prefs.edit()
+                    .remove("auth_token")
+                    .remove("user_id")
+                    .remove("user_username")
+                    .remove("user_email")
+                    .remove("user_is_admin")
+                    .apply()
+            },
+        )
+        return
+    }
 
     if (useRail && showNav) {
         // Expanded: NavigationRail on the left

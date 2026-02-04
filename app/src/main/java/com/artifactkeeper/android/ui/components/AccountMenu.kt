@@ -23,7 +23,7 @@ import kotlinx.coroutines.launch
 @Composable
 fun AccountMenu(
     currentUser: UserInfo?,
-    onLoggedIn: (UserInfo, String) -> Unit,
+    onLoggedIn: (UserInfo, String, Boolean) -> Unit,
     onLoggedOut: () -> Unit,
 ) {
     var showMenu by remember { mutableStateOf(false) }
@@ -82,9 +82,9 @@ fun AccountMenu(
     if (showLoginDialog) {
         LoginDialog(
             onDismiss = { showLoginDialog = false },
-            onSuccess = { user, token ->
+            onSuccess = { user, token, mustChangePassword ->
                 showLoginDialog = false
-                onLoggedIn(user, token)
+                onLoggedIn(user, token, mustChangePassword)
             },
         )
     }
@@ -93,7 +93,7 @@ fun AccountMenu(
 @Composable
 private fun LoginDialog(
     onDismiss: () -> Unit,
-    onSuccess: (UserInfo, String) -> Unit,
+    onSuccess: (UserInfo, String, Boolean) -> Unit,
 ) {
     var username by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
@@ -149,7 +149,7 @@ private fun LoginDialog(
                             val response = ApiClient.api.login(LoginRequest(username.trim(), password))
                             ApiClient.setToken(response.accessToken)
                             val user = ApiClient.api.getMe()
-                            onSuccess(user, response.accessToken)
+                            onSuccess(user, response.accessToken, response.mustChangePassword)
                         } catch (e: Exception) {
                             error = e.message ?: "Login failed"
                         } finally {

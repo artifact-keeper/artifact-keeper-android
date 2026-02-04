@@ -161,6 +161,12 @@ data class ScanListResponse(
 )
 
 @Serializable
+data class ChangePasswordRequest(
+    @SerialName("current_password") val currentPassword: String,
+    @SerialName("new_password") val newPassword: String,
+)
+
+@Serializable
 data class LoginRequest(val username: String, val password: String)
 
 @Serializable
