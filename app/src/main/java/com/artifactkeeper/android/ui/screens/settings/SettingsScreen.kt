@@ -105,7 +105,8 @@ fun SettingsScreen(onBack: () -> Unit, onDisconnect: () -> Unit = {}) {
                     onClick = {
                         ServerManager.removeServer(server.id)
                         showRemoveDialog = null
-                        if (servers.isEmpty()) {
+                        // Check the updated server list directly from ServerManager
+                        if (ServerManager.getServers().isEmpty()) {
                             onDisconnect()
                         }
                     },
