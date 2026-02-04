@@ -177,7 +177,7 @@ fun MonitoringScreen() {
                             }
                         }
 
-                        items(healthLog, key = { it.id }) { entry ->
+                        items(healthLog, key = { "${it.serviceName}-${it.checkedAt}" }) { entry ->
                             HealthLogCard(entry)
                         }
 
@@ -316,7 +316,7 @@ private fun HealthLogCard(entry: HealthLogEntry) {
             Spacer(modifier = Modifier.width(8.dp))
 
             Text(
-                text = entry.service,
+                text = entry.serviceName.replaceFirstChar { it.uppercase() },
                 style = MaterialTheme.typography.bodySmall,
                 modifier = Modifier.weight(1f),
             )

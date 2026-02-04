@@ -398,11 +398,12 @@ data class HealthCheck(
 
 @Serializable
 data class HealthLogEntry(
-    val id: String,
-    val service: String,
+    @SerialName("service_name") val serviceName: String,
     val status: String,
+    @SerialName("previous_status") val previousStatus: String? = null,
+    val message: String? = null,
     @SerialName("response_time_ms") val responseTimeMs: Long? = null,
-    @SerialName("checked_at") val checkedAt: String
+    @SerialName("checked_at") val checkedAt: String,
 )
 
 @Serializable
