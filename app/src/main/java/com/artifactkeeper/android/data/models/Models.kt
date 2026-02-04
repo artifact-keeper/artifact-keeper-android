@@ -79,15 +79,16 @@ data class RepositoryListResponse(
 @Serializable
 data class Artifact(
     val id: String,
-    @SerialName("repository_id") val repositoryId: String,
+    @SerialName("repository_key") val repositoryKey: String? = null,
     val name: String,
     val path: String,
     val version: String? = null,
-    @SerialName("content_type") val contentType: String,
-    @SerialName("size_bytes") val sizeBytes: Long,
-    @SerialName("download_count") val downloadCount: Int,
-    @SerialName("checksum_sha256") val checksumSha256: String,
+    @SerialName("content_type") val contentType: String? = null,
+    @SerialName("size_bytes") val sizeBytes: Long = 0,
+    @SerialName("download_count") val downloadCount: Int = 0,
+    @SerialName("checksum_sha256") val checksumSha256: String? = null,
     @SerialName("created_at") val createdAt: String,
+    val metadata: kotlinx.serialization.json.JsonElement? = null,
 )
 
 @Serializable

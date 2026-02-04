@@ -270,7 +270,7 @@ private fun ArtifactCard(artifact: Artifact, repoKey: String) {
             Spacer(modifier = Modifier.height(4.dp))
 
             Text(
-                text = artifact.contentType,
+                text = artifact.contentType ?: "",
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
