@@ -27,7 +27,6 @@ import com.artifactkeeper.android.data.models.AdminStats
 import com.artifactkeeper.android.data.models.StorageBreakdownItem
 import com.artifactkeeper.android.ui.util.formatBytes
 import com.artifactkeeper.android.ui.util.formatDownloadCount
-import kotlinx.coroutines.async
 import kotlinx.coroutines.launch
 
 @Composable
@@ -44,10 +43,8 @@ fun AnalyticsScreen() {
             if (refresh) isRefreshing = true else isLoading = true
             errorMessage = null
             try {
-                val statsDeferred = async { ApiClient.api.getAdminStats() }
-                val breakdownDeferred = async { ApiClient.api.getStorageBreakdown() }
-                stats = statsDeferred.await()
-                storageBreakdown = breakdownDeferred.await()
+                stats = ApiClient.api.getAdminStats()
+                storageBreakdown = ApiClient.api.getStorageBreakdown()
             } catch (e: Exception) {
                 errorMessage = e.message ?: "Failed to load analytics"
             } finally {

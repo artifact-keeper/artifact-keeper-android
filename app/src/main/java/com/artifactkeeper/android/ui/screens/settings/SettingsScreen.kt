@@ -293,13 +293,14 @@ fun SettingsScreen(onBack: () -> Unit, onDisconnect: () -> Unit = {}) {
                                         LoginRequest(username.trim(), password)
                                     )
                                     ApiClient.setToken(response.accessToken)
-                                    currentUser = response.user
+                                    val user = ApiClient.api.getMe()
+                                    currentUser = user
                                     prefs.edit()
                                         .putString("auth_token", response.accessToken)
-                                        .putString("user_id", response.user.id)
-                                        .putString("user_username", response.user.username)
-                                        .putString("user_email", response.user.email)
-                                        .putBoolean("user_is_admin", response.user.isAdmin)
+                                        .putString("user_id", user.id)
+                                        .putString("user_username", user.username)
+                                        .putString("user_email", user.email)
+                                        .putBoolean("user_is_admin", user.isAdmin)
                                         .apply()
                                     username = ""
                                     password = ""

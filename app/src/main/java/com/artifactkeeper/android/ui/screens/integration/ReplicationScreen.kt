@@ -24,7 +24,6 @@ import com.artifactkeeper.android.data.models.PeerInstance
 import com.artifactkeeper.android.data.models.Repository
 import com.artifactkeeper.android.ui.util.formatBytes
 import com.artifactkeeper.android.ui.util.formatRelativeTime
-import kotlinx.coroutines.async
 import kotlinx.coroutines.launch
 
 private val ReplicationOnline = Color(0xFF52C41A)
@@ -47,10 +46,8 @@ fun ReplicationScreen() {
             if (refresh) isRefreshing = true else isLoading = true
             errorMessage = null
             try {
-                val peersDeferred = async { ApiClient.api.listPeers() }
-                val reposDeferred = async { ApiClient.api.listRepositories(perPage = 100) }
-                peers = peersDeferred.await().items
-                repositories = reposDeferred.await().items
+                peers = ApiClient.api.listPeers().items
+                repositories = ApiClient.api.listRepositories(perPage = 100).items
             } catch (e: Exception) {
                 errorMessage = e.message ?: "Failed to load replication data"
             } finally {

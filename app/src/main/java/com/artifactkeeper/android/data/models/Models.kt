@@ -137,7 +137,9 @@ data class LoginRequest(val username: String, val password: String)
 data class LoginResponse(
     @SerialName("access_token") val accessToken: String,
     @SerialName("refresh_token") val refreshToken: String? = null,
-    val user: UserInfo,
+    @SerialName("expires_in") val expiresIn: Long = 0,
+    @SerialName("token_type") val tokenType: String = "Bearer",
+    @SerialName("must_change_password") val mustChangePassword: Boolean = false,
 )
 
 @Serializable
@@ -145,6 +147,7 @@ data class UserInfo(
     val id: String,
     val username: String,
     val email: String? = null,
+    @SerialName("display_name") val displayName: String? = null,
     @SerialName("is_admin") val isAdmin: Boolean = false,
 )
 

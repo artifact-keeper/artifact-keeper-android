@@ -28,7 +28,6 @@ import com.artifactkeeper.android.ui.theme.Low
 import com.artifactkeeper.android.ui.theme.Medium
 import com.artifactkeeper.android.ui.util.formatRelativeTime
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.async
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.Json
@@ -56,22 +55,16 @@ fun MonitoringScreen() {
             errorMessage = null
             try {
                 // Fetch health via OkHttp directly (not under /api/v1)
-                val healthDeferred = async {
-                    withContext(Dispatchers.IO) {
-                        val healthUrl = ApiClient.baseUrl + "health"
-                        val client = OkHttpClient()
-                        val request = Request.Builder().url(healthUrl).build()
-                        val response = client.newCall(request).execute()
-                        val body = response.body?.string() ?: "{}"
-                        json.decodeFromString<HealthResponse>(body)
-                    }
+                health = withContext(Dispatchers.IO) {
+                    val healthUrl = ApiClient.baseUrl + "health"
+                    val client = OkHttpClient()
+                    val request = Request.Builder().url(healthUrl).build()
+                    val response = client.newCall(request).execute()
+                    val body = response.body?.string() ?: "{}"
+                    json.decodeFromString<HealthResponse>(body)
                 }
-                val alertsDeferred = async { ApiClient.api.getAlerts() }
-                val logDeferred = async { ApiClient.api.getHealthLog() }
-
-                health = healthDeferred.await()
-                alerts = alertsDeferred.await()
-                healthLog = logDeferred.await()
+                alerts = ApiClient.api.getAlerts()
+                healthLog = ApiClient.api.getHealthLog()
             } catch (e: Exception) {
                 errorMessage = e.message ?: "Failed to load monitoring data"
             } finally {

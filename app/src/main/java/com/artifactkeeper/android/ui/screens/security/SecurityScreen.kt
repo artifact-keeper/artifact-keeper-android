@@ -21,7 +21,6 @@ import com.artifactkeeper.android.ui.theme.Critical
 import com.artifactkeeper.android.ui.theme.High
 import com.artifactkeeper.android.ui.theme.Low
 import com.artifactkeeper.android.ui.theme.Medium
-import kotlinx.coroutines.async
 import kotlinx.coroutines.launch
 
 private val GradeA = Color(0xFF52C41A)
@@ -45,10 +44,8 @@ fun SecurityScreen() {
             if (refresh) isRefreshing = true else isLoading = true
             errorMessage = null
             try {
-                val scoresDeferred = async { ApiClient.api.getSecurityScores() }
-                val reposDeferred = async { ApiClient.api.listRepositories(perPage = 100) }
-                scores = scoresDeferred.await()
-                val repos = reposDeferred.await().items
+                scores = ApiClient.api.getSecurityScores()
+                val repos = ApiClient.api.listRepositories(perPage = 100).items
                 repoMap = repos.associateBy { it.id }
             } catch (e: Exception) {
                 errorMessage = e.message ?: "Failed to load security data"

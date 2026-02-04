@@ -18,6 +18,7 @@ import com.artifactkeeper.android.data.models.HealthLogEntry
 import com.artifactkeeper.android.data.models.HealthResponse
 import com.artifactkeeper.android.data.models.LoginRequest
 import com.artifactkeeper.android.data.models.LoginResponse
+import com.artifactkeeper.android.data.models.UserInfo
 import com.artifactkeeper.android.data.models.PackageListResponse
 import com.artifactkeeper.android.data.models.PeerConnection
 import com.artifactkeeper.android.data.models.PeerInstance
@@ -93,6 +94,9 @@ interface ArtifactKeeperApi {
 
     @POST("/api/v1/auth/login")
     suspend fun login(@Body request: LoginRequest): LoginResponse
+
+    @GET("/api/v1/auth/me")
+    suspend fun getMe(): UserInfo
 
     // --- Admin: Users ---
     @GET("api/v1/users")
