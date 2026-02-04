@@ -1,6 +1,8 @@
 package com.artifactkeeper.android.ui
 
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
@@ -10,10 +12,13 @@ import androidx.compose.material.icons.filled.Inventory2
 import androidx.compose.material.icons.filled.Link
 import androidx.compose.material.icons.filled.Shield
 import androidx.compose.material3.*
+import androidx.compose.material3.windowsizeclass.WindowWidthSizeClass
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.dp
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
@@ -43,22 +48,25 @@ import com.artifactkeeper.android.ui.screens.welcome.WelcomeScreen
 private data class BottomTab(
     val route: String,
     val label: String,
+    val compactLabel: String,
     val icon: ImageVector,
 )
 
 private val bottomTabs = listOf(
-    BottomTab("artifacts", "Artifacts", Icons.Default.Inventory2),
-    BottomTab("integration", "Integration", Icons.Default.Link),
-    BottomTab("security", "Security", Icons.Default.Shield),
-    BottomTab("operations", "Operations", Icons.Default.BarChart),
-    BottomTab("admin", "Admin", Icons.Default.AdminPanelSettings),
+    BottomTab("artifacts", "Artifacts", "Artifacts", Icons.Default.Inventory2),
+    BottomTab("integration", "Integration", "Integr.", Icons.Default.Link),
+    BottomTab("security", "Security", "Security", Icons.Default.Shield),
+    BottomTab("operations", "Operations", "Ops", Icons.Default.BarChart),
+    BottomTab("admin", "Admin", "Admin", Icons.Default.AdminPanelSettings),
 )
 
 private val sectionRoutes = bottomTabs.map { it.route }.toSet()
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun ArtifactKeeperNavHost() {
+fun ArtifactKeeperNavHost(
+    widthSizeClass: WindowWidthSizeClass = WindowWidthSizeClass.Medium,
+) {
     val context = LocalContext.current
     val prefs = remember {
         context.getSharedPreferences("artifact_keeper_prefs", android.content.Context.MODE_PRIVATE)
@@ -88,6 +96,7 @@ fun ArtifactKeeperNavHost() {
         )
     } else {
         MainAppScaffold(
+            widthSizeClass = widthSizeClass,
             onDisconnect = {
                 prefs.edit()
                     .remove("server_url")
@@ -106,9 +115,14 @@ fun ArtifactKeeperNavHost() {
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun MainAppScaffold(onDisconnect: () -> Unit) {
+private fun MainAppScaffold(
+    widthSizeClass: WindowWidthSizeClass,
+    onDisconnect: () -> Unit,
+) {
     val navController = rememberNavController()
     var selectedTab by remember { mutableIntStateOf(0) }
+    val useRail = widthSizeClass == WindowWidthSizeClass.Expanded
+    val isCompact = widthSizeClass == WindowWidthSizeClass.Compact
 
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = navBackStackEntry?.destination?.route
@@ -119,82 +133,133 @@ private fun MainAppScaffold(onDisconnect: () -> Unit) {
         if (idx >= 0) selectedTab = idx
     }
 
-    val showBottomBar = currentRoute in sectionRoutes || currentRoute == null
+    val showNav = currentRoute in sectionRoutes || currentRoute == null
 
-    Scaffold(
-        bottomBar = {
-            if (showBottomBar) {
-                NavigationBar {
-                    bottomTabs.forEachIndexed { index, tab ->
-                        NavigationBarItem(
-                            icon = { Icon(tab.icon, contentDescription = tab.label) },
-                            label = { Text(tab.label) },
-                            selected = selectedTab == index,
-                            onClick = {
-                                selectedTab = index
-                                navController.navigate(tab.route) {
-                                    popUpTo("artifacts") { saveState = true }
-                                    launchSingleTop = true
-                                    restoreState = true
-                                }
-                            },
-                        )
-                    }
+    if (useRail && showNav) {
+        // Expanded: NavigationRail on the left
+        Row(modifier = Modifier.fillMaxSize()) {
+            NavigationRail {
+                bottomTabs.forEachIndexed { index, tab ->
+                    NavigationRailItem(
+                        icon = { Icon(tab.icon, contentDescription = tab.label) },
+                        label = { Text(tab.label) },
+                        selected = selectedTab == index,
+                        onClick = {
+                            selectedTab = index
+                            navController.navigate(tab.route) {
+                                popUpTo("artifacts") { saveState = true }
+                                launchSingleTop = true
+                                restoreState = true
+                            }
+                        },
+                    )
                 }
             }
-        },
-    ) { innerPadding ->
-        NavHost(
-            navController = navController,
-            startDestination = "artifacts",
-            modifier = Modifier.padding(innerPadding),
-        ) {
-            composable("artifacts") {
-                ArtifactsSection(
-                    onRepoClick = { key -> navController.navigate("repos/$key") },
-                )
+            NavHost(
+                navController = navController,
+                startDestination = "artifacts",
+                modifier = Modifier.fillMaxHeight().weight(1f),
+            ) {
+                composable("artifacts") {
+                    ArtifactsSection(
+                        isCompact = false,
+                        onRepoClick = { key -> navController.navigate("repos/$key") },
+                    )
+                }
+                composable("integration") { IntegrationSection(isCompact = false) }
+                composable("security") { SecuritySection(isCompact = false) }
+                composable("operations") { OperationsSection(isCompact = false) }
+                composable("admin") { AdminSection(isCompact = false, onDisconnect = onDisconnect) }
+                composable("repos/{key}") { backStackEntry ->
+                    val key = backStackEntry.arguments?.getString("key") ?: return@composable
+                    RepositoryDetailScreen(
+                        repoKey = key,
+                        onBack = { navController.popBackStack() },
+                    )
+                }
             }
-            composable("integration") {
-                IntegrationSection()
-            }
-            composable("security") {
-                SecuritySection()
-            }
-            composable("operations") {
-                OperationsSection()
-            }
-            composable("admin") {
-                AdminSection(onDisconnect = onDisconnect)
-            }
-            composable("repos/{key}") { backStackEntry ->
-                val key = backStackEntry.arguments?.getString("key") ?: return@composable
-                RepositoryDetailScreen(
-                    repoKey = key,
-                    onBack = { navController.popBackStack() },
-                )
+        }
+    } else {
+        // Compact / Medium: Bottom NavigationBar
+        Scaffold(
+            bottomBar = {
+                if (showNav) {
+                    NavigationBar {
+                        bottomTabs.forEachIndexed { index, tab ->
+                            NavigationBarItem(
+                                icon = { Icon(tab.icon, contentDescription = tab.label) },
+                                label = {
+                                    Text(
+                                        text = if (isCompact) tab.compactLabel else tab.label,
+                                        maxLines = 1,
+                                        overflow = TextOverflow.Ellipsis,
+                                        style = MaterialTheme.typography.labelSmall,
+                                    )
+                                },
+                                selected = selectedTab == index,
+                                onClick = {
+                                    selectedTab = index
+                                    navController.navigate(tab.route) {
+                                        popUpTo("artifacts") { saveState = true }
+                                        launchSingleTop = true
+                                        restoreState = true
+                                    }
+                                },
+                            )
+                        }
+                    }
+                }
+            },
+        ) { innerPadding ->
+            NavHost(
+                navController = navController,
+                startDestination = "artifacts",
+                modifier = Modifier.padding(innerPadding),
+            ) {
+                composable("artifacts") {
+                    ArtifactsSection(
+                        isCompact = isCompact,
+                        onRepoClick = { key -> navController.navigate("repos/$key") },
+                    )
+                }
+                composable("integration") { IntegrationSection(isCompact = isCompact) }
+                composable("security") { SecuritySection(isCompact = isCompact) }
+                composable("operations") { OperationsSection(isCompact = isCompact) }
+                composable("admin") { AdminSection(isCompact = isCompact, onDisconnect = onDisconnect) }
+                composable("repos/{key}") { backStackEntry ->
+                    val key = backStackEntry.arguments?.getString("key") ?: return@composable
+                    RepositoryDetailScreen(
+                        repoKey = key,
+                        onBack = { navController.popBackStack() },
+                    )
+                }
             }
         }
     }
 }
 
 // ---------------------------------------------------------------------------
-// Section composables with sub-tab rows
+// Section composables with adaptive sub-tab rows
 // ---------------------------------------------------------------------------
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun ArtifactsSection(onRepoClick: (String) -> Unit) {
-    val subTabs = listOf("Repositories", "Packages", "Builds", "Search")
+private fun ArtifactsSection(isCompact: Boolean, onRepoClick: (String) -> Unit) {
+    val subTabs = if (isCompact) listOf("Repos", "Pkgs", "Builds", "Search")
+                  else listOf("Repositories", "Packages", "Builds", "Search")
     var selectedTab by remember { mutableIntStateOf(0) }
 
     Column(modifier = Modifier.fillMaxSize()) {
         TopAppBar(title = { Text("Artifacts") })
-        TabRow(selectedTabIndex = selectedTab) {
+        ScrollableTabRow(
+            selectedTabIndex = selectedTab,
+            edgePadding = if (isCompact) 4.dp else 16.dp,
+        ) {
             subTabs.forEachIndexed { index, title ->
                 Tab(
                     selected = selectedTab == index,
                     onClick = { selectedTab = index },
-                    text = { Text(title) },
+                    text = { Text(title, maxLines = 1) },
                 )
             }
         }
@@ -209,18 +274,21 @@ private fun ArtifactsSection(onRepoClick: (String) -> Unit) {
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun IntegrationSection() {
+private fun IntegrationSection(isCompact: Boolean) {
     val subTabs = listOf("Peers", "Replication", "Webhooks")
     var selectedTab by remember { mutableIntStateOf(0) }
 
     Column(modifier = Modifier.fillMaxSize()) {
         TopAppBar(title = { Text("Integration") })
-        TabRow(selectedTabIndex = selectedTab) {
+        ScrollableTabRow(
+            selectedTabIndex = selectedTab,
+            edgePadding = if (isCompact) 4.dp else 16.dp,
+        ) {
             subTabs.forEachIndexed { index, title ->
                 Tab(
                     selected = selectedTab == index,
                     onClick = { selectedTab = index },
-                    text = { Text(title) },
+                    text = { Text(title, maxLines = 1) },
                 )
             }
         }
@@ -234,18 +302,21 @@ private fun IntegrationSection() {
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun SecuritySection() {
+private fun SecuritySection(isCompact: Boolean) {
     val subTabs = listOf("Dashboard", "Scans", "Policies")
     var selectedTab by remember { mutableIntStateOf(0) }
 
     Column(modifier = Modifier.fillMaxSize()) {
         TopAppBar(title = { Text("Security") })
-        TabRow(selectedTabIndex = selectedTab) {
+        ScrollableTabRow(
+            selectedTabIndex = selectedTab,
+            edgePadding = if (isCompact) 4.dp else 16.dp,
+        ) {
             subTabs.forEachIndexed { index, title ->
                 Tab(
                     selected = selectedTab == index,
                     onClick = { selectedTab = index },
-                    text = { Text(title) },
+                    text = { Text(title, maxLines = 1) },
                 )
             }
         }
@@ -259,18 +330,22 @@ private fun SecuritySection() {
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun OperationsSection() {
-    val subTabs = listOf("Analytics", "Monitoring", "Telemetry")
+private fun OperationsSection(isCompact: Boolean) {
+    val subTabs = if (isCompact) listOf("Stats", "Health", "Metrics")
+                  else listOf("Analytics", "Monitoring", "Telemetry")
     var selectedTab by remember { mutableIntStateOf(0) }
 
     Column(modifier = Modifier.fillMaxSize()) {
         TopAppBar(title = { Text("Operations") })
-        TabRow(selectedTabIndex = selectedTab) {
+        ScrollableTabRow(
+            selectedTabIndex = selectedTab,
+            edgePadding = if (isCompact) 4.dp else 16.dp,
+        ) {
             subTabs.forEachIndexed { index, title ->
                 Tab(
                     selected = selectedTab == index,
                     onClick = { selectedTab = index },
-                    text = { Text(title) },
+                    text = { Text(title, maxLines = 1) },
                 )
             }
         }
@@ -284,18 +359,21 @@ private fun OperationsSection() {
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun AdminSection(onDisconnect: () -> Unit) {
+private fun AdminSection(isCompact: Boolean, onDisconnect: () -> Unit) {
     val subTabs = listOf("Users", "Groups", "SSO", "Settings")
     var selectedTab by remember { mutableIntStateOf(0) }
 
     Column(modifier = Modifier.fillMaxSize()) {
         TopAppBar(title = { Text("Admin") })
-        ScrollableTabRow(selectedTabIndex = selectedTab) {
+        ScrollableTabRow(
+            selectedTabIndex = selectedTab,
+            edgePadding = if (isCompact) 4.dp else 16.dp,
+        ) {
             subTabs.forEachIndexed { index, title ->
                 Tab(
                     selected = selectedTab == index,
                     onClick = { selectedTab = index },
-                    text = { Text(title) },
+                    text = { Text(title, maxLines = 1) },
                 )
             }
         }
