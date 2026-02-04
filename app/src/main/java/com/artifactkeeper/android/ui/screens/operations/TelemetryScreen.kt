@@ -18,7 +18,6 @@ import com.artifactkeeper.android.data.api.ApiClient
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import okhttp3.OkHttpClient
 import okhttp3.Request
 
 data class MetricEntry(
@@ -42,7 +41,7 @@ fun TelemetryScreen() {
             try {
                 val result = withContext(Dispatchers.IO) {
                     val metricsUrl = ApiClient.baseUrl + "metrics"
-                    val client = OkHttpClient()
+                    val client = ApiClient.httpClient
                     val request = Request.Builder().url(metricsUrl).build()
                     val response = client.newCall(request).execute()
                     val body = response.body?.string() ?: ""

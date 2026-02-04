@@ -31,7 +31,6 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.Json
-import okhttp3.OkHttpClient
 import okhttp3.Request
 
 private val StatusOk = Color(0xFF52C41A)
@@ -57,7 +56,7 @@ fun MonitoringScreen() {
                 // Fetch health via OkHttp directly (not under /api/v1)
                 health = withContext(Dispatchers.IO) {
                     val healthUrl = ApiClient.baseUrl + "health"
-                    val client = OkHttpClient()
+                    val client = ApiClient.httpClient
                     val request = Request.Builder().url(healthUrl).build()
                     val response = client.newCall(request).execute()
                     val body = response.body?.string() ?: "{}"

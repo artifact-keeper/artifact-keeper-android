@@ -61,6 +61,8 @@ object ApiClient {
     var api: ArtifactKeeperApi = buildRetrofit().create(ArtifactKeeperApi::class.java)
         private set
 
+    val httpClient: OkHttpClient get() = buildClient()
+
     val baseUrl: String get() = _baseUrl
 
     val token: String? get() = _token
