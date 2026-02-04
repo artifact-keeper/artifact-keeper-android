@@ -54,7 +54,7 @@ private data class BottomTab(
     val icon: ImageVector,
 )
 
-private val bottomTabs = listOf(
+private val allBottomTabs = listOf(
     BottomTab("artifacts", "Artifacts", "Artifacts", Icons.Default.Inventory2),
     BottomTab("integration", "Integration", "Integr.", Icons.Default.Link),
     BottomTab("security", "Security", "Security", Icons.Default.Shield),
@@ -62,7 +62,17 @@ private val bottomTabs = listOf(
     BottomTab("admin", "Admin", "Admin", Icons.Default.AdminPanelSettings),
 )
 
-private val sectionRoutes = bottomTabs.map { it.route }.toSet()
+private fun visibleTabs(isLoggedIn: Boolean, isAdmin: Boolean): List<BottomTab> {
+    return allBottomTabs.filter { tab ->
+        when (tab.route) {
+            "artifacts" -> true
+            "admin" -> isAdmin
+            else -> isLoggedIn // integration, security, operations
+        }
+    }
+}
+
+private val allSectionRoutes = allBottomTabs.map { it.route }.toSet()
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -175,16 +185,31 @@ private fun MainAppScaffold(
         )
     }
 
+    val isLoggedIn = currentUser != null
+    val isAdmin = currentUser?.isAdmin == true
+    val bottomTabs = visibleTabs(isLoggedIn, isAdmin)
+
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = navBackStackEntry?.destination?.route
 
     // Sync selectedTab when route changes (e.g. back navigation)
-    LaunchedEffect(currentRoute) {
+    LaunchedEffect(currentRoute, bottomTabs) {
         val idx = bottomTabs.indexOfFirst { it.route == currentRoute }
         if (idx >= 0) selectedTab = idx
     }
 
-    val showNav = currentRoute in sectionRoutes || currentRoute == null
+    // Reset to first tab if current tab becomes hidden after logout
+    LaunchedEffect(bottomTabs) {
+        if (selectedTab >= bottomTabs.size) {
+            selectedTab = 0
+            navController.navigate("artifacts") {
+                popUpTo("artifacts") { inclusive = true }
+                launchSingleTop = true
+            }
+        }
+    }
+
+    val showNav = currentRoute in allSectionRoutes || currentRoute == null
 
     if (useRail && showNav) {
         // Expanded: NavigationRail on the left
