@@ -6,16 +6,10 @@
             <certificates src="system" />
         </trust-anchors>
     </debug-overrides>
-    <base-config cleartextTrafficPermitted="false">
+    <!-- Allow cleartext HTTP for self-hosted servers (user explicitly enters http://) -->
+    <base-config cleartextTrafficPermitted="true">
         <trust-anchors>
             <certificates src="system" />
         </trust-anchors>
     </base-config>
-    <domain-config cleartextTrafficPermitted="false">
-        <domain includeSubdomains="true">192.168.42.186</domain>
-        <trust-anchors>
-            <certificates src="user" />
-            <certificates src="system" />
-        </trust-anchors>
-    </domain-config>
 </network-security-config>
