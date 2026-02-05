@@ -71,7 +71,7 @@ object ServerManager {
         val server = _servers.value.find { it.id == id } ?: return
         _activeServerId.value = id
         saveToPrefs()
-        ApiClient.configure(server.url, ApiClient.token)
+        ApiClient.configure(server.url, null)
     }
 
     fun migrateIfNeeded(context: Context) {

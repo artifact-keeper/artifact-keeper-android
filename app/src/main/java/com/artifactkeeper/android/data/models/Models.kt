@@ -179,6 +179,11 @@ data class LoginResponse(
 )
 
 @Serializable
+data class SetupStatusResponse(
+    @SerialName("setup_required") val setupRequired: Boolean,
+)
+
+@Serializable
 data class UserInfo(
     val id: String,
     val username: String,

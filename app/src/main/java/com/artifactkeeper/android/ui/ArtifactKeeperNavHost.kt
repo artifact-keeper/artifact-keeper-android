@@ -26,6 +26,7 @@ import androidx.navigation.compose.rememberNavController
 import com.artifactkeeper.android.data.ServerManager
 import com.artifactkeeper.android.data.api.ApiClient
 import com.artifactkeeper.android.data.models.UserInfo
+import androidx.compose.runtime.collectAsState
 import com.artifactkeeper.android.ui.components.AccountMenu
 import com.artifactkeeper.android.ui.screens.admin.GroupsScreen
 import com.artifactkeeper.android.ui.screens.admin.SSOScreen
@@ -162,9 +163,14 @@ private fun MainAppScaffold(
         }
     }
 
+    val servers by ServerManager.servers.collectAsState()
+    val activeServerId by ServerManager.activeServerId.collectAsState()
+
     val accountActions: @Composable () -> Unit = {
         AccountMenu(
             currentUser = currentUser,
+            servers = servers,
+            activeServerId = activeServerId,
             onLoggedIn = { user, token, forceChangePassword ->
                 currentUser = user
                 prefs.edit()
@@ -189,6 +195,59 @@ private fun MainAppScaffold(
                     .remove("user_email")
                     .remove("user_is_admin")
                     .apply()
+            },
+            onSwitchServer = { serverId ->
+                currentUser = null
+                ApiClient.setToken(null)
+                prefs.edit()
+                    .remove("auth_token")
+                    .remove("user_id")
+                    .remove("user_username")
+                    .remove("user_email")
+                    .remove("user_is_admin")
+                    .apply()
+                ServerManager.switchTo(serverId)
+                val server = ServerManager.getActiveServer()
+                if (server != null) {
+                    prefs.edit().putString("server_url", server.url).apply()
+                }
+            },
+            onAddServer = { name, url ->
+                ServerManager.addServer(name = name, url = url)
+                val server = ServerManager.getActiveServer()
+                if (server != null) {
+                    prefs.edit().putString("server_url", server.url).apply()
+                    currentUser = null
+                    ApiClient.setToken(null)
+                    prefs.edit()
+                        .remove("auth_token")
+                        .remove("user_id")
+                        .remove("user_username")
+                        .remove("user_email")
+                        .remove("user_is_admin")
+                        .apply()
+                }
+            },
+            onRemoveServer = { serverId ->
+                val wasActive = serverId == activeServerId
+                ServerManager.removeServer(serverId)
+                if (wasActive) {
+                    val remaining = ServerManager.getActiveServer()
+                    if (remaining != null) {
+                        prefs.edit().putString("server_url", remaining.url).apply()
+                    } else {
+                        onDisconnect()
+                    }
+                    currentUser = null
+                    ApiClient.setToken(null)
+                    prefs.edit()
+                        .remove("auth_token")
+                        .remove("user_id")
+                        .remove("user_username")
+                        .remove("user_email")
+                        .remove("user_is_admin")
+                        .apply()
+                }
             },
         )
     }

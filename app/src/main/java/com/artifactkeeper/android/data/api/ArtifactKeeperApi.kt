@@ -19,6 +19,7 @@ import com.artifactkeeper.android.data.models.HealthLogEntry
 import com.artifactkeeper.android.data.models.HealthResponse
 import com.artifactkeeper.android.data.models.LoginRequest
 import com.artifactkeeper.android.data.models.LoginResponse
+import com.artifactkeeper.android.data.models.SetupStatusResponse
 import com.artifactkeeper.android.data.models.UserInfo
 import com.artifactkeeper.android.data.models.PackageListResponse
 import com.artifactkeeper.android.data.models.PeerConnection
@@ -106,6 +107,9 @@ interface ArtifactKeeperApi {
 
     @GET("/api/v1/auth/me")
     suspend fun getMe(): UserInfo
+
+    @GET("/api/v1/setup/status")
+    suspend fun getSetupStatus(): SetupStatusResponse
 
     // --- Admin: Users ---
     @GET("api/v1/users")
