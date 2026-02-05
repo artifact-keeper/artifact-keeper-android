@@ -352,7 +352,7 @@ private fun AddServerDialog(
                         error = null
                         try {
                             ApiClient.configure(url.trim(), null)
-                            ApiClient.api.listRepositories()
+                            ApiClient.api.getHealth()
                             onServerAdded(name.trim(), url.trim())
                         } catch (e: Exception) {
                             error = e.message ?: "Failed to connect to server"

@@ -121,7 +121,7 @@ fun WelcomeScreen(onConnected: () -> Unit) {
                         errorMessage = null
                         try {
                             ApiClient.configure(url)
-                            ApiClient.api.listRepositories(page = 1, perPage = 1)
+                            ApiClient.api.getHealth()
                             // Connection succeeded -- save and register with ServerManager
                             prefs.edit().putString("server_url", url).apply()
                             val host = try {
