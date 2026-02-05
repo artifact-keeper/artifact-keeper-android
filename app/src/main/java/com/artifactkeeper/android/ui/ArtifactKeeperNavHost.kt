@@ -104,6 +104,8 @@ fun ArtifactKeeperNavHost(
         mutableStateOf(savedUrl?.isNotBlank() == true)
     }
 
+    val outerActiveServerId by ServerManager.activeServerId.collectAsState()
+
     if (!isConfigured) {
         WelcomeScreen(
             onConnected = {
@@ -111,6 +113,7 @@ fun ArtifactKeeperNavHost(
             },
         )
     } else {
+        key(outerActiveServerId) {
         MainAppScaffold(
             widthSizeClass = widthSizeClass,
             onDisconnect = {
@@ -126,6 +129,7 @@ fun ArtifactKeeperNavHost(
                 isConfigured = false
             },
         )
+        }
     }
 }
 
