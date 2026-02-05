@@ -1,5 +1,6 @@
 package com.artifactkeeper.android.ui.components
 
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AccountCircle
@@ -20,6 +21,7 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import com.artifactkeeper.android.data.api.ApiClient
 import com.artifactkeeper.android.data.models.LoginRequest
@@ -32,11 +34,13 @@ fun AccountMenu(
     currentUser: UserInfo?,
     servers: List<SavedServer>,
     activeServerId: String?,
+    serverStatuses: Map<String, Boolean>,
     onLoggedIn: (UserInfo, String, Boolean) -> Unit,
     onLoggedOut: () -> Unit,
     onSwitchServer: (String) -> Unit,
     onAddServer: (String, String) -> Unit,
     onRemoveServer: (String) -> Unit,
+    onRefreshStatuses: () -> Unit,
 ) {
     var showAccountMenu by remember { mutableStateOf(false) }
     var showServerMenu by remember { mutableStateOf(false) }
@@ -51,6 +55,12 @@ fun AccountMenu(
             setupRequired = status.setupRequired
         } catch (_: Exception) {
             setupRequired = false
+        }
+    }
+
+    LaunchedEffect(showServerMenu) {
+        if (showServerMenu) {
+            onRefreshStatuses()
         }
     }
 
@@ -71,8 +81,15 @@ fun AccountMenu(
                 DropdownMenuItem(
                     text = { Text(server.name) },
                     leadingIcon = {
-                        if (server.id == activeServerId) {
-                            Icon(Icons.Default.Check, contentDescription = "Active")
+                        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                            Canvas(modifier = Modifier.size(8.dp)) {
+                                drawCircle(
+                                    color = if (serverStatuses[server.id] == true) Color(0xFF4CAF50) else Color(0xFF9E9E9E),
+                                )
+                            }
+                            if (server.id == activeServerId) {
+                                Icon(Icons.Default.Check, contentDescription = "Active", modifier = Modifier.size(18.dp))
+                            }
                         }
                     },
                     trailingIcon = {

@@ -4,11 +4,15 @@ import android.content.Context
 import android.content.SharedPreferences
 import com.artifactkeeper.android.data.api.ApiClient
 import com.artifactkeeper.android.data.models.SavedServer
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.withContext
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
+import java.net.HttpURLConnection
+import java.net.URL
 
 object ServerManager {
     private const val PREFS_NAME = "artifact_keeper_prefs"
@@ -23,6 +27,28 @@ object ServerManager {
 
     private val _activeServerId = MutableStateFlow<String?>(null)
     val activeServerId: StateFlow<String?> = _activeServerId.asStateFlow()
+
+    private val _serverStatuses = MutableStateFlow<Map<String, Boolean>>(emptyMap())
+    val serverStatuses: StateFlow<Map<String, Boolean>> = _serverStatuses.asStateFlow()
+
+    suspend fun refreshStatuses() = withContext(Dispatchers.IO) {
+        val results = mutableMapOf<String, Boolean>()
+        for (server in _servers.value) {
+            results[server.id] = try {
+                val url = URL("${server.url}health")
+                val conn = url.openConnection() as HttpURLConnection
+                conn.connectTimeout = 5000
+                conn.readTimeout = 5000
+                conn.requestMethod = "GET"
+                val code = conn.responseCode
+                conn.disconnect()
+                code in 200..299
+            } catch (_: Exception) {
+                false
+            }
+        }
+        _serverStatuses.value = results
+    }
 
     fun init(context: Context) {
         prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)

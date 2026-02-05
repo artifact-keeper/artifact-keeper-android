@@ -212,7 +212,7 @@ interface ArtifactKeeperApi {
     suspend fun getAlerts(): List<AlertState>
 
     // --- Password ---
-    @POST("api/v1/admin/users/{id}/password")
+    @POST("api/v1/users/{id}/password")
     suspend fun changePassword(@Path("id") userId: String, @Body request: ChangePasswordRequest)
 
     // --- Health ---
