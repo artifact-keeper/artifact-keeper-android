@@ -176,6 +176,8 @@ data class LoginResponse(
     @SerialName("expires_in") val expiresIn: Long = 0,
     @SerialName("token_type") val tokenType: String = "Bearer",
     @SerialName("must_change_password") val mustChangePassword: Boolean = false,
+    @SerialName("totp_required") val totpRequired: Boolean? = null,
+    @SerialName("totp_token") val totpToken: String? = null,
 )
 
 @Serializable
@@ -190,6 +192,7 @@ data class UserInfo(
     val email: String? = null,
     @SerialName("display_name") val displayName: String? = null,
     @SerialName("is_admin") val isAdmin: Boolean = false,
+    @SerialName("totp_enabled") val totpEnabled: Boolean = false,
 )
 
 // --- Admin ---
@@ -468,3 +471,27 @@ data class AssignRepoRequest(
     @SerialName("repository_id") val repositoryId: String,
     @SerialName("replication_mode") val replicationMode: String = "pull"
 )
+
+// --- TOTP ---
+@Serializable
+data class TotpSetupResponse(
+    val secret: String,
+    @SerialName("qr_code_url") val qrCodeUrl: String,
+)
+
+@Serializable
+data class TotpEnableResponse(
+    @SerialName("backup_codes") val backupCodes: List<String>,
+)
+
+@Serializable
+data class TotpCodeRequest(val code: String)
+
+@Serializable
+data class TotpVerifyRequest(
+    @SerialName("totp_token") val totpToken: String,
+    val code: String,
+)
+
+@Serializable
+data class TotpDisableRequest(val password: String, val code: String)

@@ -10,6 +10,7 @@ import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Dns
 import androidx.compose.material.icons.filled.Login
 import androidx.compose.material.icons.filled.Logout
+import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Shield
 import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.VisibilityOff
@@ -37,6 +38,7 @@ fun AccountMenu(
     serverStatuses: Map<String, Boolean>,
     onLoggedIn: (UserInfo, String, Boolean) -> Unit,
     onLoggedOut: () -> Unit,
+    onProfileClick: () -> Unit = {},
     onSwitchServer: (String) -> Unit,
     onAddServer: (String, String) -> Unit,
     onRemoveServer: (String) -> Unit,
@@ -167,6 +169,14 @@ fun AccountMenu(
                         enabled = false,
                     )
                 }
+                DropdownMenuItem(
+                    text = { Text("Profile") },
+                    leadingIcon = { Icon(Icons.Default.Person, contentDescription = null) },
+                    onClick = {
+                        showAccountMenu = false
+                        onProfileClick()
+                    },
+                )
                 HorizontalDivider()
                 DropdownMenuItem(
                     text = { Text("Sign Out") },

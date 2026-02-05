@@ -49,6 +49,7 @@ import com.artifactkeeper.android.ui.screens.security.ScansScreen
 import com.artifactkeeper.android.ui.screens.security.SecurityScreen
 import com.artifactkeeper.android.ui.screens.settings.SettingsScreen
 import com.artifactkeeper.android.ui.screens.auth.ChangePasswordScreen
+import com.artifactkeeper.android.ui.screens.profile.ProfileScreen
 import com.artifactkeeper.android.ui.screens.welcome.WelcomeScreen
 
 private data class BottomTab(
@@ -152,6 +153,7 @@ private fun MainAppScaffold(
     var currentUser by remember { mutableStateOf<UserInfo?>(null) }
     var mustChangePassword by remember { mutableStateOf(false) }
     var changePasswordUserId by remember { mutableStateOf("") }
+    var showProfile by remember { mutableStateOf(false) }
     LaunchedEffect(Unit) {
         val savedToken = prefs.getString("auth_token", null)
         val savedUsername = prefs.getString("user_username", null)
@@ -203,6 +205,11 @@ private fun MainAppScaffold(
                     .remove("user_email")
                     .remove("user_is_admin")
                     .apply()
+            },
+            onProfileClick = {
+                if (currentUser != null) {
+                    showProfile = true
+                }
             },
             onSwitchServer = { serverId ->
                 currentUser = null
@@ -290,6 +297,23 @@ private fun MainAppScaffold(
     }
 
     val showNav = currentRoute in allSectionRoutes || currentRoute == null
+
+    if (showProfile && currentUser != null) {
+        ProfileScreen(
+            user = currentUser!!,
+            onDismiss = { showProfile = false },
+            onUserUpdated = { updatedUser ->
+                currentUser = updatedUser
+                prefs.edit()
+                    .putString("user_id", updatedUser.id)
+                    .putString("user_username", updatedUser.username)
+                    .putString("user_email", updatedUser.email)
+                    .putBoolean("user_is_admin", updatedUser.isAdmin)
+                    .apply()
+            },
+        )
+        return
+    }
 
     if (mustChangePassword) {
         ChangePasswordScreen(

@@ -9,6 +9,11 @@ import com.artifactkeeper.android.data.models.AssignRepoRequest
 import com.artifactkeeper.android.data.models.BuildListResponse
 import com.artifactkeeper.android.data.models.ChangePasswordRequest
 import com.artifactkeeper.android.data.models.CreateGroupRequest
+import com.artifactkeeper.android.data.models.TotpCodeRequest
+import com.artifactkeeper.android.data.models.TotpDisableRequest
+import com.artifactkeeper.android.data.models.TotpEnableResponse
+import com.artifactkeeper.android.data.models.TotpSetupResponse
+import com.artifactkeeper.android.data.models.TotpVerifyRequest
 import com.artifactkeeper.android.data.models.CreatePolicyRequest
 import com.artifactkeeper.android.data.models.CreateUserRequest
 import com.artifactkeeper.android.data.models.CreateUserResponse
@@ -210,6 +215,19 @@ interface ArtifactKeeperApi {
 
     @GET("api/v1/admin/monitoring/alerts")
     suspend fun getAlerts(): List<AlertState>
+
+    // --- TOTP ---
+    @POST("api/v1/auth/totp/setup")
+    suspend fun totpSetup(): TotpSetupResponse
+
+    @POST("api/v1/auth/totp/enable")
+    suspend fun totpEnable(@Body request: TotpCodeRequest): TotpEnableResponse
+
+    @POST("api/v1/auth/totp/verify")
+    suspend fun totpVerify(@Body request: TotpVerifyRequest): LoginResponse
+
+    @POST("api/v1/auth/totp/disable")
+    suspend fun totpDisable(@Body request: TotpDisableRequest)
 
     // --- Password ---
     @POST("api/v1/users/{id}/password")
