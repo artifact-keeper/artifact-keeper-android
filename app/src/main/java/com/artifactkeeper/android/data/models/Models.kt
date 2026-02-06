@@ -648,3 +648,172 @@ data class LicenseViolation(
     val reason: String,
     val component: String? = null,
 )
+
+// --- Staging / Promotion ---
+
+enum class RepositoryType {
+    LOCAL,
+    REMOTE,
+    VIRTUAL,
+    STAGING;
+
+    companion object {
+        fun fromString(value: String): RepositoryType {
+            return entries.find { it.name.equals(value, ignoreCase = true) } ?: LOCAL
+        }
+    }
+}
+
+enum class PolicyStatus {
+    PASSING,
+    FAILING,
+    WARNING,
+    PENDING;
+
+    companion object {
+        fun fromString(value: String): PolicyStatus {
+            return entries.find { it.name.equals(value, ignoreCase = true) } ?: PENDING
+        }
+    }
+}
+
+@Serializable
+data class PolicyViolation(
+    val id: String,
+    @SerialName("policy_id") val policyId: String,
+    @SerialName("policy_name") val policyName: String,
+    val severity: String,
+    val message: String,
+    val rule: String? = null,
+    @SerialName("artifact_id") val artifactId: String? = null,
+    @SerialName("created_at") val createdAt: String? = null,
+)
+
+@Serializable
+data class CveSummary(
+    val total: Int = 0,
+    @SerialName("critical_count") val criticalCount: Int = 0,
+    @SerialName("high_count") val highCount: Int = 0,
+    @SerialName("medium_count") val mediumCount: Int = 0,
+    @SerialName("low_count") val lowCount: Int = 0,
+)
+
+@Serializable
+data class LicenseSummary(
+    val total: Int = 0,
+    @SerialName("allowed_count") val allowedCount: Int = 0,
+    @SerialName("denied_count") val deniedCount: Int = 0,
+    @SerialName("unknown_count") val unknownCount: Int = 0,
+    val licenses: List<String> = emptyList(),
+)
+
+@Serializable
+data class StagingArtifact(
+    val id: String,
+    @SerialName("repository_key") val repositoryKey: String? = null,
+    val name: String,
+    val path: String,
+    val version: String? = null,
+    @SerialName("content_type") val contentType: String? = null,
+    @SerialName("size_bytes") val sizeBytes: Long = 0,
+    @SerialName("checksum_sha256") val checksumSha256: String? = null,
+    @SerialName("policy_status") val policyStatus: String = "pending",
+    @SerialName("cve_summary") val cveSummary: CveSummary? = null,
+    @SerialName("license_summary") val licenseSummary: LicenseSummary? = null,
+    @SerialName("policy_violations") val policyViolations: List<PolicyViolation> = emptyList(),
+    @SerialName("can_promote") val canPromote: Boolean = true,
+    @SerialName("created_at") val createdAt: String,
+    @SerialName("updated_at") val updatedAt: String? = null,
+)
+
+@Serializable
+data class StagingArtifactListResponse(
+    val items: List<StagingArtifact>,
+    val pagination: Pagination? = null,
+)
+
+@Serializable
+data class StagingRepository(
+    val id: String,
+    val key: String,
+    val name: String,
+    val format: String,
+    @SerialName("repo_type") val repoType: String = "staging",
+    @SerialName("is_public") val isPublic: Boolean = false,
+    val description: String? = null,
+    @SerialName("storage_used_bytes") val storageUsedBytes: Long = 0,
+    @SerialName("artifact_count") val artifactCount: Int = 0,
+    @SerialName("pending_count") val pendingCount: Int = 0,
+    @SerialName("passing_count") val passingCount: Int = 0,
+    @SerialName("failing_count") val failingCount: Int = 0,
+    @SerialName("target_repository_key") val targetRepositoryKey: String? = null,
+    @SerialName("created_at") val createdAt: String,
+    @SerialName("updated_at") val updatedAt: String? = null,
+)
+
+@Serializable
+data class StagingRepositoryListResponse(
+    val items: List<StagingRepository>,
+    val pagination: Pagination? = null,
+)
+
+@Serializable
+data class PromoteArtifactRequest(
+    @SerialName("target_repository_key") val targetRepositoryKey: String,
+    @SerialName("force") val force: Boolean = false,
+    val comment: String? = null,
+)
+
+@Serializable
+data class PromotionResponse(
+    val success: Boolean,
+    val message: String,
+    @SerialName("artifact_id") val artifactId: String,
+    @SerialName("target_repository_key") val targetRepositoryKey: String,
+    @SerialName("promoted_at") val promotedAt: String? = null,
+)
+
+@Serializable
+data class BulkPromoteRequest(
+    @SerialName("artifact_ids") val artifactIds: List<String>,
+    @SerialName("target_repository_key") val targetRepositoryKey: String,
+    @SerialName("force") val force: Boolean = false,
+    val comment: String? = null,
+)
+
+@Serializable
+data class BulkPromotionResult(
+    @SerialName("artifact_id") val artifactId: String,
+    val success: Boolean,
+    val message: String? = null,
+    val error: String? = null,
+)
+
+@Serializable
+data class BulkPromotionResponse(
+    @SerialName("total_requested") val totalRequested: Int,
+    @SerialName("total_succeeded") val totalSucceeded: Int,
+    @SerialName("total_failed") val totalFailed: Int,
+    val results: List<BulkPromotionResult>,
+)
+
+@Serializable
+data class PromotionHistoryEntry(
+    val id: String,
+    @SerialName("artifact_id") val artifactId: String,
+    @SerialName("artifact_name") val artifactName: String? = null,
+    @SerialName("artifact_version") val artifactVersion: String? = null,
+    @SerialName("source_repository_key") val sourceRepositoryKey: String,
+    @SerialName("target_repository_key") val targetRepositoryKey: String,
+    @SerialName("promoted_by") val promotedBy: String? = null,
+    @SerialName("promoted_by_username") val promotedByUsername: String? = null,
+    val comment: String? = null,
+    val forced: Boolean = false,
+    @SerialName("promoted_at") val promotedAt: String,
+)
+
+@Serializable
+data class PromotionHistoryResponse(
+    val items: List<PromotionHistoryEntry>,
+    val pagination: Pagination? = null,
+)

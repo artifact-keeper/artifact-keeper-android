@@ -84,8 +84,4 @@ object ApiClient {
         api = buildRetrofit().create(ArtifactKeeperApi::class.java)
     }
 
-    fun getHealthUrl(): String {
-        val base = _baseUrl.ifBlank { "http://localhost/" }
-        return "${base}health"
-    }
 }

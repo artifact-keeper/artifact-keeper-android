@@ -52,6 +52,11 @@ import com.artifactkeeper.android.ui.screens.settings.SettingsScreen
 import com.artifactkeeper.android.ui.screens.auth.ChangePasswordScreen
 import com.artifactkeeper.android.ui.screens.profile.ProfileScreen
 import com.artifactkeeper.android.ui.screens.welcome.WelcomeScreen
+import com.artifactkeeper.android.ui.screens.staging.StagingListScreen
+import com.artifactkeeper.android.ui.screens.staging.StagingDetailScreen
+import com.artifactkeeper.android.ui.screens.staging.PromotionHistoryScreen
+import com.artifactkeeper.android.ui.screens.staging.StagingViewModel
+import androidx.lifecycle.viewmodel.compose.viewModel
 
 private data class BottomTab(
     val route: String,
@@ -454,29 +459,65 @@ private fun ArtifactsSection(
     onRepoClick: (String) -> Unit,
     accountActions: @Composable () -> Unit,
 ) {
-    val subTabs = if (isCompact) listOf("Repos", "Pkgs", "Builds", "Search")
-                  else listOf("Repositories", "Packages", "Builds", "Search")
+    val subTabs = if (isCompact) listOf("Repos", "Staging", "Pkgs", "Builds", "Search")
+                  else listOf("Repositories", "Staging", "Packages", "Builds", "Search")
     var selectedTab by remember { mutableIntStateOf(0) }
 
+    // Staging navigation state
+    val stagingViewModel: StagingViewModel = viewModel()
+    val stagingUiState by stagingViewModel.uiState.collectAsState()
+    var showStagingHistory by remember { mutableStateOf(false) }
+
     Column(modifier = Modifier.fillMaxSize()) {
-        TopAppBar(title = { Text("Artifacts") }, actions = { accountActions() })
-        ScrollableTabRow(
-            selectedTabIndex = selectedTab,
-            edgePadding = if (isCompact) 4.dp else 16.dp,
-        ) {
-            subTabs.forEachIndexed { index, title ->
-                Tab(
-                    selected = selectedTab == index,
-                    onClick = { selectedTab = index },
-                    text = { Text(title, maxLines = 1) },
+        // Handle staging sub-navigation
+        if (selectedTab == 1 && stagingUiState.selectedRepo != null) {
+            if (showStagingHistory) {
+                PromotionHistoryScreen(
+                    viewModel = stagingViewModel,
+                    onBack = { showStagingHistory = false },
+                )
+            } else {
+                StagingDetailScreen(
+                    viewModel = stagingViewModel,
+                    onBack = {
+                        stagingViewModel.clearSelectedRepo()
+                    },
+                    onShowHistory = { showStagingHistory = true },
                 )
             }
-        }
-        when (selectedTab) {
-            0 -> RepositoriesScreen(onRepoClick = onRepoClick)
-            1 -> PackagesScreen()
-            2 -> BuildsScreen()
-            3 -> SearchScreen()
+        } else {
+            TopAppBar(title = { Text("Artifacts") }, actions = { accountActions() })
+            ScrollableTabRow(
+                selectedTabIndex = selectedTab,
+                edgePadding = if (isCompact) 4.dp else 16.dp,
+            ) {
+                subTabs.forEachIndexed { index, title ->
+                    Tab(
+                        selected = selectedTab == index,
+                        onClick = {
+                            selectedTab = index
+                            if (index != 1) {
+                                // Reset staging state when navigating away
+                                stagingViewModel.clearSelectedRepo()
+                                showStagingHistory = false
+                            }
+                        },
+                        text = { Text(title, maxLines = 1) },
+                    )
+                }
+            }
+            when (selectedTab) {
+                0 -> RepositoriesScreen(onRepoClick = onRepoClick)
+                1 -> StagingListScreen(
+                    viewModel = stagingViewModel,
+                    onRepoClick = { repo ->
+                        stagingViewModel.selectRepo(repo)
+                    },
+                )
+                2 -> PackagesScreen()
+                3 -> BuildsScreen()
+                4 -> SearchScreen()
+            }
         }
     }
 }

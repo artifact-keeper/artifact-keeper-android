@@ -15,3 +15,9 @@ val Critical = Color(0xFFF5222D)
 val High = Color(0xFFFA8C16)
 val Medium = Color(0xFFFAAD14)
 val Low = Color(0xFF1890FF)
+
+// Policy status colors
+val PolicyPassing = Color(0xFF52C41A)
+val PolicyFailing = Color(0xFFF5222D)
+val PolicyWarning = Color(0xFFFAAD14)
+val PolicyPending = Color(0xFF8C8C8C)
