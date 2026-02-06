@@ -5,6 +5,23 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.0.0-a1] - 2026-02-06
+
+### Added
+- SBOM UI for viewing software bill of materials
+- Profile screen with password change and TOTP 2FA setup
+- Server online/offline status dots in server list
+- Server switcher in toolbar and first-boot setup detection
+- MIT License
+
+### Changed
+- Use /health endpoint for connection test instead of /repositories
+
+### Fixed
+- Auto-reload all screens when switching servers
+- Allow cleartext HTTP traffic for self-hosted servers
+- Password change endpoint corrected
+
 ## [1.0.0-rc.1] - 2026-02-03
 
 ### Added
