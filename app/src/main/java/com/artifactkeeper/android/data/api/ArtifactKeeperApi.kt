@@ -46,6 +46,17 @@ import com.artifactkeeper.android.data.models.TriggerScanResponse
 import com.artifactkeeper.android.data.models.UpdatePolicyRequest
 import com.artifactkeeper.android.data.models.Webhook
 import com.artifactkeeper.android.data.models.WebhookListResponse
+import com.artifactkeeper.android.data.models.SbomListResponse
+import com.artifactkeeper.android.data.models.SbomContentResponse
+import com.artifactkeeper.android.data.models.SbomComponentsResponse
+import com.artifactkeeper.android.data.models.CveHistoryEntry
+import com.artifactkeeper.android.data.models.CveTrends
+import com.artifactkeeper.android.data.models.GenerateSbomRequest
+import com.artifactkeeper.android.data.models.SbomResponse
+import com.artifactkeeper.android.data.models.LicensePolicyListResponse
+import com.artifactkeeper.android.data.models.LicensePolicy
+import com.artifactkeeper.android.data.models.CreateLicensePolicyRequest
+import com.artifactkeeper.android.data.models.UpdateLicensePolicyRequest
 import retrofit2.http.Body
 import retrofit2.http.DELETE
 import retrofit2.http.GET
@@ -216,6 +227,10 @@ interface ArtifactKeeperApi {
     @GET("api/v1/admin/monitoring/alerts")
     suspend fun getAlerts(): List<AlertState>
 
+    @GET("api/v1/admin/monitoring/metrics")
+    @retrofit2.http.Headers("Accept: text/plain")
+    suspend fun getPrometheusMetrics(): okhttp3.ResponseBody
+
     // --- TOTP ---
     @POST("api/v1/auth/totp/setup")
     suspend fun totpSetup(): TotpSetupResponse
@@ -236,4 +251,44 @@ interface ArtifactKeeperApi {
     // --- Health ---
     @GET("health")
     suspend fun getHealth(): HealthResponse
+
+    // --- SBOM ---
+    @GET("api/v1/sbom")
+    suspend fun listSboms(
+        @Query("artifact_id") artifactId: String? = null,
+        @Query("page") page: Int = 1,
+        @Query("per_page") perPage: Int = 20,
+    ): SbomListResponse
+
+    @POST("api/v1/sbom")
+    suspend fun generateSbom(@Body request: GenerateSbomRequest): SbomResponse
+
+    @GET("api/v1/sbom/{id}")
+    suspend fun getSbom(@Path("id") id: String): SbomContentResponse
+
+    @GET("api/v1/sbom/{id}/components")
+    suspend fun getSbomComponents(
+        @Path("id") id: String,
+        @Query("page") page: Int = 1,
+        @Query("per_page") perPage: Int = 100,
+    ): SbomComponentsResponse
+
+    @GET("api/v1/sbom/cve/history/{artifactId}")
+    suspend fun getCveHistory(@Path("artifactId") artifactId: String): List<CveHistoryEntry>
+
+    @GET("api/v1/sbom/cve/trends")
+    suspend fun getCveTrends(@Query("days") days: Int = 30): CveTrends
+
+    // --- License Policies ---
+    @GET("api/v1/sbom/license-policies")
+    suspend fun listLicensePolicies(): LicensePolicyListResponse
+
+    @POST("api/v1/sbom/license-policies")
+    suspend fun createLicensePolicy(@Body request: CreateLicensePolicyRequest): LicensePolicy
+
+    @PUT("api/v1/sbom/license-policies/{id}")
+    suspend fun updateLicensePolicy(@Path("id") id: String, @Body request: UpdateLicensePolicyRequest): LicensePolicy
+
+    @DELETE("api/v1/sbom/license-policies/{id}")
+    suspend fun deleteLicensePolicy(@Path("id") id: String)
 }

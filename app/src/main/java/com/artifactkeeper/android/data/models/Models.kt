@@ -495,3 +495,156 @@ data class TotpVerifyRequest(
 
 @Serializable
 data class TotpDisableRequest(val password: String, val code: String)
+
+// --- SBOM ---
+@Serializable
+data class SbomResponse(
+    val id: String,
+    @SerialName("artifact_id") val artifactId: String,
+    @SerialName("artifact_name") val artifactName: String? = null,
+    @SerialName("artifact_version") val artifactVersion: String? = null,
+    val format: String,
+    @SerialName("spec_version") val specVersion: String? = null,
+    @SerialName("component_count") val componentCount: Int = 0,
+    @SerialName("dependency_count") val dependencyCount: Int = 0,
+    @SerialName("license_count") val licenseCount: Int = 0,
+    val licenses: List<String> = emptyList(),
+    @SerialName("created_at") val createdAt: String,
+    @SerialName("updated_at") val updatedAt: String? = null,
+)
+
+@Serializable
+data class SbomContentResponse(
+    val id: String,
+    @SerialName("artifact_id") val artifactId: String,
+    @SerialName("artifact_name") val artifactName: String? = null,
+    @SerialName("artifact_version") val artifactVersion: String? = null,
+    val format: String,
+    @SerialName("spec_version") val specVersion: String? = null,
+    @SerialName("component_count") val componentCount: Int = 0,
+    @SerialName("dependency_count") val dependencyCount: Int = 0,
+    @SerialName("license_count") val licenseCount: Int = 0,
+    val licenses: List<String> = emptyList(),
+    val content: String? = null,
+    @SerialName("created_at") val createdAt: String,
+    @SerialName("updated_at") val updatedAt: String? = null,
+)
+
+@Serializable
+data class SbomComponent(
+    val name: String,
+    val version: String? = null,
+    val type: String? = null,
+    val purl: String? = null,
+    val licenses: List<String> = emptyList(),
+    val supplier: String? = null,
+    val author: String? = null,
+    val description: String? = null,
+)
+
+@Serializable
+data class SbomComponentsResponse(
+    val components: List<SbomComponent>,
+    val total: Int,
+)
+
+@Serializable
+data class CveHistoryEntry(
+    val id: String,
+    @SerialName("artifact_id") val artifactId: String,
+    @SerialName("cve_id") val cveId: String,
+    val severity: String,
+    val status: String,
+    val title: String? = null,
+    val description: String? = null,
+    @SerialName("detected_at") val detectedAt: String,
+    @SerialName("resolved_at") val resolvedAt: String? = null,
+)
+
+@Serializable
+data class CveTrends(
+    val period: String,
+    @SerialName("total_detected") val totalDetected: Int,
+    @SerialName("total_resolved") val totalResolved: Int,
+    @SerialName("critical_count") val criticalCount: Int,
+    @SerialName("high_count") val highCount: Int,
+    @SerialName("medium_count") val mediumCount: Int,
+    @SerialName("low_count") val lowCount: Int,
+    @SerialName("trend_data") val trendData: List<CveTrendDataPoint> = emptyList(),
+)
+
+@Serializable
+data class CveTrendDataPoint(
+    val date: String,
+    val detected: Int,
+    val resolved: Int,
+)
+
+@Serializable
+data class SbomListResponse(
+    val items: List<SbomResponse>,
+    val total: Int,
+)
+
+@Serializable
+data class GenerateSbomRequest(
+    @SerialName("artifact_id") val artifactId: String,
+    val format: String = "cyclonedx",
+)
+
+// --- License Policies ---
+@Serializable
+data class LicensePolicy(
+    val id: String,
+    val name: String,
+    val description: String? = null,
+    @SerialName("allowed_licenses") val allowedLicenses: List<String> = emptyList(),
+    @SerialName("denied_licenses") val deniedLicenses: List<String> = emptyList(),
+    val action: String = "warn",
+    @SerialName("allow_unknown") val allowUnknown: Boolean = true,
+    @SerialName("is_enabled") val isEnabled: Boolean = true,
+    @SerialName("created_at") val createdAt: String,
+    @SerialName("updated_at") val updatedAt: String? = null,
+)
+
+@Serializable
+data class LicensePolicyListResponse(
+    val items: List<LicensePolicy>,
+    val total: Int,
+)
+
+@Serializable
+data class CreateLicensePolicyRequest(
+    val name: String,
+    val description: String? = null,
+    @SerialName("allowed_licenses") val allowedLicenses: List<String> = emptyList(),
+    @SerialName("denied_licenses") val deniedLicenses: List<String> = emptyList(),
+    val action: String = "warn",
+    @SerialName("allow_unknown") val allowUnknown: Boolean = true,
+)
+
+@Serializable
+data class UpdateLicensePolicyRequest(
+    val name: String,
+    val description: String? = null,
+    @SerialName("allowed_licenses") val allowedLicenses: List<String> = emptyList(),
+    @SerialName("denied_licenses") val deniedLicenses: List<String> = emptyList(),
+    val action: String = "warn",
+    @SerialName("allow_unknown") val allowUnknown: Boolean = true,
+    @SerialName("is_enabled") val isEnabled: Boolean = true,
+)
+
+@Serializable
+data class LicenseCheckResult(
+    @SerialName("policy_id") val policyId: String,
+    @SerialName("policy_name") val policyName: String,
+    val passed: Boolean,
+    val violations: List<LicenseViolation> = emptyList(),
+)
+
+@Serializable
+data class LicenseViolation(
+    val license: String,
+    val reason: String,
+    val component: String? = null,
+)
