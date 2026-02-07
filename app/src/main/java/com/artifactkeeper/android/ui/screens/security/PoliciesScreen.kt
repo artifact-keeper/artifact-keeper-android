@@ -59,8 +59,6 @@ fun PoliciesScreen() {
     LaunchedEffect(Unit) { loadPolicies() }
 
     Column(modifier = Modifier.fillMaxSize()) {
-        TopAppBar(title = { Text("Security Policies") })
-
         when {
             isLoading -> {
                 Box(

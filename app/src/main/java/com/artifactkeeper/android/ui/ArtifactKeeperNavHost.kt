@@ -1,10 +1,13 @@
 package com.artifactkeeper.android.ui
 
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AdminPanelSettings
 import androidx.compose.material.icons.filled.BarChart
@@ -15,8 +18,11 @@ import androidx.compose.material3.*
 import androidx.compose.material3.windowsizeclass.WindowWidthSizeClass
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
+import com.artifactkeeper.android.R
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.navigation.compose.NavHost
@@ -503,6 +509,22 @@ private fun MainAppScaffold(
 }
 
 // ---------------------------------------------------------------------------
+// Shared TopAppBar logo
+// ---------------------------------------------------------------------------
+
+@Composable
+private fun AppLogo() {
+    Image(
+        painter = painterResource(id = R.drawable.logo),
+        contentDescription = "Artifact Keeper",
+        modifier = Modifier
+            .padding(start = 8.dp)
+            .size(32.dp)
+            .clip(RoundedCornerShape(6.dp)),
+    )
+}
+
+// ---------------------------------------------------------------------------
 // Section composables with adaptive sub-tab rows
 // ---------------------------------------------------------------------------
 
@@ -540,7 +562,11 @@ private fun ArtifactsSection(
                 )
             }
         } else {
-            TopAppBar(title = { Text("Artifacts") }, actions = { accountActions() })
+            TopAppBar(
+                title = { Text("Artifacts") },
+                navigationIcon = { AppLogo() },
+                actions = { accountActions() },
+            )
             ScrollableTabRow(
                 selectedTabIndex = selectedTab,
                 edgePadding = if (isCompact) 4.dp else 16.dp,
@@ -583,7 +609,11 @@ private fun IntegrationSection(isCompact: Boolean, accountActions: @Composable (
     var selectedTab by remember { mutableIntStateOf(0) }
 
     Column(modifier = Modifier.fillMaxSize()) {
-        TopAppBar(title = { Text("Integration") }, actions = { accountActions() })
+        TopAppBar(
+            title = { Text("Integration") },
+            navigationIcon = { AppLogo() },
+            actions = { accountActions() },
+        )
         ScrollableTabRow(
             selectedTabIndex = selectedTab,
             edgePadding = if (isCompact) 4.dp else 16.dp,
@@ -618,7 +648,11 @@ private fun SecuritySection(isCompact: Boolean, accountActions: @Composable () -
                 onBack = { selectedScanId = null },
             )
         } else {
-            TopAppBar(title = { Text("Security") }, actions = { accountActions() })
+            TopAppBar(
+                title = { Text("Security") },
+                navigationIcon = { AppLogo() },
+                actions = { accountActions() },
+            )
             ScrollableTabRow(
                 selectedTabIndex = selectedTab,
                 edgePadding = if (isCompact) 4.dp else 16.dp,
@@ -649,7 +683,11 @@ private fun OperationsSection(isCompact: Boolean, accountActions: @Composable ()
     var selectedTab by remember { mutableIntStateOf(0) }
 
     Column(modifier = Modifier.fillMaxSize()) {
-        TopAppBar(title = { Text("Operations") }, actions = { accountActions() })
+        TopAppBar(
+            title = { Text("Operations") },
+            navigationIcon = { AppLogo() },
+            actions = { accountActions() },
+        )
         ScrollableTabRow(
             selectedTabIndex = selectedTab,
             edgePadding = if (isCompact) 4.dp else 16.dp,
@@ -677,7 +715,11 @@ private fun AdminSection(isCompact: Boolean, onDisconnect: () -> Unit, accountAc
     var selectedTab by remember { mutableIntStateOf(0) }
 
     Column(modifier = Modifier.fillMaxSize()) {
-        TopAppBar(title = { Text("Admin") }, actions = { accountActions() })
+        TopAppBar(
+            title = { Text("Admin") },
+            navigationIcon = { AppLogo() },
+            actions = { accountActions() },
+        )
         ScrollableTabRow(
             selectedTabIndex = selectedTab,
             edgePadding = if (isCompact) 4.dp else 16.dp,

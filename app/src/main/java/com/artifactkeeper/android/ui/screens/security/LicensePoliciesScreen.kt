@@ -59,8 +59,6 @@ fun LicensePoliciesScreen() {
     LaunchedEffect(Unit) { loadPolicies() }
 
     Column(modifier = Modifier.fillMaxSize()) {
-        TopAppBar(title = { Text("License Policies") })
-
         when {
             isLoading -> {
                 Box(
