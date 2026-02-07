@@ -46,6 +46,7 @@ import com.artifactkeeper.android.ui.screens.repositories.VirtualMembersScreen
 import com.artifactkeeper.android.ui.screens.search.SearchScreen
 import com.artifactkeeper.android.ui.screens.security.LicensePoliciesScreen
 import com.artifactkeeper.android.ui.screens.security.PoliciesScreen
+import com.artifactkeeper.android.ui.screens.security.SbomScreen
 import com.artifactkeeper.android.ui.screens.security.ScanFindingsScreen
 import com.artifactkeeper.android.ui.screens.security.ScansScreen
 import com.artifactkeeper.android.ui.screens.security.SecurityScreen
@@ -385,9 +386,21 @@ private fun MainAppScaffold(
                     RepositoryDetailScreen(
                         repoKey = key,
                         onBack = { navController.popBackStack() },
+                        onArtifactSecurityClick = { id, name ->
+                            navController.navigate("artifacts/$id/security?name=$name")
+                        },
                         onNavigateToMembers = { repoKey, repoName, repoFormat ->
                             navController.navigate("repos/$repoKey/members?name=$repoName&format=$repoFormat")
                         },
+                    )
+                }
+                composable("artifacts/{id}/security?name={name}") { backStackEntry ->
+                    val id = backStackEntry.arguments?.getString("id") ?: return@composable
+                    val name = backStackEntry.arguments?.getString("name") ?: "Artifact"
+                    SbomScreen(
+                        artifactId = id,
+                        artifactName = name,
+                        onBack = { navController.popBackStack() },
                     )
                 }
                 composable("repos/{key}/members?name={name}&format={format}") { backStackEntry ->
@@ -456,9 +469,21 @@ private fun MainAppScaffold(
                     RepositoryDetailScreen(
                         repoKey = key,
                         onBack = { navController.popBackStack() },
+                        onArtifactSecurityClick = { id, name ->
+                            navController.navigate("artifacts/$id/security?name=$name")
+                        },
                         onNavigateToMembers = { repoKey, repoName, repoFormat ->
                             navController.navigate("repos/$repoKey/members?name=$repoName&format=$repoFormat")
                         },
+                    )
+                }
+                composable("artifacts/{id}/security?name={name}") { backStackEntry ->
+                    val id = backStackEntry.arguments?.getString("id") ?: return@composable
+                    val name = backStackEntry.arguments?.getString("name") ?: "Artifact"
+                    SbomScreen(
+                        artifactId = id,
+                        artifactName = name,
+                        onBack = { navController.popBackStack() },
                     )
                 }
                 composable("repos/{key}/members?name={name}&format={format}") { backStackEntry ->

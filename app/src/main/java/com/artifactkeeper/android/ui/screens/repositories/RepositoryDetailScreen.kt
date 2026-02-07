@@ -12,6 +12,7 @@ import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material.icons.filled.Download
 import androidx.compose.material.icons.filled.Groups
 import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.filled.Shield
 import androidx.compose.material3.*
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.*
@@ -33,6 +34,7 @@ import kotlinx.coroutines.launch
 fun RepositoryDetailScreen(
     repoKey: String,
     onBack: () -> Unit,
+    onArtifactSecurityClick: (id: String, name: String) -> Unit = { _, _ -> },
     onNavigateToMembers: ((repoKey: String, repoName: String, repoFormat: String) -> Unit)? = null,
 ) {
     var repository by remember { mutableStateOf<Repository?>(null) }
@@ -172,7 +174,11 @@ fun RepositoryDetailScreen(
                         }
 
                         items(artifacts, key = { it.id }) { artifact ->
-                            ArtifactCard(artifact, repoKey)
+                            ArtifactCard(
+                                artifact = artifact,
+                                repoKey = repoKey,
+                                onSecurityClick = { onArtifactSecurityClick(artifact.id, artifact.name) },
+                            )
                         }
                     }
                 }
@@ -250,7 +256,7 @@ private fun RepoDetailHeader(repo: Repository) {
 }
 
 @Composable
-private fun ArtifactCard(artifact: Artifact, repoKey: String) {
+private fun ArtifactCard(artifact: Artifact, repoKey: String, onSecurityClick: () -> Unit) {
     val context = LocalContext.current
 
     Card(
@@ -280,6 +286,17 @@ private fun ArtifactCard(artifact: Artifact, repoKey: String) {
                     AssistChip(
                         onClick = {},
                         label = { Text("v${artifact.version}", style = MaterialTheme.typography.labelSmall) },
+                    )
+                }
+                IconButton(
+                    onClick = onSecurityClick,
+                    modifier = Modifier.size(36.dp),
+                ) {
+                    Icon(
+                        Icons.Default.Shield,
+                        contentDescription = "SBOM & Security",
+                        modifier = Modifier.size(20.dp),
+                        tint = MaterialTheme.colorScheme.primary,
                     )
                 }
             }

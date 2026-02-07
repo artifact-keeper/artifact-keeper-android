@@ -1,5 +1,6 @@
 package com.artifactkeeper.android.ui.screens.security
 
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -11,10 +12,15 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.artifactkeeper.android.data.api.ApiClient
+import com.artifactkeeper.android.data.models.CveTrendDataPoint
+import com.artifactkeeper.android.data.models.CveTrends
 import com.artifactkeeper.android.data.models.DtPortfolioMetrics
 import com.artifactkeeper.android.data.models.DtStatus
 import com.artifactkeeper.android.data.models.RepoSecurityScore
@@ -41,6 +47,7 @@ private val DtProjects = Color(0xFF1890FF)
 fun SecurityScreen() {
     var scores by remember { mutableStateOf<List<RepoSecurityScore>>(emptyList()) }
     var repoMap by remember { mutableStateOf<Map<String, Repository>>(emptyMap()) }
+    var cveTrends by remember { mutableStateOf<CveTrends?>(null) }
     var isLoading by remember { mutableStateOf(true) }
     var isRefreshing by remember { mutableStateOf(false) }
     var errorMessage by remember { mutableStateOf<String?>(null) }
@@ -56,6 +63,11 @@ fun SecurityScreen() {
                 scores = ApiClient.api.getSecurityScores()
                 val repos = ApiClient.api.listRepositories(perPage = 100).items
                 repoMap = repos.associateBy { it.id }
+                try {
+                    cveTrends = ApiClient.api.getCveTrends()
+                } catch (_: Exception) {
+                    // CVE trends are optional
+                }
 
                 // Load Dependency-Track status (non-blocking)
                 try {
@@ -109,13 +121,13 @@ fun SecurityScreen() {
                     }
                 }
             }
-            scores.isEmpty() && dtStatus?.enabled != true -> {
+            scores.isEmpty() && cveTrends == null && dtStatus?.enabled != true -> {
                 Box(
                     modifier = Modifier.fillMaxSize(),
                     contentAlignment = Alignment.Center,
                 ) {
                     Text(
-                        text = "No security scores available",
+                        text = "No security data available",
                         style = MaterialTheme.typography.bodyLarge,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
@@ -132,6 +144,12 @@ fun SecurityScreen() {
                         contentPadding = PaddingValues(16.dp),
                         verticalArrangement = Arrangement.spacedBy(12.dp),
                     ) {
+                        cveTrends?.let { trends ->
+                            item(key = "cve-trends") {
+                                CveTrendsSummaryCard(trends)
+                            }
+                        }
+
                         // Dependency-Track section (only when enabled)
                         if (dtStatus?.enabled == true) {
                             item(key = "dt-status") {
@@ -149,9 +167,17 @@ fun SecurityScreen() {
                             }
                         }
 
-                        // Existing security score cards
-                        items(scores, key = { it.id }) { score ->
-                            SecurityScoreCard(score, repoMap[score.repositoryId])
+                        if (scores.isNotEmpty()) {
+                            item(key = "scores-header") {
+                                Text(
+                                    text = "Repository Scores",
+                                    style = MaterialTheme.typography.titleMedium,
+                                    modifier = Modifier.padding(top = 4.dp),
+                                )
+                            }
+                            items(scores, key = { it.id }) { score ->
+                                SecurityScoreCard(score, repoMap[score.repositoryId])
+                            }
                         }
                     }
                 }
@@ -415,6 +441,103 @@ private fun SeverityPill(label: String, count: Int, color: Color) {
             style = MaterialTheme.typography.labelSmall,
             fontWeight = FontWeight.SemiBold,
             color = color,
+        )
+    }
+}
+
+// MARK: - CVE Trends Summary
+
+@Composable
+private fun CveTrendsSummaryCard(trends: CveTrends) {
+    Card(modifier = Modifier.fillMaxWidth()) {
+        Column(modifier = Modifier.padding(16.dp)) {
+            Text(
+                text = "CVE Trends",
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.Bold,
+            )
+
+            Spacer(modifier = Modifier.height(12.dp))
+
+            // Severity counts
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+            ) {
+                SeverityPill(label = "Critical", count = trends.criticalCount, color = Critical)
+                SeverityPill(label = "High", count = trends.highCount, color = High)
+                SeverityPill(label = "Medium", count = trends.mediumCount, color = Medium)
+                SeverityPill(label = "Low", count = trends.lowCount, color = Low)
+            }
+
+            Spacer(modifier = Modifier.height(12.dp))
+
+            // Detected vs Resolved
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+            ) {
+                Text(
+                    text = "${trends.totalDetected} detected",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = Critical,
+                )
+                Text(
+                    text = "${trends.totalResolved} resolved",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = GradeA,
+                )
+                Text(
+                    text = trends.period,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
+
+            // Sparkline
+            if (trends.trendData.size >= 2) {
+                Spacer(modifier = Modifier.height(12.dp))
+                CveTrendSparkline(
+                    data = trends.trendData,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(48.dp),
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun CveTrendSparkline(data: List<CveTrendDataPoint>, modifier: Modifier = Modifier) {
+    val detectedColor = Critical
+    val resolvedColor = GradeA
+
+    Canvas(modifier = modifier) {
+        if (data.size < 2) return@Canvas
+
+        val maxVal = data.maxOf { maxOf(it.detected, it.resolved) }.coerceAtLeast(1).toFloat()
+        val stepX = size.width / (data.size - 1).toFloat()
+
+        fun buildPath(values: List<Int>): Path {
+            val path = Path()
+            values.forEachIndexed { i, v ->
+                val x = i * stepX
+                val y = size.height - (v.toFloat() / maxVal) * size.height
+                if (i == 0) path.moveTo(x, y) else path.lineTo(x, y)
+            }
+            return path
+        }
+
+        drawPath(
+            path = buildPath(data.map { it.detected }),
+            color = detectedColor,
+            style = Stroke(width = 2.dp.toPx()),
+        )
+        drawPath(
+            path = buildPath(data.map { it.resolved }),
+            color = resolvedColor,
+            style = Stroke(width = 2.dp.toPx()),
         )
     }
 }
