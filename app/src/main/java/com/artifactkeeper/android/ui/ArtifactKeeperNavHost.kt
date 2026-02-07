@@ -42,6 +42,7 @@ import com.artifactkeeper.android.ui.screens.operations.TelemetryScreen
 import com.artifactkeeper.android.ui.screens.packages.PackagesScreen
 import com.artifactkeeper.android.ui.screens.repositories.RepositoriesScreen
 import com.artifactkeeper.android.ui.screens.repositories.RepositoryDetailScreen
+import com.artifactkeeper.android.ui.screens.repositories.VirtualMembersScreen
 import com.artifactkeeper.android.ui.screens.search.SearchScreen
 import com.artifactkeeper.android.ui.screens.security.LicensePoliciesScreen
 import com.artifactkeeper.android.ui.screens.security.PoliciesScreen
@@ -384,6 +385,20 @@ private fun MainAppScaffold(
                     RepositoryDetailScreen(
                         repoKey = key,
                         onBack = { navController.popBackStack() },
+                        onNavigateToMembers = { repoKey, repoName, repoFormat ->
+                            navController.navigate("repos/$repoKey/members?name=$repoName&format=$repoFormat")
+                        },
+                    )
+                }
+                composable("repos/{key}/members?name={name}&format={format}") { backStackEntry ->
+                    val key = backStackEntry.arguments?.getString("key") ?: return@composable
+                    val name = backStackEntry.arguments?.getString("name") ?: key
+                    val format = backStackEntry.arguments?.getString("format") ?: ""
+                    VirtualMembersScreen(
+                        repoKey = key,
+                        repoName = name,
+                        repoFormat = format,
+                        onBack = { navController.popBackStack() },
                     )
                 }
             }
@@ -440,6 +455,20 @@ private fun MainAppScaffold(
                     val key = backStackEntry.arguments?.getString("key") ?: return@composable
                     RepositoryDetailScreen(
                         repoKey = key,
+                        onBack = { navController.popBackStack() },
+                        onNavigateToMembers = { repoKey, repoName, repoFormat ->
+                            navController.navigate("repos/$repoKey/members?name=$repoName&format=$repoFormat")
+                        },
+                    )
+                }
+                composable("repos/{key}/members?name={name}&format={format}") { backStackEntry ->
+                    val key = backStackEntry.arguments?.getString("key") ?: return@composable
+                    val name = backStackEntry.arguments?.getString("name") ?: key
+                    val format = backStackEntry.arguments?.getString("format") ?: ""
+                    VirtualMembersScreen(
+                        repoKey = key,
+                        repoName = name,
+                        repoFormat = format,
                         onBack = { navController.popBackStack() },
                     )
                 }

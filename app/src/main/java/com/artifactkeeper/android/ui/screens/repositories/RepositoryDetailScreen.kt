@@ -8,7 +8,9 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material.icons.filled.Download
+import androidx.compose.material.icons.filled.Groups
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.*
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
@@ -28,7 +30,11 @@ import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun RepositoryDetailScreen(repoKey: String, onBack: () -> Unit) {
+fun RepositoryDetailScreen(
+    repoKey: String,
+    onBack: () -> Unit,
+    onNavigateToMembers: ((repoKey: String, repoName: String, repoFormat: String) -> Unit)? = null,
+) {
     var repository by remember { mutableStateOf<Repository?>(null) }
     var artifacts by remember { mutableStateOf<List<Artifact>>(emptyList()) }
     var isLoading by remember { mutableStateOf(true) }
@@ -113,6 +119,17 @@ fun RepositoryDetailScreen(repoKey: String, onBack: () -> Unit) {
                         repository?.let { repo ->
                             item(key = "header") {
                                 RepoDetailHeader(repo)
+                            }
+
+                            // Members card for virtual repositories
+                            if (repo.repoType.equals("virtual", ignoreCase = true)) {
+                                item(key = "members") {
+                                    VirtualMembersCard(
+                                        onClick = {
+                                            onNavigateToMembers?.invoke(repo.key, repo.name, repo.format)
+                                        },
+                                    )
+                                }
                             }
                         }
 
@@ -308,6 +325,46 @@ private fun ArtifactCard(artifact: Artifact, repoKey: String) {
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
             }
+        }
+    }
+}
+
+@Composable
+private fun VirtualMembersCard(onClick: () -> Unit) {
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable(onClick = onClick),
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Icon(
+                Icons.Default.Groups,
+                contentDescription = "Members",
+                modifier = Modifier.size(24.dp),
+                tint = MaterialTheme.colorScheme.primary,
+            )
+            Spacer(modifier = Modifier.width(12.dp))
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = "Member Repositories",
+                    style = MaterialTheme.typography.titleMedium,
+                )
+                Text(
+                    text = "Manage local and remote repositories included in this virtual repository",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
+            Icon(
+                Icons.AutoMirrored.Filled.ArrowForward,
+                contentDescription = "Navigate",
+                tint = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
         }
     }
 }
