@@ -57,8 +57,6 @@ fun AnalyticsScreen() {
     LaunchedEffect(Unit) { loadData() }
 
     Column(modifier = Modifier.fillMaxSize()) {
-        TopAppBar(title = { Text("Analytics") })
-
         when {
             isLoading -> {
                 Box(

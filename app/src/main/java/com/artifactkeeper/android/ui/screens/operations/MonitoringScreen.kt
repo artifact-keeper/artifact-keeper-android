@@ -19,6 +19,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.artifactkeeper.android.data.api.ApiClient
 import com.artifactkeeper.android.data.models.AlertState
+import com.artifactkeeper.android.data.models.DtStatus
 import com.artifactkeeper.android.data.models.HealthCheck
 import com.artifactkeeper.android.data.models.HealthLogEntry
 import com.artifactkeeper.android.data.models.HealthResponse
@@ -37,6 +38,7 @@ private val json = Json { ignoreUnknownKeys = true }
 @Composable
 fun MonitoringScreen() {
     var health by remember { mutableStateOf<HealthResponse?>(null) }
+    var dtStatus by remember { mutableStateOf<DtStatus?>(null) }
     var alerts by remember { mutableStateOf<List<AlertState>>(emptyList()) }
     var healthLog by remember { mutableStateOf<List<HealthLogEntry>>(emptyList()) }
     var isLoading by remember { mutableStateOf(true) }
@@ -58,6 +60,12 @@ fun MonitoringScreen() {
                     val body = response.body?.string() ?: "{}"
                     json.decodeFromString<HealthResponse>(body)
                 }
+                // Fetch Dependency-Track status
+                try {
+                    dtStatus = ApiClient.api.getDtStatus()
+                } catch (_: Exception) {
+                    dtStatus = null
+                }
                 alerts = ApiClient.api.getAlerts()
                 healthLog = ApiClient.api.getHealthLog()
             } catch (e: Exception) {
@@ -72,8 +80,6 @@ fun MonitoringScreen() {
     LaunchedEffect(Unit) { loadData() }
 
     Column(modifier = Modifier.fillMaxSize()) {
-        TopAppBar(title = { Text("Monitoring") })
-
         when {
             isLoading -> {
                 Box(
@@ -133,6 +139,19 @@ fun MonitoringScreen() {
 
                         items(healthChecks, key = { "check-${it.key}" }) { (name, check) ->
                             ServiceHealthCard(name, check)
+                        }
+
+                        // Dependency-Track health (from separate endpoint)
+                        if (dtStatus?.enabled == true) {
+                            item(key = "check-dependency-track") {
+                                ServiceHealthCard(
+                                    name = "Dependency-Track",
+                                    check = HealthCheck(
+                                        status = if (dtStatus!!.healthy) "healthy" else "unhealthy",
+                                        responseTimeMs = null,
+                                    ),
+                                )
+                            }
                         }
 
                         // Alerts section

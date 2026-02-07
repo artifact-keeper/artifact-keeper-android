@@ -563,13 +563,19 @@ data class CveHistoryEntry(
 
 @Serializable
 data class CveTrends(
-    val period: String,
-    @SerialName("total_detected") val totalDetected: Int,
-    @SerialName("total_resolved") val totalResolved: Int,
-    @SerialName("critical_count") val criticalCount: Int,
-    @SerialName("high_count") val highCount: Int,
-    @SerialName("medium_count") val mediumCount: Int,
-    @SerialName("low_count") val lowCount: Int,
+    val period: String = "",
+    @SerialName("total_cves") val totalCves: Int = 0,
+    @SerialName("open_cves") val openCves: Int = 0,
+    @SerialName("fixed_cves") val fixedCves: Int = 0,
+    @SerialName("acknowledged_cves") val acknowledgedCves: Int = 0,
+    @SerialName("total_detected") val totalDetected: Int = 0,
+    @SerialName("total_resolved") val totalResolved: Int = 0,
+    @SerialName("critical_count") val criticalCount: Int = 0,
+    @SerialName("high_count") val highCount: Int = 0,
+    @SerialName("medium_count") val mediumCount: Int = 0,
+    @SerialName("low_count") val lowCount: Int = 0,
+    @SerialName("avg_days_to_fix") val avgDaysToFix: Double? = null,
+    val timeline: List<CveTrendDataPoint> = emptyList(),
     @SerialName("trend_data") val trendData: List<CveTrendDataPoint> = emptyList(),
 )
 

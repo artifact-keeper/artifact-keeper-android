@@ -14,7 +14,10 @@ import javax.net.ssl.TrustManager
 import javax.net.ssl.X509TrustManager
 
 object ApiClient {
-    private val json = Json { ignoreUnknownKeys = true }
+    private val json = Json {
+        ignoreUnknownKeys = true
+        encodeDefaults = true
+    }
     private var _baseUrl = ""
     private var _token: String? = null
 

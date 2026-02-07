@@ -60,15 +60,6 @@ fun TelemetryScreen() {
     LaunchedEffect(Unit) { loadMetrics() }
 
     Column(modifier = Modifier.fillMaxSize()) {
-        TopAppBar(
-            title = { Text("Telemetry") },
-            actions = {
-                IconButton(onClick = { loadMetrics(refresh = true) }) {
-                    Icon(Icons.Default.Refresh, contentDescription = "Refresh")
-                }
-            },
-        )
-
         when {
             isLoading -> {
                 Box(

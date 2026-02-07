@@ -60,8 +60,6 @@ fun ReplicationScreen() {
     LaunchedEffect(Unit) { loadData() }
 
     Column(modifier = Modifier.fillMaxSize()) {
-        TopAppBar(title = { Text("Replication") })
-
         TabRow(selectedTabIndex = selectedTab) {
             tabs.forEachIndexed { index, title ->
                 Tab(
