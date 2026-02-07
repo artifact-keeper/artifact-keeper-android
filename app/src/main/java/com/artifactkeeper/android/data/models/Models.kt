@@ -1008,3 +1008,38 @@ data class UpdateDtAnalysisRequest(
     val details: String? = null,
     val suppressed: Boolean = false,
 )
+
+// --- Virtual Repository Members ---
+
+@Serializable
+data class VirtualMember(
+    val id: String,
+    @SerialName("member_repo_id") val memberRepoId: String,
+    @SerialName("member_repo_key") val memberRepoKey: String,
+    @SerialName("member_repo_name") val memberRepoName: String,
+    @SerialName("member_repo_type") val memberRepoType: String,
+    val priority: Int,
+    @SerialName("created_at") val createdAt: String,
+)
+
+@Serializable
+data class VirtualMembersResponse(
+    val items: List<VirtualMember>,
+)
+
+@Serializable
+data class AddMemberRequest(
+    @SerialName("member_key") val memberKey: String,
+    val priority: Int? = null,
+)
+
+@Serializable
+data class MemberPriority(
+    @SerialName("member_key") val memberKey: String,
+    val priority: Int,
+)
+
+@Serializable
+data class ReorderMembersRequest(
+    val members: List<MemberPriority>,
+)

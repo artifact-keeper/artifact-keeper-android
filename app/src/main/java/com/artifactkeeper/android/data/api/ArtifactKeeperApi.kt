@@ -74,6 +74,10 @@ import com.artifactkeeper.android.data.models.DtPolicyViolation
 import com.artifactkeeper.android.data.models.DtAnalysisResponse
 import com.artifactkeeper.android.data.models.DtPolicyFull
 import com.artifactkeeper.android.data.models.UpdateDtAnalysisRequest
+import com.artifactkeeper.android.data.models.VirtualMembersResponse
+import com.artifactkeeper.android.data.models.VirtualMember
+import com.artifactkeeper.android.data.models.AddMemberRequest
+import com.artifactkeeper.android.data.models.ReorderMembersRequest
 import retrofit2.http.Body
 import retrofit2.http.DELETE
 import retrofit2.http.GET
@@ -377,4 +381,26 @@ interface ArtifactKeeperApi {
 
     @GET("api/v1/dependency-track/policies")
     suspend fun getDtPolicies(): List<DtPolicyFull>
+
+    // --- Virtual Repository Members ---
+    @GET("api/v1/repositories/{key}/members")
+    suspend fun listVirtualMembers(@Path("key") repoKey: String): VirtualMembersResponse
+
+    @POST("api/v1/repositories/{key}/members")
+    suspend fun addVirtualMember(
+        @Path("key") repoKey: String,
+        @Body request: AddMemberRequest,
+    ): VirtualMember
+
+    @DELETE("api/v1/repositories/{key}/members/{memberKey}")
+    suspend fun removeVirtualMember(
+        @Path("key") repoKey: String,
+        @Path("memberKey") memberKey: String,
+    )
+
+    @PUT("api/v1/repositories/{key}/members")
+    suspend fun reorderVirtualMembers(
+        @Path("key") repoKey: String,
+        @Body request: ReorderMembersRequest,
+    ): VirtualMembersResponse
 }
