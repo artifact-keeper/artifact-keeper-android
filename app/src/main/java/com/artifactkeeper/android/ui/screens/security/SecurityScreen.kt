@@ -15,6 +15,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.artifactkeeper.android.data.api.ApiClient
+import com.artifactkeeper.android.data.models.DtPortfolioMetrics
+import com.artifactkeeper.android.data.models.DtStatus
 import com.artifactkeeper.android.data.models.RepoSecurityScore
 import com.artifactkeeper.android.data.models.Repository
 import com.artifactkeeper.android.ui.theme.Critical
@@ -29,6 +31,11 @@ private val GradeC = Color(0xFFFAAD14)
 private val GradeD = Color(0xFFFA8C16)
 private val GradeF = Color(0xFFF5222D)
 
+private val DtConnected = Color(0xFF52C41A)
+private val DtDisconnected = Color(0xFFF5222D)
+private val DtViolations = Color(0xFFFA8C16)
+private val DtProjects = Color(0xFF1890FF)
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SecurityScreen() {
@@ -37,6 +44,8 @@ fun SecurityScreen() {
     var isLoading by remember { mutableStateOf(true) }
     var isRefreshing by remember { mutableStateOf(false) }
     var errorMessage by remember { mutableStateOf<String?>(null) }
+    var dtStatus by remember { mutableStateOf<DtStatus?>(null) }
+    var dtPortfolioMetrics by remember { mutableStateOf<DtPortfolioMetrics?>(null) }
     val coroutineScope = rememberCoroutineScope()
 
     fun loadData(refresh: Boolean = false) {
@@ -47,6 +56,20 @@ fun SecurityScreen() {
                 scores = ApiClient.api.getSecurityScores()
                 val repos = ApiClient.api.listRepositories(perPage = 100).items
                 repoMap = repos.associateBy { it.id }
+
+                // Load Dependency-Track status (non-blocking)
+                try {
+                    val status = ApiClient.api.getDtStatus()
+                    dtStatus = status
+                    if (status.enabled && status.healthy) {
+                        dtPortfolioMetrics = ApiClient.api.getDtPortfolioMetrics()
+                    } else {
+                        dtPortfolioMetrics = null
+                    }
+                } catch (_: Exception) {
+                    dtStatus = null
+                    dtPortfolioMetrics = null
+                }
             } catch (e: Exception) {
                 errorMessage = e.message ?: "Failed to load security data"
             } finally {
@@ -86,7 +109,7 @@ fun SecurityScreen() {
                     }
                 }
             }
-            scores.isEmpty() -> {
+            scores.isEmpty() && dtStatus?.enabled != true -> {
                 Box(
                     modifier = Modifier.fillMaxSize(),
                     contentAlignment = Alignment.Center,
@@ -109,11 +132,198 @@ fun SecurityScreen() {
                         contentPadding = PaddingValues(16.dp),
                         verticalArrangement = Arrangement.spacedBy(12.dp),
                     ) {
+                        // Dependency-Track section (only when enabled)
+                        if (dtStatus?.enabled == true) {
+                            item(key = "dt-status") {
+                                DtStatusCard(dtStatus!!)
+                            }
+
+                            if (dtPortfolioMetrics != null) {
+                                item(key = "dt-metrics") {
+                                    DtPortfolioMetricsCard(dtPortfolioMetrics!!)
+                                }
+
+                                item(key = "dt-audit") {
+                                    DtAuditProgressCard(dtPortfolioMetrics!!)
+                                }
+                            }
+                        }
+
+                        // Existing security score cards
                         items(scores, key = { it.id }) { score ->
                             SecurityScoreCard(score, repoMap[score.repositoryId])
                         }
                     }
                 }
+            }
+        }
+    }
+}
+
+@Composable
+private fun DtStatusCard(status: DtStatus) {
+    val isHealthy = status.healthy
+    val statusColor = if (isHealthy) DtConnected else DtDisconnected
+    val statusText = if (isHealthy) "Connected" else "Disconnected"
+
+    Card(modifier = Modifier.fillMaxWidth()) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Column {
+                Text(
+                    text = "Dependency-Track",
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold,
+                )
+                if (status.url != null) {
+                    Text(
+                        text = status.url,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
+            }
+
+            Box(
+                modifier = Modifier
+                    .clip(RoundedCornerShape(12.dp))
+                    .background(statusColor.copy(alpha = 0.15f))
+                    .padding(horizontal = 12.dp, vertical = 6.dp),
+            ) {
+                Text(
+                    text = statusText,
+                    style = MaterialTheme.typography.labelMedium,
+                    fontWeight = FontWeight.SemiBold,
+                    color = statusColor,
+                )
+            }
+        }
+    }
+}
+
+@OptIn(ExperimentalLayoutApi::class)
+@Composable
+private fun DtPortfolioMetricsCard(metrics: DtPortfolioMetrics) {
+    Card(modifier = Modifier.fillMaxWidth()) {
+        Column(modifier = Modifier.padding(16.dp)) {
+            Text(
+                text = "Portfolio Overview",
+                style = MaterialTheme.typography.titleSmall,
+                fontWeight = FontWeight.Bold,
+            )
+            Spacer(modifier = Modifier.height(12.dp))
+
+            FlowRow(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                verticalArrangement = Arrangement.spacedBy(8.dp),
+            ) {
+                DtMetricChip(
+                    label = "Critical",
+                    value = metrics.critical.toString(),
+                    color = Critical,
+                )
+                DtMetricChip(
+                    label = "High",
+                    value = metrics.high.toString(),
+                    color = High,
+                )
+                DtMetricChip(
+                    label = "Findings",
+                    value = metrics.findingsTotal.toString(),
+                    color = Medium,
+                )
+                DtMetricChip(
+                    label = "Violations",
+                    value = metrics.policyViolationsTotal.toString(),
+                    color = DtViolations,
+                )
+                DtMetricChip(
+                    label = "Projects",
+                    value = metrics.projects.toString(),
+                    color = DtProjects,
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun DtMetricChip(label: String, value: String, color: Color) {
+    Box(
+        modifier = Modifier
+            .clip(RoundedCornerShape(8.dp))
+            .background(color.copy(alpha = 0.10f))
+            .padding(horizontal = 12.dp, vertical = 8.dp),
+    ) {
+        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+            Text(
+                text = value,
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.Bold,
+                color = color,
+            )
+            Text(
+                text = label,
+                style = MaterialTheme.typography.labelSmall,
+                color = color.copy(alpha = 0.8f),
+            )
+        }
+    }
+}
+
+@Composable
+private fun DtAuditProgressCard(metrics: DtPortfolioMetrics) {
+    val total = metrics.findingsTotal
+    val audited = metrics.findingsAudited
+    val progress = if (total > 0) audited.toFloat() / total.toFloat() else 0f
+
+    Card(modifier = Modifier.fillMaxWidth()) {
+        Column(modifier = Modifier.padding(16.dp)) {
+            Text(
+                text = "Audit Progress",
+                style = MaterialTheme.typography.titleSmall,
+                fontWeight = FontWeight.Bold,
+            )
+            Spacer(modifier = Modifier.height(12.dp))
+
+            LinearProgressIndicator(
+                progress = { progress },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(8.dp)
+                    .clip(RoundedCornerShape(4.dp)),
+                color = DtConnected,
+                trackColor = MaterialTheme.colorScheme.surfaceVariant,
+            )
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+            ) {
+                Text(
+                    text = "Audited $audited / $total",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+                Text(
+                    text = "Risk Score: ${"%.1f".format(metrics.inheritedRiskScore)}",
+                    style = MaterialTheme.typography.bodySmall,
+                    fontWeight = FontWeight.Medium,
+                    color = when {
+                        metrics.inheritedRiskScore >= 70 -> Critical
+                        metrics.inheritedRiskScore >= 40 -> High
+                        metrics.inheritedRiskScore >= 10 -> Medium
+                        else -> DtConnected
+                    },
+                )
             }
         }
     }
