@@ -46,7 +46,7 @@ fun LicensePoliciesScreen() {
             if (refresh) isRefreshing = true else isLoading = true
             errorMessage = null
             try {
-                policies = ApiClient.api.listLicensePolicies().items
+                policies = ApiClient.api.listLicensePolicies()
             } catch (e: Exception) {
                 errorMessage = e.message ?: "Failed to load license policies"
             } finally {

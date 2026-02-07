@@ -53,7 +53,6 @@ import com.artifactkeeper.android.data.models.CveHistoryEntry
 import com.artifactkeeper.android.data.models.CveTrends
 import com.artifactkeeper.android.data.models.GenerateSbomRequest
 import com.artifactkeeper.android.data.models.SbomResponse
-import com.artifactkeeper.android.data.models.LicensePolicyListResponse
 import com.artifactkeeper.android.data.models.LicensePolicy
 import com.artifactkeeper.android.data.models.CreateLicensePolicyRequest
 import com.artifactkeeper.android.data.models.UpdateLicensePolicyRequest
@@ -302,7 +301,7 @@ interface ArtifactKeeperApi {
 
     // --- License Policies ---
     @GET("api/v1/sbom/license-policies")
-    suspend fun listLicensePolicies(): LicensePolicyListResponse
+    suspend fun listLicensePolicies(): List<LicensePolicy>
 
     @POST("api/v1/sbom/license-policies")
     suspend fun createLicensePolicy(@Body request: CreateLicensePolicyRequest): LicensePolicy
