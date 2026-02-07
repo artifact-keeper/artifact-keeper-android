@@ -64,6 +64,20 @@ import com.artifactkeeper.android.data.models.PromotionResponse
 import com.artifactkeeper.android.data.models.BulkPromoteRequest
 import com.artifactkeeper.android.data.models.BulkPromotionResponse
 import com.artifactkeeper.android.data.models.PromotionHistoryResponse
+import com.artifactkeeper.android.data.models.DtStatus
+import com.artifactkeeper.android.data.models.DtProject
+import com.artifactkeeper.android.data.models.DtFinding
+import com.artifactkeeper.android.data.models.DtComponentFull
+import com.artifactkeeper.android.data.models.DtProjectMetrics
+import com.artifactkeeper.android.data.models.DtPortfolioMetrics
+import com.artifactkeeper.android.data.models.DtPolicyViolation
+import com.artifactkeeper.android.data.models.DtAnalysisResponse
+import com.artifactkeeper.android.data.models.DtPolicyFull
+import com.artifactkeeper.android.data.models.UpdateDtAnalysisRequest
+import com.artifactkeeper.android.data.models.VirtualMembersResponse
+import com.artifactkeeper.android.data.models.VirtualMember
+import com.artifactkeeper.android.data.models.AddMemberRequest
+import com.artifactkeeper.android.data.models.ReorderMembersRequest
 import retrofit2.http.Body
 import retrofit2.http.DELETE
 import retrofit2.http.GET
@@ -333,4 +347,60 @@ interface ArtifactKeeperApi {
         @Query("page") page: Int = 1,
         @Query("per_page") perPage: Int = 50,
     ): PromotionHistoryResponse
+
+    // --- Dependency-Track ---
+    @GET("api/v1/dependency-track/status")
+    suspend fun getDtStatus(): DtStatus
+
+    @GET("api/v1/dependency-track/projects")
+    suspend fun getDtProjects(): List<DtProject>
+
+    @GET("api/v1/dependency-track/projects/{uuid}/findings")
+    suspend fun getDtFindings(@Path("uuid") projectUuid: String): List<DtFinding>
+
+    @GET("api/v1/dependency-track/projects/{uuid}/components")
+    suspend fun getDtComponents(@Path("uuid") projectUuid: String): List<DtComponentFull>
+
+    @GET("api/v1/dependency-track/projects/{uuid}/metrics")
+    suspend fun getDtProjectMetrics(@Path("uuid") projectUuid: String): DtProjectMetrics
+
+    @GET("api/v1/dependency-track/projects/{uuid}/metrics/history")
+    suspend fun getDtProjectMetricsHistory(
+        @Path("uuid") projectUuid: String,
+        @Query("days") days: Int = 30,
+    ): List<DtProjectMetrics>
+
+    @GET("api/v1/dependency-track/metrics/portfolio")
+    suspend fun getDtPortfolioMetrics(): DtPortfolioMetrics
+
+    @GET("api/v1/dependency-track/projects/{uuid}/violations")
+    suspend fun getDtProjectViolations(@Path("uuid") projectUuid: String): List<DtPolicyViolation>
+
+    @PUT("api/v1/dependency-track/analysis")
+    suspend fun updateDtAnalysis(@Body request: UpdateDtAnalysisRequest): DtAnalysisResponse
+
+    @GET("api/v1/dependency-track/policies")
+    suspend fun getDtPolicies(): List<DtPolicyFull>
+
+    // --- Virtual Repository Members ---
+    @GET("api/v1/repositories/{key}/members")
+    suspend fun listVirtualMembers(@Path("key") repoKey: String): VirtualMembersResponse
+
+    @POST("api/v1/repositories/{key}/members")
+    suspend fun addVirtualMember(
+        @Path("key") repoKey: String,
+        @Body request: AddMemberRequest,
+    ): VirtualMember
+
+    @DELETE("api/v1/repositories/{key}/members/{memberKey}")
+    suspend fun removeVirtualMember(
+        @Path("key") repoKey: String,
+        @Path("memberKey") memberKey: String,
+    )
+
+    @PUT("api/v1/repositories/{key}/members")
+    suspend fun reorderVirtualMembers(
+        @Path("key") repoKey: String,
+        @Body request: ReorderMembersRequest,
+    ): VirtualMembersResponse
 }

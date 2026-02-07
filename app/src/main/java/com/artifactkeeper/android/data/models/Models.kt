@@ -817,3 +817,229 @@ data class PromotionHistoryResponse(
     val items: List<PromotionHistoryEntry>,
     val pagination: Pagination? = null,
 )
+
+// --- Dependency-Track Integration ---
+
+@Serializable
+data class DtStatus(
+    val enabled: Boolean,
+    val healthy: Boolean,
+    val url: String? = null,
+)
+
+@Serializable
+data class DtProject(
+    val uuid: String,
+    val name: String,
+    val version: String? = null,
+    val description: String? = null,
+    @SerialName("lastBomImport") val lastBomImport: Long? = null,
+    @SerialName("lastBomImportFormat") val lastBomImportFormat: String? = null,
+)
+
+@Serializable
+data class DtComponent(
+    val uuid: String,
+    val name: String,
+    val version: String? = null,
+    val group: String? = null,
+    val purl: String? = null,
+)
+
+@Serializable
+data class DtCwe(
+    @SerialName("cweId") val cweId: Int,
+    val name: String,
+)
+
+@Serializable
+data class DtVulnerability(
+    val uuid: String,
+    @SerialName("vulnId") val vulnId: String,
+    val source: String,
+    val severity: String,
+    val title: String? = null,
+    val description: String? = null,
+    @SerialName("cvssV3BaseScore") val cvssV3BaseScore: Double? = null,
+    val cwe: DtCwe? = null,
+)
+
+@Serializable
+data class DtAnalysis(
+    val state: String? = null,
+    val justification: String? = null,
+    val response: String? = null,
+    val details: String? = null,
+    @SerialName("isSuppressed") val isSuppressed: Boolean = false,
+)
+
+@Serializable
+data class DtAttribution(
+    @SerialName("analyzerIdentity") val analyzerIdentity: String? = null,
+    @SerialName("attributedOn") val attributedOn: Long? = null,
+)
+
+@Serializable
+data class DtFinding(
+    val component: DtComponent,
+    val vulnerability: DtVulnerability,
+    val analysis: DtAnalysis? = null,
+    val attribution: DtAttribution? = null,
+)
+
+@Serializable
+data class DtProjectMetrics(
+    val critical: Long = 0,
+    val high: Long = 0,
+    val medium: Long = 0,
+    val low: Long = 0,
+    val unassigned: Long = 0,
+    val vulnerabilities: Long? = null,
+    @SerialName("findingsTotal") val findingsTotal: Long = 0,
+    @SerialName("findingsAudited") val findingsAudited: Long = 0,
+    @SerialName("findingsUnaudited") val findingsUnaudited: Long = 0,
+    val suppressions: Long = 0,
+    @SerialName("inheritedRiskScore") val inheritedRiskScore: Double = 0.0,
+    @SerialName("policyViolationsFail") val policyViolationsFail: Long = 0,
+    @SerialName("policyViolationsWarn") val policyViolationsWarn: Long = 0,
+    @SerialName("policyViolationsInfo") val policyViolationsInfo: Long = 0,
+    @SerialName("policyViolationsTotal") val policyViolationsTotal: Long = 0,
+    @SerialName("firstOccurrence") val firstOccurrence: Long? = null,
+    @SerialName("lastOccurrence") val lastOccurrence: Long? = null,
+)
+
+@Serializable
+data class DtPortfolioMetrics(
+    val critical: Long = 0,
+    val high: Long = 0,
+    val medium: Long = 0,
+    val low: Long = 0,
+    val unassigned: Long = 0,
+    val vulnerabilities: Long? = null,
+    @SerialName("findingsTotal") val findingsTotal: Long = 0,
+    @SerialName("findingsAudited") val findingsAudited: Long = 0,
+    @SerialName("findingsUnaudited") val findingsUnaudited: Long = 0,
+    val suppressions: Long = 0,
+    @SerialName("inheritedRiskScore") val inheritedRiskScore: Double = 0.0,
+    @SerialName("policyViolationsFail") val policyViolationsFail: Long = 0,
+    @SerialName("policyViolationsWarn") val policyViolationsWarn: Long = 0,
+    @SerialName("policyViolationsInfo") val policyViolationsInfo: Long = 0,
+    @SerialName("policyViolationsTotal") val policyViolationsTotal: Long = 0,
+    val projects: Long = 0,
+)
+
+@Serializable
+data class DtLicense(
+    val uuid: String? = null,
+    @SerialName("licenseId") val licenseId: String? = null,
+    val name: String,
+)
+
+@Serializable
+data class DtComponentFull(
+    val uuid: String,
+    val name: String,
+    val version: String? = null,
+    val group: String? = null,
+    val purl: String? = null,
+    val cpe: String? = null,
+    @SerialName("resolvedLicense") val resolvedLicense: DtLicense? = null,
+    @SerialName("isInternal") val isInternal: Boolean? = null,
+)
+
+@Serializable
+data class DtPolicy(
+    val uuid: String,
+    val name: String,
+    @SerialName("violationState") val violationState: String,
+)
+
+@Serializable
+data class DtPolicyCondition(
+    val uuid: String,
+    val subject: String,
+    val operator: String,
+    val value: String,
+    val policy: DtPolicy,
+)
+
+@Serializable
+data class DtPolicyConditionFull(
+    val uuid: String,
+    val subject: String,
+    val operator: String,
+    val value: String,
+)
+
+@Serializable
+data class DtPolicyViolation(
+    val uuid: String,
+    @SerialName("type") val violationType: String,
+    val component: DtComponent,
+    @SerialName("policyCondition") val policyCondition: DtPolicyCondition,
+)
+
+@Serializable
+data class DtPolicyFull(
+    val uuid: String,
+    val name: String,
+    @SerialName("violationState") val violationState: String,
+    @SerialName("includeChildren") val includeChildren: Boolean? = null,
+    @SerialName("policyConditions") val policyConditions: List<DtPolicyConditionFull> = emptyList(),
+    val projects: List<DtProject> = emptyList(),
+    val tags: List<kotlinx.serialization.json.JsonElement> = emptyList(),
+)
+
+@Serializable
+data class DtAnalysisResponse(
+    @SerialName("analysisState") val analysisState: String,
+    @SerialName("analysisJustification") val analysisJustification: String? = null,
+    @SerialName("analysisDetails") val analysisDetails: String? = null,
+    @SerialName("isSuppressed") val isSuppressed: Boolean = false,
+)
+
+@Serializable
+data class UpdateDtAnalysisRequest(
+    @SerialName("project_uuid") val projectUuid: String,
+    @SerialName("component_uuid") val componentUuid: String,
+    @SerialName("vulnerability_uuid") val vulnerabilityUuid: String,
+    val state: String,
+    val justification: String? = null,
+    val details: String? = null,
+    val suppressed: Boolean = false,
+)
+
+// --- Virtual Repository Members ---
+
+@Serializable
+data class VirtualMember(
+    val id: String,
+    @SerialName("member_repo_id") val memberRepoId: String,
+    @SerialName("member_repo_key") val memberRepoKey: String,
+    @SerialName("member_repo_name") val memberRepoName: String,
+    @SerialName("member_repo_type") val memberRepoType: String,
+    val priority: Int,
+    @SerialName("created_at") val createdAt: String,
+)
+
+@Serializable
+data class VirtualMembersResponse(
+    val items: List<VirtualMember>,
+)
+
+@Serializable
+data class AddMemberRequest(
+    @SerialName("member_key") val memberKey: String,
+    val priority: Int? = null,
+)
+
+@Serializable
+data class MemberPriority(
+    @SerialName("member_key") val memberKey: String,
+    val priority: Int,
+)
+
+@Serializable
+data class ReorderMembersRequest(
+    val members: List<MemberPriority>,
+)
