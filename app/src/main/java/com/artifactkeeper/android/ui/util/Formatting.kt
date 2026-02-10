@@ -1,6 +1,7 @@
 package com.artifactkeeper.android.ui.util
 
 import java.time.Instant
+import java.time.OffsetDateTime
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import java.time.temporal.ChronoUnit
@@ -34,24 +35,32 @@ fun formatDuration(durationMs: Long): String {
 fun formatRelativeTime(isoTimestamp: String): String {
     return try {
         val instant = Instant.parse(isoTimestamp)
-        val now = Instant.now()
-        val minutesAgo = ChronoUnit.MINUTES.between(instant, now)
-        val hoursAgo = ChronoUnit.HOURS.between(instant, now)
-        val daysAgo = ChronoUnit.DAYS.between(instant, now)
-
-        when {
-            minutesAgo < 1 -> "just now"
-            minutesAgo < 60 -> "${minutesAgo}m ago"
-            hoursAgo < 24 -> "${hoursAgo}h ago"
-            daysAgo < 7 -> "${daysAgo}d ago"
-            else -> {
-                val formatter = DateTimeFormatter.ofPattern("MMM d, yyyy")
-                    .withZone(ZoneId.systemDefault())
-                formatter.format(instant)
-            }
-        }
+        formatRelativeTimeFromInstant(instant)
     } catch (_: Exception) {
         isoTimestamp
+    }
+}
+
+fun formatRelativeTime(dateTime: OffsetDateTime): String {
+    return formatRelativeTimeFromInstant(dateTime.toInstant())
+}
+
+private fun formatRelativeTimeFromInstant(instant: Instant): String {
+    val now = Instant.now()
+    val minutesAgo = ChronoUnit.MINUTES.between(instant, now)
+    val hoursAgo = ChronoUnit.HOURS.between(instant, now)
+    val daysAgo = ChronoUnit.DAYS.between(instant, now)
+
+    return when {
+        minutesAgo < 1 -> "just now"
+        minutesAgo < 60 -> "${minutesAgo}m ago"
+        hoursAgo < 24 -> "${hoursAgo}h ago"
+        daysAgo < 7 -> "${daysAgo}d ago"
+        else -> {
+            val formatter = DateTimeFormatter.ofPattern("MMM d, yyyy")
+                .withZone(ZoneId.systemDefault())
+            formatter.format(instant)
+        }
     }
 }
 

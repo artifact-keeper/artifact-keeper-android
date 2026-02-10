@@ -21,6 +21,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.artifactkeeper.android.data.api.ApiClient
+import com.artifactkeeper.android.data.api.unwrap
 import com.artifactkeeper.android.data.models.CreateWebhookRequest
 import com.artifactkeeper.android.data.models.Webhook
 import kotlinx.coroutines.launch
@@ -53,7 +54,7 @@ fun WebhooksScreen() {
             if (refresh) isRefreshing = true else isLoading = true
             errorMessage = null
             try {
-                webhooks = ApiClient.api.listWebhooks().items
+                webhooks = ApiClient.webhooksApi.listWebhooks().unwrap().items
             } catch (e: Exception) {
                 errorMessage = e.message ?: "Failed to load webhooks"
             } finally {
@@ -128,9 +129,9 @@ fun WebhooksScreen() {
                                     coroutineScope.launch {
                                         try {
                                             if (enabled) {
-                                                ApiClient.api.enableWebhook(webhook.id)
+                                                ApiClient.webhooksApi.enableWebhook(webhook.id).unwrap()
                                             } else {
-                                                ApiClient.api.disableWebhook(webhook.id)
+                                                ApiClient.webhooksApi.disableWebhook(webhook.id).unwrap()
                                             }
                                             loadWebhooks(refresh = true)
                                         } catch (e: Exception) {
@@ -141,7 +142,7 @@ fun WebhooksScreen() {
                                 onTest = {
                                     coroutineScope.launch {
                                         try {
-                                            val result = ApiClient.api.testWebhook(webhook.id)
+                                            val result = ApiClient.webhooksApi.testWebhook(webhook.id).unwrap()
                                             testResult = if (result.success) {
                                                 "Test succeeded (status ${result.statusCode})"
                                             } else {
@@ -188,7 +189,7 @@ fun WebhooksScreen() {
             onCreate = { request ->
                 coroutineScope.launch {
                     try {
-                        ApiClient.api.createWebhook(request)
+                        ApiClient.webhooksApi.createWebhook(request).unwrap()
                         showAddDialog = false
                         loadWebhooks(refresh = true)
                     } catch (e: Exception) {
@@ -213,7 +214,7 @@ fun WebhooksScreen() {
                         webhookToDelete = null
                         coroutineScope.launch {
                             try {
-                                ApiClient.api.deleteWebhook(id)
+                                ApiClient.webhooksApi.deleteWebhook(id).unwrap()
                                 loadWebhooks(refresh = true)
                             } catch (e: Exception) {
                                 errorMessage = e.message ?: "Failed to delete webhook"

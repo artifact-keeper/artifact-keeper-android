@@ -25,6 +25,7 @@ import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import com.artifactkeeper.android.data.api.ApiClient
+import com.artifactkeeper.android.data.api.unwrap
 import com.artifactkeeper.android.data.models.LoginRequest
 import com.artifactkeeper.android.data.models.SavedServer
 import com.artifactkeeper.android.data.models.UserInfo
@@ -53,7 +54,7 @@ fun AccountMenu(
     var setupRequired by remember { mutableStateOf(false) }
     LaunchedEffect(activeServerId) {
         try {
-            val status = ApiClient.api.getSetupStatus()
+            val status = ApiClient.authApi.setupStatus().unwrap()
             setupRequired = status.setupRequired
         } catch (_: Exception) {
             setupRequired = false
@@ -303,9 +304,9 @@ private fun LoginDialog(
                         isLoading = true
                         error = null
                         try {
-                            val response = ApiClient.api.login(LoginRequest(username.trim(), password))
+                            val response = ApiClient.authApi.login(LoginRequest(username.trim(), password)).unwrap()
                             ApiClient.setToken(response.accessToken)
-                            val user = ApiClient.api.getMe()
+                            val user = ApiClient.authApi.getCurrentUser().unwrap()
                             onSuccess(user, response.accessToken, response.mustChangePassword)
                         } catch (e: Exception) {
                             error = e.message ?: "Login failed"
@@ -379,7 +380,7 @@ private fun AddServerDialog(
                         error = null
                         try {
                             ApiClient.configure(url.trim(), null)
-                            ApiClient.api.getHealth()
+                            ApiClient.healthApi.healthCheck().unwrap()
                             onServerAdded(name.trim(), url.trim())
                         } catch (e: Exception) {
                             error = e.message ?: "Failed to connect to server"

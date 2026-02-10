@@ -22,6 +22,7 @@ import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.artifactkeeper.android.data.api.ApiClient
+import com.artifactkeeper.android.data.api.unwrap
 import com.artifactkeeper.android.data.models.ScanFinding
 import com.artifactkeeper.android.ui.theme.Critical
 import com.artifactkeeper.android.ui.theme.High
@@ -57,7 +58,7 @@ fun ScanFindingsScreen(
             isLoading = true
             errorMessage = null
             try {
-                val response = ApiClient.api.getScanFindings(scanId)
+                val response = ApiClient.securityApi.listFindings(java.util.UUID.fromString(scanId)).unwrap()
                 findings = response.items
             } catch (e: Exception) {
                 errorMessage = e.message ?: "Failed to load findings"
@@ -203,43 +204,44 @@ private fun FindingCard(finding: ScanFinding) {
             )
 
             // CVE ID as clickable link
-            if (!finding.cveId.isNullOrBlank()) {
+            finding.cveId?.takeIf { it.isNotBlank() }?.let { cve ->
                 Spacer(modifier = Modifier.height(4.dp))
                 Text(
-                    text = finding.cveId,
+                    text = cve,
                     style = MaterialTheme.typography.bodySmall.copy(
                         textDecoration = TextDecoration.Underline,
                     ),
                     color = MaterialTheme.colorScheme.primary,
                     modifier = Modifier.clickable {
-                        uriHandler.openUri("https://nvd.nist.gov/vuln/detail/${finding.cveId}")
+                        uriHandler.openUri("https://nvd.nist.gov/vuln/detail/$cve")
                     },
                 )
             }
 
             // Affected component + version -> fixed version
-            if (!finding.affectedComponent.isNullOrBlank() || !finding.affectedVersion.isNullOrBlank() || !finding.fixedVersion.isNullOrBlank()) {
+            val hasComponentInfo = !finding.affectedComponent.isNullOrBlank() || !finding.affectedVersion.isNullOrBlank() || !finding.fixedVersion.isNullOrBlank()
+            if (hasComponentInfo) {
                 Spacer(modifier = Modifier.height(8.dp))
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.spacedBy(4.dp),
                 ) {
-                    if (!finding.affectedComponent.isNullOrBlank()) {
+                    finding.affectedComponent?.takeIf { it.isNotBlank() }?.let { comp ->
                         Text(
-                            text = finding.affectedComponent,
+                            text = comp,
                             style = MaterialTheme.typography.bodySmall,
                             fontWeight = FontWeight.Medium,
                         )
                     }
-                    if (!finding.affectedVersion.isNullOrBlank()) {
+                    finding.affectedVersion?.takeIf { it.isNotBlank() }?.let { ver ->
                         Text(
-                            text = finding.affectedVersion,
+                            text = ver,
                             style = MaterialTheme.typography.bodySmall,
                             fontWeight = FontWeight.Medium,
                             color = Critical,
                         )
                     }
-                    if (!finding.fixedVersion.isNullOrBlank()) {
+                    finding.fixedVersion?.takeIf { it.isNotBlank() }?.let { fixed ->
                         Icon(
                             imageVector = Icons.Default.ArrowForward,
                             contentDescription = "fixed in",
@@ -247,7 +249,7 @@ private fun FindingCard(finding: ScanFinding) {
                             tint = MaterialTheme.colorScheme.onSurfaceVariant,
                         )
                         Text(
-                            text = finding.fixedVersion,
+                            text = fixed,
                             style = MaterialTheme.typography.bodySmall,
                             fontWeight = FontWeight.Medium,
                             color = FixedVersionGreen,
@@ -257,10 +259,10 @@ private fun FindingCard(finding: ScanFinding) {
             }
 
             // Description
-            if (!finding.description.isNullOrBlank()) {
+            finding.description?.takeIf { it.isNotBlank() }?.let { desc ->
                 Spacer(modifier = Modifier.height(8.dp))
                 Text(
-                    text = finding.description,
+                    text = desc,
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     maxLines = 3,

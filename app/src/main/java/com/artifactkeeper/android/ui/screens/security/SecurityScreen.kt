@@ -1,6 +1,5 @@
 package com.artifactkeeper.android.ui.screens.security
 
-import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -12,14 +11,11 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.Path
-import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.artifactkeeper.android.data.api.ApiClient
-import com.artifactkeeper.android.data.models.CveTrendDataPoint
+import com.artifactkeeper.android.data.api.unwrap
 import com.artifactkeeper.android.data.models.CveTrends
 import com.artifactkeeper.android.data.models.DtPortfolioMetrics
 import com.artifactkeeper.android.data.models.DtStatus
@@ -46,7 +42,7 @@ private val DtProjects = Color(0xFF1890FF)
 @Composable
 fun SecurityScreen() {
     var scores by remember { mutableStateOf<List<RepoSecurityScore>>(emptyList()) }
-    var repoMap by remember { mutableStateOf<Map<String, Repository>>(emptyMap()) }
+    var repoMap by remember { mutableStateOf<Map<java.util.UUID, Repository>>(emptyMap()) }
     var cveTrends by remember { mutableStateOf<CveTrends?>(null) }
     var isLoading by remember { mutableStateOf(true) }
     var isRefreshing by remember { mutableStateOf(false) }
@@ -60,21 +56,21 @@ fun SecurityScreen() {
             if (refresh) isRefreshing = true else isLoading = true
             errorMessage = null
             try {
-                scores = ApiClient.api.getSecurityScores()
-                val repos = ApiClient.api.listRepositories(perPage = 100).items
+                scores = ApiClient.securityApi.getAllScores().unwrap()
+                val repos = ApiClient.reposApi.listRepositories(perPage = 100).unwrap().items
                 repoMap = repos.associateBy { it.id }
                 try {
-                    cveTrends = ApiClient.api.getCveTrends()
+                    cveTrends = ApiClient.sbomApi.getCveTrends().unwrap()
                 } catch (_: Exception) {
                     // CVE trends are optional
                 }
 
                 // Load Dependency-Track status (non-blocking)
                 try {
-                    val status = ApiClient.api.getDtStatus()
+                    val status = ApiClient.securityApi.dtStatus().unwrap()
                     dtStatus = status
                     if (status.enabled && status.healthy) {
-                        dtPortfolioMetrics = ApiClient.api.getDtPortfolioMetrics()
+                        dtPortfolioMetrics = ApiClient.securityApi.getPortfolioMetrics().unwrap()
                     } else {
                         dtPortfolioMetrics = null
                     }
@@ -206,9 +202,9 @@ private fun DtStatusCard(status: DtStatus) {
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold,
                 )
-                if (status.url != null) {
+                status.url?.let { dtUrl ->
                     Text(
-                        text = status.url,
+                        text = dtUrl,
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
@@ -251,27 +247,27 @@ private fun DtPortfolioMetricsCard(metrics: DtPortfolioMetrics) {
             ) {
                 DtMetricChip(
                     label = "Critical",
-                    value = metrics.critical.toString(),
+                    value = (metrics.critical ?: 0).toString(),
                     color = Critical,
                 )
                 DtMetricChip(
                     label = "High",
-                    value = metrics.high.toString(),
+                    value = (metrics.high ?: 0).toString(),
                     color = High,
                 )
                 DtMetricChip(
                     label = "Findings",
-                    value = metrics.findingsTotal.toString(),
+                    value = (metrics.findingsTotal ?: 0).toString(),
                     color = Medium,
                 )
                 DtMetricChip(
                     label = "Violations",
-                    value = metrics.policyViolationsTotal.toString(),
+                    value = (metrics.policyViolationsTotal ?: 0).toString(),
                     color = DtViolations,
                 )
                 DtMetricChip(
                     label = "Projects",
-                    value = metrics.projects.toString(),
+                    value = (metrics.projects ?: 0).toString(),
                     color = DtProjects,
                 )
             }
@@ -305,9 +301,10 @@ private fun DtMetricChip(label: String, value: String, color: Color) {
 
 @Composable
 private fun DtAuditProgressCard(metrics: DtPortfolioMetrics) {
-    val total = metrics.findingsTotal
-    val audited = metrics.findingsAudited
+    val total = metrics.findingsTotal ?: 0L
+    val audited = metrics.findingsAudited ?: 0L
     val progress = if (total > 0) audited.toFloat() / total.toFloat() else 0f
+    val riskScore = metrics.inheritedRiskScore ?: 0.0
 
     Card(modifier = Modifier.fillMaxWidth()) {
         Column(modifier = Modifier.padding(16.dp)) {
@@ -340,13 +337,13 @@ private fun DtAuditProgressCard(metrics: DtPortfolioMetrics) {
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
                 Text(
-                    text = "Risk Score: ${"%.1f".format(metrics.inheritedRiskScore)}",
+                    text = "Risk Score: ${"%.1f".format(riskScore)}",
                     style = MaterialTheme.typography.bodySmall,
                     fontWeight = FontWeight.Medium,
                     color = when {
-                        metrics.inheritedRiskScore >= 70 -> Critical
-                        metrics.inheritedRiskScore >= 40 -> High
-                        metrics.inheritedRiskScore >= 10 -> Medium
+                        riskScore >= 70 -> Critical
+                        riskScore >= 40 -> High
+                        riskScore >= 10 -> Medium
                         else -> DtConnected
                     },
                 )
@@ -374,7 +371,7 @@ private fun SecurityScoreCard(score: RepoSecurityScore, repo: Repository?) {
             ) {
                 Column(modifier = Modifier.weight(1f)) {
                     Text(
-                        text = repo?.name ?: score.repositoryId,
+                        text = repo?.name ?: score.repositoryId.toString(),
                         style = MaterialTheme.typography.titleMedium,
                     )
                     if (repo != null) {
@@ -429,7 +426,7 @@ private fun SecurityScoreCard(score: RepoSecurityScore, repo: Repository?) {
 }
 
 @Composable
-private fun SeverityPill(label: String, count: Int, color: Color) {
+private fun SeverityPill(label: String, count: Long, color: Color) {
     Box(
         modifier = Modifier
             .clip(RoundedCornerShape(12.dp))
@@ -443,6 +440,11 @@ private fun SeverityPill(label: String, count: Int, color: Color) {
             color = color,
         )
     }
+}
+
+@Composable
+private fun SeverityPill(label: String, count: Int, color: Color) {
+    SeverityPill(label = label, count = count.toLong(), color = color)
 }
 
 // MARK: - CVE Trends Summary
@@ -472,72 +474,27 @@ private fun CveTrendsSummaryCard(trends: CveTrends) {
 
             Spacer(modifier = Modifier.height(12.dp))
 
-            // Detected vs Resolved
+            // Open vs Fixed
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
             ) {
                 Text(
-                    text = "${trends.totalDetected} detected",
+                    text = "${trends.openCves} open",
                     style = MaterialTheme.typography.bodySmall,
                     color = Critical,
                 )
                 Text(
-                    text = "${trends.totalResolved} resolved",
+                    text = "${trends.fixedCves} fixed",
                     style = MaterialTheme.typography.bodySmall,
                     color = GradeA,
                 )
                 Text(
-                    text = trends.period,
+                    text = "${trends.totalCves} total",
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
             }
-
-            // Sparkline
-            if (trends.trendData.size >= 2) {
-                Spacer(modifier = Modifier.height(12.dp))
-                CveTrendSparkline(
-                    data = trends.trendData,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(48.dp),
-                )
-            }
         }
-    }
-}
-
-@Composable
-private fun CveTrendSparkline(data: List<CveTrendDataPoint>, modifier: Modifier = Modifier) {
-    val detectedColor = Critical
-    val resolvedColor = GradeA
-
-    Canvas(modifier = modifier) {
-        if (data.size < 2) return@Canvas
-
-        val maxVal = data.maxOf { maxOf(it.detected, it.resolved) }.coerceAtLeast(1).toFloat()
-        val stepX = size.width / (data.size - 1).toFloat()
-
-        fun buildPath(values: List<Int>): Path {
-            val path = Path()
-            values.forEachIndexed { i, v ->
-                val x = i * stepX
-                val y = size.height - (v.toFloat() / maxVal) * size.height
-                if (i == 0) path.moveTo(x, y) else path.lineTo(x, y)
-            }
-            return path
-        }
-
-        drawPath(
-            path = buildPath(data.map { it.detected }),
-            color = detectedColor,
-            style = Stroke(width = 2.dp.toPx()),
-        )
-        drawPath(
-            path = buildPath(data.map { it.resolved }),
-            color = resolvedColor,
-            style = Stroke(width = 2.dp.toPx()),
-        )
     }
 }

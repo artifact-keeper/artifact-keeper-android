@@ -18,6 +18,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.artifactkeeper.android.data.api.ApiClient
+import com.artifactkeeper.android.data.api.unwrap
 import com.artifactkeeper.android.data.models.BuildItem
 import com.artifactkeeper.android.ui.util.formatDuration
 import com.artifactkeeper.android.ui.util.formatRelativeTime
@@ -51,10 +52,10 @@ fun BuildsScreen() {
             if (refresh) isRefreshing = true else isLoading = true
             errorMessage = null
             try {
-                val response = ApiClient.api.listBuilds(
+                val response = ApiClient.buildsApi.listBuilds(
                     search = searchQuery.ifBlank { null },
                     status = selectedStatus,
-                )
+                ).unwrap()
                 builds = response.items
             } catch (e: Exception) {
                 errorMessage = e.message ?: "Failed to load builds"
@@ -194,10 +195,10 @@ private fun BuildCard(build: BuildItem) {
                     color = statusColor,
                 )
 
-                if (!build.vcsBranch.isNullOrBlank()) {
+                build.vcsBranch?.takeIf { it.isNotBlank() }?.let { branch ->
                     Spacer(modifier = Modifier.height(4.dp))
                     Text(
-                        text = build.vcsBranch,
+                        text = branch,
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         maxLines = 1,
@@ -205,10 +206,10 @@ private fun BuildCard(build: BuildItem) {
                     )
                 }
 
-                if (!build.vcsMessage.isNullOrBlank()) {
+                build.vcsMessage?.takeIf { it.isNotBlank() }?.let { msg ->
                     Spacer(modifier = Modifier.height(2.dp))
                     Text(
-                        text = build.vcsMessage,
+                        text = msg,
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         maxLines = 1,
@@ -222,9 +223,9 @@ private fun BuildCard(build: BuildItem) {
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween,
                 ) {
-                    if (build.durationMs != null) {
+                    build.durationMs?.let { duration ->
                         Text(
-                            text = formatDuration(build.durationMs),
+                            text = formatDuration(duration),
                             style = MaterialTheme.typography.labelSmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                         )
@@ -234,9 +235,9 @@ private fun BuildCard(build: BuildItem) {
                         style = MaterialTheme.typography.labelSmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
-                    if (build.artifactCount != null && build.artifactCount > 0) {
+                    build.artifactCount?.takeIf { it > 0 }?.let { count ->
                         Text(
-                            text = "${build.artifactCount} artifact${if (build.artifactCount > 1) "s" else ""}",
+                            text = "$count artifact${if (count > 1) "s" else ""}",
                             style = MaterialTheme.typography.labelSmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                         )

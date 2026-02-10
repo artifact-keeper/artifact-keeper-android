@@ -23,6 +23,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.artifactkeeper.android.data.api.ApiClient
+import com.artifactkeeper.android.data.api.unwrap
 import com.artifactkeeper.android.data.models.AdminStats
 import com.artifactkeeper.android.data.models.StorageBreakdownItem
 import com.artifactkeeper.android.ui.util.formatBytes
@@ -43,8 +44,8 @@ fun AnalyticsScreen() {
             if (refresh) isRefreshing = true else isLoading = true
             errorMessage = null
             try {
-                stats = ApiClient.api.getAdminStats()
-                storageBreakdown = ApiClient.api.getStorageBreakdown()
+                stats = ApiClient.adminApi.getSystemStats().unwrap()
+                storageBreakdown = ApiClient.analyticsApi.getStorageBreakdown().unwrap()
             } catch (e: Exception) {
                 errorMessage = e.message ?: "Failed to load analytics"
             } finally {

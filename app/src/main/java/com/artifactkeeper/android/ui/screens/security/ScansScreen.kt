@@ -22,7 +22,9 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.artifactkeeper.android.data.api.ApiClient
+import com.artifactkeeper.android.data.api.unwrap
 import com.artifactkeeper.android.data.models.ScanResult
+import com.artifactkeeper.android.data.models.TriggerScanRequest
 import com.artifactkeeper.android.ui.theme.Critical
 import com.artifactkeeper.android.ui.theme.High
 import com.artifactkeeper.android.ui.theme.Low
@@ -49,7 +51,7 @@ fun ScansScreen(onScanClick: (String) -> Unit = {}) {
             isLoading = true
             errorMessage = null
             try {
-                val response = ApiClient.api.listScans()
+                val response = ApiClient.securityApi.listScans().unwrap()
                 scans = response.items
             } catch (e: Exception) {
                 errorMessage = e.message ?: "Failed to load scans"
@@ -110,7 +112,7 @@ fun ScansScreen(onScanClick: (String) -> Unit = {}) {
                         }
                     } else {
                         items(scans, key = { it.id }) { scan ->
-                            ScanCard(scan, onClick = { onScanClick(scan.id) })
+                            ScanCard(scan, onClick = { onScanClick(scan.id.toString()) })
                         }
                     }
                 }
@@ -141,7 +143,7 @@ fun ScansScreen(onScanClick: (String) -> Unit = {}) {
                                 isTriggering = true
                                 triggerMessage = null
                                 try {
-                                    val response = ApiClient.api.triggerScan()
+                                    val response = ApiClient.securityApi.triggerScan(TriggerScanRequest()).unwrap()
                                     triggerMessage = "${response.message} (${response.artifactsQueued} queued)"
                                     loadScans()
                                 } catch (e: Exception) {
@@ -231,10 +233,10 @@ private fun ScanCard(scan: ScanResult, onClick: () -> Unit = {}) {
                 SeverityPill(label = "L", count = scan.lowCount, color = Low)
             }
 
-            if (scan.errorMessage != null) {
+            scan.errorMessage?.let { errMsg ->
                 Spacer(modifier = Modifier.height(8.dp))
                 Text(
-                    text = scan.errorMessage,
+                    text = errMsg,
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.error,
                 )

@@ -20,9 +20,11 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.artifactkeeper.android.data.api.ApiClient
+import com.artifactkeeper.android.data.api.unwrap
 import com.artifactkeeper.android.data.models.CreateLicensePolicyRequest
 import com.artifactkeeper.android.data.models.LicensePolicy
 import com.artifactkeeper.android.data.models.UpdateLicensePolicyRequest
+import com.artifactkeeper.client.models.UpsertLicensePolicyRequest
 import kotlinx.coroutines.launch
 
 private val ACTION_OPTIONS = listOf("warn", "block", "allow")
@@ -46,7 +48,7 @@ fun LicensePoliciesScreen() {
             if (refresh) isRefreshing = true else isLoading = true
             errorMessage = null
             try {
-                policies = ApiClient.api.listLicensePolicies()
+                policies = ApiClient.sbomApi.listLicensePolicies().unwrap()
             } catch (e: Exception) {
                 errorMessage = e.message ?: "Failed to load license policies"
             } finally {
@@ -120,9 +122,8 @@ fun LicensePoliciesScreen() {
                                 onToggle = { enabled ->
                                     coroutineScope.launch {
                                         try {
-                                            ApiClient.api.updateLicensePolicy(
-                                                policy.id,
-                                                UpdateLicensePolicyRequest(
+                                            ApiClient.sbomApi.upsertLicensePolicy(
+                                                UpsertLicensePolicyRequest(
                                                     name = policy.name,
                                                     description = policy.description,
                                                     allowedLicenses = policy.allowedLicenses,
@@ -131,7 +132,7 @@ fun LicensePoliciesScreen() {
                                                     allowUnknown = policy.allowUnknown,
                                                     isEnabled = enabled,
                                                 )
-                                            )
+                                            ).unwrap()
                                             loadPolicies(refresh = true)
                                         } catch (e: Exception) {
                                             errorMessage = e.message ?: "Failed to update policy"
@@ -174,7 +175,16 @@ fun LicensePoliciesScreen() {
             onCreate = { request ->
                 coroutineScope.launch {
                     try {
-                        ApiClient.api.createLicensePolicy(request)
+                        ApiClient.sbomApi.upsertLicensePolicy(
+                            UpsertLicensePolicyRequest(
+                                name = request.name,
+                                description = request.description,
+                                allowedLicenses = request.allowedLicenses,
+                                deniedLicenses = request.deniedLicenses,
+                                action = request.action,
+                                allowUnknown = request.allowUnknown,
+                            )
+                        ).unwrap()
                         showAddDialog = false
                         loadPolicies(refresh = true)
                     } catch (e: Exception) {
@@ -199,7 +209,7 @@ fun LicensePoliciesScreen() {
                         policyToDelete = null
                         coroutineScope.launch {
                             try {
-                                ApiClient.api.deleteLicensePolicy(id)
+                                ApiClient.sbomApi.deleteLicensePolicy(id).unwrap()
                                 loadPolicies(refresh = true)
                             } catch (e: Exception) {
                                 errorMessage = e.message ?: "Failed to delete license policy"
@@ -245,9 +255,9 @@ private fun LicensePolicyCard(
                         text = policy.name,
                         style = MaterialTheme.typography.titleMedium,
                     )
-                    if (!policy.description.isNullOrBlank()) {
+                    policy.description?.takeIf { it.isNotBlank() }?.let { desc ->
                         Text(
-                            text = policy.description,
+                            text = desc,
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                         )

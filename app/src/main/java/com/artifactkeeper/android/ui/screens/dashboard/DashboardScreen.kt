@@ -13,6 +13,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.dp
 import com.artifactkeeper.android.data.api.ApiClient
+import com.artifactkeeper.android.data.api.unwrap
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -30,9 +31,9 @@ fun DashboardScreen(onSettingsClick: () -> Unit = {}) {
             isLoading = true
             errorMessage = null
             try {
-                repoCount = ApiClient.api.listRepositories(perPage = 1).pagination?.total
-                packageCount = ApiClient.api.listPackages(perPage = 1).pagination?.total
-                buildCount = ApiClient.api.listBuilds(perPage = 1).pagination?.total
+                repoCount = ApiClient.reposApi.listRepositories(perPage = 1).unwrap().pagination.total
+                packageCount = ApiClient.packagesApi.listPackages(perPage = 1).unwrap().pagination.total
+                buildCount = ApiClient.buildsApi.listBuilds(perPage = 1).unwrap().pagination.total
             } catch (e: Exception) {
                 errorMessage = e.message ?: "Failed to load dashboard"
             } finally {

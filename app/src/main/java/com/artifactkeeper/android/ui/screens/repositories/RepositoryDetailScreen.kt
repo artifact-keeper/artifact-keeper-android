@@ -22,6 +22,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.artifactkeeper.android.data.api.ApiClient
+import com.artifactkeeper.android.data.api.unwrap
 import com.artifactkeeper.android.data.models.Artifact
 import com.artifactkeeper.android.data.models.Repository
 import com.artifactkeeper.android.ui.util.formatBytes
@@ -50,12 +51,12 @@ fun RepositoryDetailScreen(
             if (refresh) isRefreshing = true else isLoading = true
             errorMessage = null
             try {
-                val repo = ApiClient.api.getRepository(repoKey)
+                val repo = ApiClient.reposApi.getRepository(repoKey).unwrap()
                 repository = repo
-                val response = ApiClient.api.listArtifacts(
-                    repoKey = repoKey,
-                    search = searchQuery.ifBlank { null },
-                )
+                val response = ApiClient.reposApi.listArtifacts(
+                    key = repoKey,
+                    q = searchQuery.ifBlank { null },
+                ).unwrap()
                 artifacts = response.items
             } catch (e: Exception) {
                 errorMessage = e.message ?: "Failed to load repository"
@@ -177,7 +178,7 @@ fun RepositoryDetailScreen(
                             ArtifactCard(
                                 artifact = artifact,
                                 repoKey = repoKey,
-                                onSecurityClick = { onArtifactSecurityClick(artifact.id, artifact.name) },
+                                onSecurityClick = { onArtifactSecurityClick(artifact.id.toString(), artifact.name) },
                             )
                         }
                     }
@@ -218,10 +219,10 @@ private fun RepoDetailHeader(repo: Repository) {
                 )
             }
 
-            if (!repo.description.isNullOrBlank()) {
+            repo.description?.takeIf { it.isNotBlank() }?.let { desc ->
                 Spacer(modifier = Modifier.height(8.dp))
                 Text(
-                    text = repo.description,
+                    text = desc,
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
@@ -235,11 +236,6 @@ private fun RepoDetailHeader(repo: Repository) {
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
             ) {
-                Text(
-                    text = "${repo.artifactCount} artifact${if (repo.artifactCount != 1) "s" else ""}",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
                 Text(
                     text = formatBytes(repo.storageUsedBytes),
                     style = MaterialTheme.typography.bodySmall,

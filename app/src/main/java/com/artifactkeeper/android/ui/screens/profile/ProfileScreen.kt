@@ -54,6 +54,7 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import com.artifactkeeper.android.data.api.ApiClient
+import com.artifactkeeper.android.data.api.unwrap
 import com.artifactkeeper.android.data.models.ChangePasswordRequest
 import com.artifactkeeper.android.data.models.TotpCodeRequest
 import com.artifactkeeper.android.data.models.TotpDisableRequest
@@ -318,10 +319,10 @@ fun ProfileScreen(
                                 coroutineScope.launch {
                                     passwordLoading = true
                                     try {
-                                        ApiClient.api.changePassword(
+                                        ApiClient.usersApi.changePassword(
                                             user.id,
                                             ChangePasswordRequest(currentPassword, newPassword),
-                                        )
+                                        ).unwrap()
                                         passwordSuccess = true
                                         currentPassword = ""
                                         newPassword = ""
@@ -462,16 +463,16 @@ fun ProfileScreen(
                                             coroutineScope.launch {
                                                 disableLoading = true
                                                 try {
-                                                    ApiClient.api.totpDisable(
+                                                    ApiClient.authApi.disableTotp(
                                                         TotpDisableRequest(disablePassword, disableCode)
-                                                    )
+                                                    ).unwrap()
                                                     totpEnabled = false
                                                     showDisableFlow = false
                                                     disablePassword = ""
                                                     disableCode = ""
                                                     // Update user info
                                                     try {
-                                                        val updatedUser = ApiClient.api.getMe()
+                                                        val updatedUser = ApiClient.authApi.getCurrentUser().unwrap()
                                                         onUserUpdated(updatedUser)
                                                     } catch (_: Exception) { }
                                                     snackbarHostState.showSnackbar("Two-factor authentication disabled")
@@ -566,7 +567,7 @@ fun ProfileScreen(
                                     coroutineScope.launch {
                                         setupLoading = true
                                         try {
-                                            setupResponse = ApiClient.api.totpSetup()
+                                            setupResponse = ApiClient.authApi.setupTotp().unwrap()
                                         } catch (e: Exception) {
                                             setupError = e.message ?: "Failed to start 2FA setup"
                                         } finally {
@@ -709,9 +710,9 @@ fun ProfileScreen(
                                             coroutineScope.launch {
                                                 verifyLoading = true
                                                 try {
-                                                    val response = ApiClient.api.totpEnable(
+                                                    val response = ApiClient.authApi.enableTotp(
                                                         TotpCodeRequest(verifyCode)
-                                                    )
+                                                    ).unwrap()
                                                     backupCodes = response.backupCodes
                                                     totpEnabled = true
                                                     showSetupFlow = false
@@ -719,7 +720,7 @@ fun ProfileScreen(
                                                     verifyCode = ""
                                                     // Update user info
                                                     try {
-                                                        val updatedUser = ApiClient.api.getMe()
+                                                        val updatedUser = ApiClient.authApi.getCurrentUser().unwrap()
                                                         onUserUpdated(updatedUser)
                                                     } catch (_: Exception) { }
                                                 } catch (e: Exception) {

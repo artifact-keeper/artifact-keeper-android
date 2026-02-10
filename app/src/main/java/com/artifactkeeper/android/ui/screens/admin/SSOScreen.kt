@@ -20,6 +20,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.artifactkeeper.android.data.api.ApiClient
+import com.artifactkeeper.android.data.api.unwrap
 import com.artifactkeeper.android.data.models.SSOProvider
 import kotlinx.coroutines.launch
 
@@ -36,7 +37,7 @@ fun SSOScreen() {
             if (refresh) isRefreshing = true else isLoading = true
             errorMessage = null
             try {
-                providers = ApiClient.api.listSSOProviders()
+                providers = ApiClient.ssoApi.listSsoProvidersAdmin().unwrap()
             } catch (e: Exception) {
                 errorMessage = e.message ?: "Failed to load SSO providers"
             } finally {

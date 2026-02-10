@@ -3,6 +3,7 @@ package com.artifactkeeper.android.ui.screens.staging
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.artifactkeeper.android.data.api.ApiClient
+import com.artifactkeeper.android.data.api.unwrap
 import com.artifactkeeper.android.data.models.BulkPromoteRequest
 import com.artifactkeeper.android.data.models.BulkPromotionResponse
 import com.artifactkeeper.android.data.models.PolicyStatus
@@ -46,7 +47,7 @@ class StagingViewModel : ViewModel() {
         viewModelScope.launch {
             _uiState.update { it.copy(isLoadingRepos = true, reposError = null) }
             try {
-                val response = ApiClient.api.listStagingRepos()
+                val response = ApiClient.stagingApi.listStagingRepos().unwrap()
                 _uiState.update { it.copy(stagingRepos = response.items, isLoadingRepos = false) }
             } catch (e: Exception) {
                 _uiState.update {
@@ -88,10 +89,10 @@ class StagingViewModel : ViewModel() {
             _uiState.update { it.copy(isLoadingArtifacts = true, artifactsError = null) }
             try {
                 val statusFilter = _uiState.value.filterStatus?.name?.lowercase()
-                val response = ApiClient.api.listStagingArtifacts(
+                val response = ApiClient.stagingApi.listStagingArtifacts(
                     repoKey = repoKey,
                     policyStatus = statusFilter,
-                )
+                ).unwrap()
                 _uiState.update { it.copy(artifacts = response.items, isLoadingArtifacts = false) }
             } catch (e: Exception) {
                 _uiState.update {
@@ -115,7 +116,7 @@ class StagingViewModel : ViewModel() {
         viewModelScope.launch {
             _uiState.update { it.copy(isLoadingHistory = true, historyError = null) }
             try {
-                val response = ApiClient.api.getPromotionHistory(repoKey)
+                val response = ApiClient.stagingApi.getPromotionHistory(repoKey).unwrap()
                 _uiState.update { it.copy(promotionHistory = response.items, isLoadingHistory = false) }
             } catch (e: Exception) {
                 _uiState.update {
@@ -131,7 +132,7 @@ class StagingViewModel : ViewModel() {
     private fun loadTargetRepositories() {
         viewModelScope.launch {
             try {
-                val response = ApiClient.api.listRepositories()
+                val response = ApiClient.reposApi.listRepositories().unwrap()
                 // Filter to only show local repositories as promotion targets
                 val localRepos = response.items.filter { it.repoType.equals("local", ignoreCase = true) }
                 _uiState.update { it.copy(targetRepositories = localRepos) }
@@ -184,7 +185,7 @@ class StagingViewModel : ViewModel() {
                     force = force,
                     comment = comment,
                 )
-                val response = ApiClient.api.promoteArtifact(repoKey, artifactId, request)
+                val response = ApiClient.stagingApi.promoteArtifact(repoKey, artifactId, request).unwrap()
                 _uiState.update {
                     it.copy(
                         isPromoting = false,
@@ -227,7 +228,7 @@ class StagingViewModel : ViewModel() {
                     force = force,
                     comment = comment,
                 )
-                val response = ApiClient.api.promoteBulk(repoKey, request)
+                val response = ApiClient.stagingApi.promoteBulk(repoKey, request).unwrap()
                 _uiState.update {
                     it.copy(
                         isPromoting = false,

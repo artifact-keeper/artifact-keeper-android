@@ -32,6 +32,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.artifactkeeper.android.data.api.ApiClient
+import com.artifactkeeper.android.data.api.unwrap
 import com.artifactkeeper.android.data.models.CveHistoryEntry
 import com.artifactkeeper.android.data.models.GenerateSbomRequest
 import com.artifactkeeper.android.data.models.SbomComponent
@@ -79,17 +80,16 @@ fun SbomScreen(
             errorMessage = null
             try {
                 // Try to find existing SBOM for this artifact
-                val sbomList = ApiClient.api.listSboms(artifactId = artifactId)
-                if (sbomList.items.isNotEmpty()) {
-                    val existingSbom = sbomList.items.first()
-                    val sbomContent = ApiClient.api.getSbom(existingSbom.id)
+                val sbomList = ApiClient.sbomApi.listSboms(artifactId = java.util.UUID.fromString(artifactId)).unwrap()
+                if (sbomList.isNotEmpty()) {
+                    val existingSbom = sbomList.first()
+                    val sbomContent = ApiClient.sbomApi.getSbom(existingSbom.id).unwrap()
                     sbom = sbomContent
                     selectedFormat = sbomContent.format
 
                     // Load components
                     try {
-                        val componentsResponse = ApiClient.api.getSbomComponents(existingSbom.id)
-                        components = componentsResponse.components
+                        components = ApiClient.sbomApi.getSbomComponents(existingSbom.id).unwrap()
                     } catch (_: Exception) {
                         components = emptyList()
                     }
@@ -100,7 +100,7 @@ fun SbomScreen(
 
                 // Load CVE history
                 try {
-                    cveHistory = ApiClient.api.getCveHistory(artifactId)
+                    cveHistory = ApiClient.sbomApi.getCveHistory(java.util.UUID.fromString(artifactId)).unwrap()
                 } catch (_: Exception) {
                     cveHistory = emptyList()
                 }
@@ -117,12 +117,12 @@ fun SbomScreen(
             isGenerating = true
             errorMessage = null
             try {
-                val newSbom = ApiClient.api.generateSbom(
+                ApiClient.sbomApi.generateSbom(
                     GenerateSbomRequest(
-                        artifactId = artifactId,
+                        artifactId = java.util.UUID.fromString(artifactId),
                         format = selectedFormat,
                     )
-                )
+                ).unwrap()
                 // Reload to get full content
                 loadSbomData()
             } catch (e: Exception) {
@@ -262,10 +262,10 @@ fun SbomScreen(
                     }
 
                     // Raw JSON viewer
-                    if (sbom?.content != null) {
+                    if (sbom != null) {
                         item(key = "raw-json") {
                             RawJsonCard(
-                                content = sbom!!.content ?: "",
+                                content = sbom!!.content.toString(),
                                 expanded = showRawJson,
                                 onToggle = { showRawJson = !showRawJson },
                             )
@@ -487,7 +487,7 @@ private fun SbomComponentCard(component: SbomComponent) {
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
                 )
-                if (component.version != null) {
+                component.version?.let { ver ->
                     Spacer(modifier = Modifier.width(8.dp))
                     Box(
                         modifier = Modifier
@@ -496,7 +496,7 @@ private fun SbomComponentCard(component: SbomComponent) {
                             .padding(horizontal = 6.dp, vertical = 2.dp),
                     ) {
                         Text(
-                            text = component.version,
+                            text = ver,
                             style = MaterialTheme.typography.labelSmall,
                             color = MaterialTheme.colorScheme.onSecondaryContainer,
                         )
@@ -528,10 +528,10 @@ private fun SbomComponentCard(component: SbomComponent) {
                 }
             }
 
-            if (component.type != null) {
+            component.componentType?.let { compType ->
                 Spacer(modifier = Modifier.height(4.dp))
                 Text(
-                    text = "Type: ${component.type}",
+                    text = "Type: $compType",
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
@@ -543,7 +543,8 @@ private fun SbomComponentCard(component: SbomComponent) {
 @Composable
 private fun CveHistoryCard(entry: CveHistoryEntry) {
     val uriHandler = LocalUriHandler.current
-    val sevColor = severityColor(entry.severity)
+    val severity = entry.severity ?: "unknown"
+    val sevColor = severityColor(severity)
     val statusColor = if (entry.status.lowercase() == "resolved") StatusResolved else StatusOpen
 
     Card(modifier = Modifier.fillMaxWidth()) {
@@ -561,7 +562,7 @@ private fun CveHistoryCard(entry: CveHistoryEntry) {
                         .padding(horizontal = 6.dp, vertical = 2.dp),
                 ) {
                     Text(
-                        text = entry.severity.replaceFirstChar { it.uppercase() },
+                        text = severity.replaceFirstChar { it.uppercase() },
                         style = MaterialTheme.typography.labelSmall,
                         fontWeight = FontWeight.SemiBold,
                         color = sevColor,
@@ -598,10 +599,17 @@ private fun CveHistoryCard(entry: CveHistoryEntry) {
                 )
             }
 
-            if (entry.title != null) {
+            // Show affected component as title-like info
+            entry.affectedComponent?.takeIf { it.isNotBlank() }?.let { comp ->
                 Spacer(modifier = Modifier.height(6.dp))
+                val label = buildString {
+                    append(comp)
+                    entry.affectedVersion?.takeIf { it.isNotBlank() }?.let { ver ->
+                        append(" @ $ver")
+                    }
+                }
                 Text(
-                    text = entry.title,
+                    text = label,
                     style = MaterialTheme.typography.bodySmall,
                     fontWeight = FontWeight.Medium,
                     maxLines = 2,
@@ -615,13 +623,14 @@ private fun CveHistoryCard(entry: CveHistoryEntry) {
                 horizontalArrangement = Arrangement.SpaceBetween,
             ) {
                 Text(
-                    text = "Detected: ${formatRelativeTime(entry.detectedAt)}",
+                    text = "Detected: ${formatRelativeTime(entry.firstDetectedAt)}",
                     style = MaterialTheme.typography.labelSmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
-                if (entry.resolvedAt != null) {
+                // Show updatedAt as resolved time when status is resolved
+                if (entry.status.lowercase() == "resolved") {
                     Text(
-                        text = "Resolved: ${formatRelativeTime(entry.resolvedAt)}",
+                        text = "Resolved: ${formatRelativeTime(entry.updatedAt)}",
                         style = MaterialTheme.typography.labelSmall,
                         color = StatusResolved,
                     )

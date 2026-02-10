@@ -22,6 +22,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.artifactkeeper.android.data.api.ApiClient
+import com.artifactkeeper.android.data.api.unwrap
 import com.artifactkeeper.android.data.models.PeerInstance
 import com.artifactkeeper.android.data.models.RegisterPeerRequest
 import com.artifactkeeper.android.ui.util.formatBytes
@@ -47,7 +48,7 @@ fun PeersScreen() {
             if (refresh) isRefreshing = true else isLoading = true
             errorMessage = null
             try {
-                peers = ApiClient.api.listPeers().items
+                peers = ApiClient.peersApi.listPeers().unwrap().items
             } catch (e: Exception) {
                 errorMessage = e.message ?: "Failed to load peers"
             } finally {
@@ -165,7 +166,7 @@ fun PeersScreen() {
             onRegister = { request ->
                 coroutineScope.launch {
                     try {
-                        ApiClient.api.registerPeer(request)
+                        ApiClient.peersApi.registerPeer(request).unwrap()
                         showRegisterDialog = false
                         loadPeers(refresh = true)
                     } catch (e: Exception) {
@@ -190,7 +191,7 @@ fun PeersScreen() {
                         peerToDelete = null
                         coroutineScope.launch {
                             try {
-                                ApiClient.api.deletePeer(id)
+                                ApiClient.peersApi.unregisterPeer(id).unwrap()
                                 loadPeers(refresh = true)
                             } catch (e: Exception) {
                                 errorMessage = e.message ?: "Failed to delete peer"
@@ -330,16 +331,16 @@ private fun PeerCard(peer: PeerInstance, onDelete: () -> Unit) {
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween,
                 ) {
-                    if (peer.lastSyncAt != null) {
+                    peer.lastSyncAt?.let { syncAt ->
                         Text(
-                            text = "Synced: ${formatRelativeTime(peer.lastSyncAt)}",
+                            text = "Synced: ${formatRelativeTime(syncAt)}",
                             style = MaterialTheme.typography.labelSmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                         )
                     }
-                    if (peer.lastHeartbeatAt != null) {
+                    peer.lastHeartbeatAt?.let { hbAt ->
                         Text(
-                            text = "Heartbeat: ${formatRelativeTime(peer.lastHeartbeatAt)}",
+                            text = "Heartbeat: ${formatRelativeTime(hbAt)}",
                             style = MaterialTheme.typography.labelSmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                         )
@@ -402,8 +403,9 @@ private fun RegisterPeerDialog(
                         RegisterPeerRequest(
                             name = name,
                             endpointUrl = endpointUrl,
-                            region = region.ifBlank { null },
                             apiKey = apiKey,
+                            syncFilter = kotlinx.serialization.json.JsonObject(emptyMap()),
+                            region = region.ifBlank { null },
                         )
                     )
                 },

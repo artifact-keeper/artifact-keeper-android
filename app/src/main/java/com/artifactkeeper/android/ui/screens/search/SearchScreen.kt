@@ -14,6 +14,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.artifactkeeper.android.data.api.ApiClient
+import com.artifactkeeper.android.data.api.unwrap
 import com.artifactkeeper.android.data.models.PackageItem
 import com.artifactkeeper.android.data.models.Repository
 import com.artifactkeeper.android.ui.util.formatBytes
@@ -44,14 +45,14 @@ fun SearchScreen() {
         try {
             val reposDeferred = async {
                 try {
-                    ApiClient.api.listRepositories(search = searchQuery, perPage = 20).items
+                    ApiClient.reposApi.listRepositories(q = searchQuery, perPage = 20).unwrap().items
                 } catch (_: Exception) {
                     emptyList<Repository>()
                 }
             }
             val artifactsDeferred = async {
                 try {
-                    ApiClient.api.listPackages(search = searchQuery, perPage = 20).items
+                    ApiClient.packagesApi.listPackages(search = searchQuery, perPage = 20).unwrap().items
                 } catch (_: Exception) {
                     emptyList<PackageItem>()
                 }
