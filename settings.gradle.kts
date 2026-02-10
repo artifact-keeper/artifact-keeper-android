@@ -14,3 +14,4 @@ dependencyResolutionManagement {
 }
 rootProject.name = "ArtifactKeeper"
 include(":app")
+include(":sdk")

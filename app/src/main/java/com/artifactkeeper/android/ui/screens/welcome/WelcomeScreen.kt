@@ -20,6 +20,7 @@ import androidx.compose.ui.unit.dp
 import com.artifactkeeper.android.R
 import com.artifactkeeper.android.data.ServerManager
 import com.artifactkeeper.android.data.api.ApiClient
+import com.artifactkeeper.android.data.api.unwrap
 import kotlinx.coroutines.launch
 
 @Composable
@@ -121,7 +122,7 @@ fun WelcomeScreen(onConnected: () -> Unit) {
                         errorMessage = null
                         try {
                             ApiClient.configure(url)
-                            ApiClient.api.getHealth()
+                            ApiClient.healthApi.healthCheck().unwrap()
                             // Connection succeeded -- save and register with ServerManager
                             prefs.edit().putString("server_url", url).apply()
                             val host = try {

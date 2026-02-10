@@ -18,6 +18,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.artifactkeeper.android.data.api.ApiClient
+import com.artifactkeeper.android.data.api.unwrap
 import com.artifactkeeper.android.data.models.AssignRepoRequest
 import com.artifactkeeper.android.data.models.PeerConnection
 import com.artifactkeeper.android.data.models.PeerInstance
@@ -46,8 +47,8 @@ fun ReplicationScreen() {
             if (refresh) isRefreshing = true else isLoading = true
             errorMessage = null
             try {
-                peers = ApiClient.api.listPeers().items
-                repositories = ApiClient.api.listRepositories(perPage = 100).items
+                peers = ApiClient.peersApi.listPeers().unwrap().items
+                repositories = ApiClient.reposApi.listRepositories(perPage = 100).unwrap().items
             } catch (e: Exception) {
                 errorMessage = e.message ?: "Failed to load replication data"
             } finally {
@@ -298,16 +299,16 @@ private fun ReplicationPeerCard(peer: PeerInstance) {
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
             ) {
-                if (peer.lastSyncAt != null) {
+                peer.lastSyncAt?.let { syncAt ->
                     Text(
-                        text = "Last sync: ${formatRelativeTime(peer.lastSyncAt)}",
+                        text = "Last sync: ${formatRelativeTime(syncAt)}",
                         style = MaterialTheme.typography.labelSmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
                 }
-                if (peer.lastHeartbeatAt != null) {
+                peer.lastHeartbeatAt?.let { hbAt ->
                     Text(
-                        text = "Heartbeat: ${formatRelativeTime(peer.lastHeartbeatAt)}",
+                        text = "Heartbeat: ${formatRelativeTime(hbAt)}",
                         style = MaterialTheme.typography.labelSmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
@@ -323,7 +324,7 @@ private fun ReplicationSubscriptionsTab(
     repositories: List<Repository>,
 ) {
     var selectedPeerId by remember { mutableStateOf(peers.firstOrNull()?.id) }
-    var assignedRepoIds by remember { mutableStateOf<Set<String>>(emptySet()) }
+    var assignedRepoIds by remember { mutableStateOf<Set<java.util.UUID>>(emptySet()) }
     var isLoadingRepos by remember { mutableStateOf(false) }
     var expanded by remember { mutableStateOf(false) }
     val coroutineScope = rememberCoroutineScope()
@@ -332,7 +333,7 @@ private fun ReplicationSubscriptionsTab(
         val peerId = selectedPeerId ?: return@LaunchedEffect
         isLoadingRepos = true
         try {
-            val repoIds = ApiClient.api.getPeerRepositories(peerId)
+            val repoIds = ApiClient.peersApi.getAssignedRepos(peerId).unwrap()
             assignedRepoIds = repoIds.toSet()
         } catch (_: Exception) {
             assignedRepoIds = emptySet()
@@ -464,13 +465,13 @@ private fun ReplicationSubscriptionsTab(
                                     val peerId = selectedPeerId ?: return@TextButton
                                     coroutineScope.launch {
                                         try {
-                                            ApiClient.api.assignPeerRepository(
+                                            ApiClient.peersApi.assignRepo(
                                                 peerId,
                                                 AssignRepoRequest(
                                                     repositoryId = repo.id,
                                                     replicationMode = "pull",
                                                 )
-                                            )
+                                            ).unwrap()
                                             assignedRepoIds = assignedRepoIds + repo.id
                                         } catch (_: Exception) {
                                             // Silently handle
@@ -500,7 +501,7 @@ private fun ReplicationTopologyTab(peers: List<PeerInstance>) {
         val peerId = selectedPeerId ?: return@LaunchedEffect
         isLoadingConnections = true
         try {
-            connections = ApiClient.api.getPeerConnections(peerId)
+            connections = ApiClient.peersApi.listPeerConnections(peerId).unwrap()
         } catch (_: Exception) {
             connections = emptyList()
         } finally {
@@ -599,7 +600,7 @@ private fun ReplicationTopologyTab(peers: List<PeerInstance>) {
 @Composable
 private fun ReplicationConnectionCard(
     connection: PeerConnection,
-    peerMap: Map<String, PeerInstance>,
+    peerMap: Map<java.util.UUID, PeerInstance>,
 ) {
     val statusColor = when (connection.status.lowercase()) {
         "connected" -> ReplicationOnline
@@ -615,7 +616,7 @@ private fun ReplicationConnectionCard(
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 Text(
-                    text = targetPeer?.name ?: connection.targetPeerId,
+                    text = targetPeer?.name ?: connection.targetPeerId.toString(),
                     style = MaterialTheme.typography.titleMedium,
                     modifier = Modifier.weight(1f),
                 )
@@ -647,9 +648,9 @@ private fun ReplicationConnectionCard(
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
                 }
-                if (connection.bandwidthEstimateBps != null) {
+                connection.bandwidthEstimateBps?.let { bw ->
                     Text(
-                        text = "Bandwidth: ${formatReplicationBandwidth(connection.bandwidthEstimateBps)}",
+                        text = "Bandwidth: ${formatReplicationBandwidth(bw)}",
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )

@@ -18,6 +18,7 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import com.artifactkeeper.android.data.ServerManager
 import com.artifactkeeper.android.data.api.ApiClient
+import com.artifactkeeper.android.data.api.unwrap
 import com.artifactkeeper.android.data.models.LoginRequest
 import com.artifactkeeper.android.data.models.SavedServer
 import com.artifactkeeper.android.data.models.UserInfo
@@ -54,10 +55,11 @@ fun SettingsScreen(onBack: () -> Unit, onDisconnect: () -> Unit = {}) {
 
         if (savedToken != null && savedUsername != null && savedUserId != null) {
             currentUser = UserInfo(
-                id = savedUserId,
+                id = java.util.UUID.fromString(savedUserId),
                 username = savedUsername,
-                email = savedEmail,
+                email = savedEmail ?: "",
                 isAdmin = savedIsAdmin,
+                totpEnabled = false,
             )
         }
     }
@@ -303,15 +305,15 @@ fun SettingsScreen(onBack: () -> Unit, onDisconnect: () -> Unit = {}) {
                                 isLoggingIn = true
                                 loginError = null
                                 try {
-                                    val response = ApiClient.api.login(
+                                    val response = ApiClient.authApi.login(
                                         LoginRequest(username.trim(), password)
-                                    )
+                                    ).unwrap()
                                     ApiClient.setToken(response.accessToken)
-                                    val user = ApiClient.api.getMe()
+                                    val user = ApiClient.authApi.getCurrentUser().unwrap()
                                     currentUser = user
                                     prefs.edit()
                                         .putString("auth_token", response.accessToken)
-                                        .putString("user_id", user.id)
+                                        .putString("user_id", user.id.toString())
                                         .putString("user_username", user.username)
                                         .putString("user_email", user.email)
                                         .putBoolean("user_is_admin", user.isAdmin)
@@ -527,7 +529,7 @@ private fun AddServerDialog(
                         errorMessage = null
                         try {
                             ApiClient.configure(cleanedUrl)
-                            ApiClient.api.listRepositories(page = 1, perPage = 1)
+                            ApiClient.reposApi.listRepositories(page = 1, perPage = 1).unwrap()
                             val host = try {
                                 java.net.URI(cleanedUrl).host ?: cleanedUrl
                             } catch (_: Exception) {

@@ -18,11 +18,12 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.artifactkeeper.android.data.api.ApiClient
+import com.artifactkeeper.android.data.api.unwrap
 import com.artifactkeeper.android.data.models.AlertState
 import com.artifactkeeper.android.data.models.DtStatus
 import com.artifactkeeper.android.data.models.HealthCheck
 import com.artifactkeeper.android.data.models.HealthLogEntry
-import com.artifactkeeper.android.data.models.HealthResponse
+import com.artifactkeeper.android.data.models.LocalHealthResponse
 import com.artifactkeeper.android.ui.util.formatRelativeTime
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -37,7 +38,7 @@ private val json = Json { ignoreUnknownKeys = true }
 
 @Composable
 fun MonitoringScreen() {
-    var health by remember { mutableStateOf<HealthResponse?>(null) }
+    var health by remember { mutableStateOf<LocalHealthResponse?>(null) }
     var dtStatus by remember { mutableStateOf<DtStatus?>(null) }
     var alerts by remember { mutableStateOf<List<AlertState>>(emptyList()) }
     var healthLog by remember { mutableStateOf<List<HealthLogEntry>>(emptyList()) }
@@ -58,16 +59,16 @@ fun MonitoringScreen() {
                     val request = Request.Builder().url(healthUrl).build()
                     val response = client.newCall(request).execute()
                     val body = response.body?.string() ?: "{}"
-                    json.decodeFromString<HealthResponse>(body)
+                    json.decodeFromString<LocalHealthResponse>(body)
                 }
                 // Fetch Dependency-Track status
                 try {
-                    dtStatus = ApiClient.api.getDtStatus()
+                    dtStatus = ApiClient.securityApi.dtStatus().unwrap()
                 } catch (_: Exception) {
                     dtStatus = null
                 }
-                alerts = ApiClient.api.getAlerts()
-                healthLog = ApiClient.api.getHealthLog()
+                alerts = ApiClient.monitoringApi.getAlertStates().unwrap()
+                healthLog = ApiClient.monitoringApi.getHealthLog().unwrap()
             } catch (e: Exception) {
                 errorMessage = e.message ?: "Failed to load monitoring data"
             } finally {

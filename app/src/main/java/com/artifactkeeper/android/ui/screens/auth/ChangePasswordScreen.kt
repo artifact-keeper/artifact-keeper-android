@@ -35,6 +35,7 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import com.artifactkeeper.android.data.api.ApiClient
+import com.artifactkeeper.android.data.api.unwrap
 import com.artifactkeeper.android.data.models.ChangePasswordRequest
 import kotlinx.coroutines.launch
 
@@ -171,10 +172,10 @@ fun ChangePasswordScreen(
                         coroutineScope.launch {
                             isLoading = true
                             try {
-                                ApiClient.api.changePassword(
-                                    userId,
+                                ApiClient.usersApi.changePassword(
+                                    java.util.UUID.fromString(userId),
                                     ChangePasswordRequest(currentPassword, newPassword),
-                                )
+                                ).unwrap()
                                 onPasswordChanged()
                             } catch (e: Exception) {
                                 error = e.message ?: "Failed to change password"

@@ -12,6 +12,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.artifactkeeper.android.data.api.ApiClient
+import com.artifactkeeper.android.data.api.unwrap
 import com.artifactkeeper.android.data.models.Repository
 import com.artifactkeeper.android.ui.util.formatBytes
 import com.artifactkeeper.android.ui.util.formatRelativeTime
@@ -31,7 +32,7 @@ fun RepositoriesScreen(onRepoClick: (String) -> Unit = {}) {
             if (refresh) isRefreshing = true else isLoading = true
             errorMessage = null
             try {
-                val response = ApiClient.api.listRepositories()
+                val response = ApiClient.reposApi.listRepositories().unwrap()
                 repositories = response.items
             } catch (e: Exception) {
                 errorMessage = e.message ?: "Failed to load repositories"
@@ -147,10 +148,10 @@ private fun RepositoryCard(repo: Repository, onClick: () -> Unit) {
                 }
             }
 
-            if (!repo.description.isNullOrBlank()) {
+            repo.description?.takeIf { it.isNotBlank() }?.let { desc ->
                 Spacer(modifier = Modifier.height(4.dp))
                 Text(
-                    text = repo.description,
+                    text = desc,
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     maxLines = 2,
@@ -166,11 +167,6 @@ private fun RepositoryCard(repo: Repository, onClick: () -> Unit) {
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
             ) {
-                Text(
-                    text = "${repo.artifactCount} artifact${if (repo.artifactCount != 1) "s" else ""}",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
                 Text(
                     text = formatBytes(repo.storageUsedBytes),
                     style = MaterialTheme.typography.bodySmall,

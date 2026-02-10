@@ -3,11 +3,12 @@ package com.artifactkeeper.android.ui.screens.repositories
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.artifactkeeper.android.data.api.ApiClient
+import com.artifactkeeper.android.data.api.unwrap
 import com.artifactkeeper.android.data.models.AddMemberRequest
-import com.artifactkeeper.android.data.models.MemberPriority
-import com.artifactkeeper.android.data.models.ReorderMembersRequest
 import com.artifactkeeper.android.data.models.Repository
 import com.artifactkeeper.android.data.models.VirtualMember
+import com.artifactkeeper.client.models.UpdateVirtualMembersRequest
+import com.artifactkeeper.client.models.VirtualMemberPriority
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -36,7 +37,7 @@ class VirtualMembersViewModel : ViewModel() {
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true, error = null) }
             try {
-                val response = ApiClient.api.listVirtualMembers(repoKey)
+                val response = ApiClient.reposApi.listVirtualMembers(repoKey).unwrap()
                 _uiState.update {
                     it.copy(
                         members = response.items.sortedBy { member -> member.priority },
@@ -58,7 +59,7 @@ class VirtualMembersViewModel : ViewModel() {
         viewModelScope.launch {
             _uiState.update { it.copy(isLoadingEligible = true) }
             try {
-                val response = ApiClient.api.listRepositories()
+                val response = ApiClient.reposApi.listRepositories().unwrap()
                 // Filter to local and remote repos of the same format
                 // Exclude repos that are already members
                 val currentMemberKeys = _uiState.value.members.map { it.memberRepoKey }.toSet()
@@ -81,7 +82,7 @@ class VirtualMembersViewModel : ViewModel() {
             _uiState.update { it.copy(isSaving = true, error = null, successMessage = null) }
             try {
                 val request = AddMemberRequest(memberKey = memberKey, priority = priority)
-                ApiClient.api.addVirtualMember(currentRepoKey, request)
+                ApiClient.reposApi.addVirtualMember(currentRepoKey, request).unwrap()
                 _uiState.update { it.copy(isSaving = false, successMessage = "Member added") }
                 loadMembers(currentRepoKey)
             } catch (e: Exception) {
@@ -99,7 +100,7 @@ class VirtualMembersViewModel : ViewModel() {
         viewModelScope.launch {
             _uiState.update { it.copy(isSaving = true, error = null, successMessage = null) }
             try {
-                ApiClient.api.removeVirtualMember(currentRepoKey, memberKey)
+                ApiClient.reposApi.removeVirtualMember(currentRepoKey, memberKey).unwrap()
                 _uiState.update { it.copy(isSaving = false, successMessage = "Member removed") }
                 loadMembers(currentRepoKey)
             } catch (e: Exception) {
@@ -121,10 +122,10 @@ class VirtualMembersViewModel : ViewModel() {
             _uiState.update { it.copy(isSaving = true, error = null, successMessage = null) }
             try {
                 val memberPriorities = reorderedMembers.mapIndexed { index, member ->
-                    MemberPriority(memberKey = member.memberRepoKey, priority = index + 1)
+                    VirtualMemberPriority(memberKey = member.memberRepoKey, priority = index + 1)
                 }
-                val request = ReorderMembersRequest(members = memberPriorities)
-                val response = ApiClient.api.reorderVirtualMembers(currentRepoKey, request)
+                val request = UpdateVirtualMembersRequest(members = memberPriorities)
+                val response = ApiClient.reposApi.updateVirtualMembers(currentRepoKey, request).unwrap()
                 _uiState.update {
                     it.copy(
                         members = response.items.sortedBy { member -> member.priority },

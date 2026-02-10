@@ -15,6 +15,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.artifactkeeper.android.data.api.ApiClient
+import com.artifactkeeper.android.data.api.unwrap
 import com.artifactkeeper.android.data.models.AdminGroup
 import com.artifactkeeper.android.data.models.CreateGroupRequest
 import kotlinx.coroutines.launch
@@ -33,7 +34,7 @@ fun GroupsScreen() {
             if (refresh) isRefreshing = true else isLoading = true
             errorMessage = null
             try {
-                groups = ApiClient.api.listGroups().items
+                groups = ApiClient.groupsApi.listGroups().unwrap().items
             } catch (e: Exception) {
                 errorMessage = e.message ?: "Failed to load groups"
             } finally {
@@ -146,7 +147,7 @@ fun GroupsScreen() {
             onCreate = { request ->
                 coroutineScope.launch {
                     try {
-                        ApiClient.api.createGroup(request)
+                        ApiClient.groupsApi.createGroup(request).unwrap()
                         showAddDialog = false
                         loadGroups(refresh = true)
                     } catch (e: Exception) {
@@ -181,9 +182,9 @@ private fun GroupCard(group: AdminGroup) {
                     text = group.name,
                     style = MaterialTheme.typography.titleMedium,
                 )
-                if (group.description != null) {
+                group.description?.let { desc ->
                     Text(
-                        text = group.description,
+                        text = desc,
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )

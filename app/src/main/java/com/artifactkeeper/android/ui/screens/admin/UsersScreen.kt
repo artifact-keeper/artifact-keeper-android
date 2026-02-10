@@ -21,6 +21,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.artifactkeeper.android.data.api.ApiClient
+import com.artifactkeeper.android.data.api.unwrap
 import com.artifactkeeper.android.data.models.AdminUser
 import com.artifactkeeper.android.data.models.CreateUserRequest
 import kotlinx.coroutines.launch
@@ -40,7 +41,7 @@ fun UsersScreen() {
             if (refresh) isRefreshing = true else isLoading = true
             errorMessage = null
             try {
-                users = ApiClient.api.listUsers().items
+                users = ApiClient.usersApi.listUsers().unwrap().items
             } catch (e: Exception) {
                 errorMessage = e.message ?: "Failed to load users"
             } finally {
@@ -144,7 +145,7 @@ fun UsersScreen() {
             onCreate = { request ->
                 coroutineScope.launch {
                     try {
-                        val response = ApiClient.api.createUser(request)
+                        val response = ApiClient.usersApi.createUser(request).unwrap()
                         generatedPassword = response.generatedPassword
                         showAddDialog = false
                         loadUsers(refresh = true)
@@ -202,16 +203,6 @@ private fun UserCard(user: AdminUser) {
                 .padding(16.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            // Active/inactive status dot
-            Box(
-                modifier = Modifier
-                    .size(10.dp)
-                    .clip(CircleShape)
-                    .background(if (user.isActive) Color(0xFF52C41A) else Color(0xFFBFBFBF)),
-            )
-
-            Spacer(modifier = Modifier.width(12.dp))
-
             Column(modifier = Modifier.weight(1f)) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Text(
@@ -235,20 +226,12 @@ private fun UserCard(user: AdminUser) {
                     }
                 }
                 val subtitle = user.displayName ?: user.email
-                if (subtitle != null) {
-                    Text(
-                        text = subtitle,
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    )
-                }
+                Text(
+                    text = subtitle,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
             }
-
-            Text(
-                text = if (user.isActive) "Active" else "Inactive",
-                style = MaterialTheme.typography.labelSmall,
-                color = if (user.isActive) Color(0xFF52C41A) else MaterialTheme.colorScheme.onSurfaceVariant,
-            )
         }
     }
 }

@@ -14,6 +14,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.artifactkeeper.android.data.api.ApiClient
+import com.artifactkeeper.android.data.api.unwrap
 import com.artifactkeeper.android.data.models.PackageItem
 import com.artifactkeeper.android.ui.util.formatBytes
 import com.artifactkeeper.android.ui.util.formatDownloadCount
@@ -35,9 +36,9 @@ fun PackagesScreen() {
             if (refresh) isRefreshing = true else isLoading = true
             errorMessage = null
             try {
-                val response = ApiClient.api.listPackages(
+                val response = ApiClient.packagesApi.listPackages(
                     search = searchQuery.ifBlank { null },
-                )
+                ).unwrap()
                 packages = response.items
             } catch (e: Exception) {
                 errorMessage = e.message ?: "Failed to load packages"
@@ -159,10 +160,10 @@ private fun PackageCard(pkg: PackageItem) {
                 color = MaterialTheme.colorScheme.primary,
             )
 
-            if (!pkg.description.isNullOrBlank()) {
+            pkg.description?.takeIf { it.isNotBlank() }?.let { desc ->
                 Spacer(modifier = Modifier.height(4.dp))
                 Text(
-                    text = pkg.description,
+                    text = desc,
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     maxLines = 2,

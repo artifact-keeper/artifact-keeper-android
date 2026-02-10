@@ -20,6 +20,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.artifactkeeper.android.data.api.ApiClient
+import com.artifactkeeper.android.data.api.unwrap
 import com.artifactkeeper.android.data.models.CreatePolicyRequest
 import com.artifactkeeper.android.data.models.SecurityPolicy
 import com.artifactkeeper.android.data.models.UpdatePolicyRequest
@@ -46,7 +47,7 @@ fun PoliciesScreen() {
             if (refresh) isRefreshing = true else isLoading = true
             errorMessage = null
             try {
-                policies = ApiClient.api.listPolicies()
+                policies = ApiClient.securityApi.listPolicies().unwrap()
             } catch (e: Exception) {
                 errorMessage = e.message ?: "Failed to load policies"
             } finally {
@@ -120,7 +121,7 @@ fun PoliciesScreen() {
                                 onToggle = { enabled ->
                                     coroutineScope.launch {
                                         try {
-                                            ApiClient.api.updatePolicy(
+                                            ApiClient.securityApi.updatePolicy(
                                                 policy.id,
                                                 UpdatePolicyRequest(
                                                     name = policy.name,
@@ -129,7 +130,7 @@ fun PoliciesScreen() {
                                                     blockOnFail = policy.blockOnFail,
                                                     isEnabled = enabled,
                                                 )
-                                            )
+                                            ).unwrap()
                                             loadPolicies(refresh = true)
                                         } catch (e: Exception) {
                                             errorMessage = e.message ?: "Failed to update policy"
@@ -172,7 +173,7 @@ fun PoliciesScreen() {
             onCreate = { request ->
                 coroutineScope.launch {
                     try {
-                        ApiClient.api.createPolicy(request)
+                        ApiClient.securityApi.createPolicy(request).unwrap()
                         showAddDialog = false
                         loadPolicies(refresh = true)
                     } catch (e: Exception) {
@@ -197,7 +198,7 @@ fun PoliciesScreen() {
                         policyToDelete = null
                         coroutineScope.launch {
                             try {
-                                ApiClient.api.deletePolicy(id)
+                                ApiClient.securityApi.deletePolicy(id).unwrap()
                                 loadPolicies(refresh = true)
                             } catch (e: Exception) {
                                 errorMessage = e.message ?: "Failed to delete policy"

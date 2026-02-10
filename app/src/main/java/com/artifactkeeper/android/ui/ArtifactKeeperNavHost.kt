@@ -176,10 +176,11 @@ private fun MainAppScaffold(
         val savedIsAdmin = prefs.getBoolean("user_is_admin", false)
         if (savedToken != null && savedUsername != null && savedUserId != null) {
             currentUser = UserInfo(
-                id = savedUserId,
+                id = java.util.UUID.fromString(savedUserId),
                 username = savedUsername,
-                email = savedEmail,
+                email = savedEmail ?: "",
                 isAdmin = savedIsAdmin,
+                totpEnabled = false,
             )
         }
     }
@@ -199,13 +200,13 @@ private fun MainAppScaffold(
                 currentUser = user
                 prefs.edit()
                     .putString("auth_token", token)
-                    .putString("user_id", user.id)
+                    .putString("user_id", user.id.toString())
                     .putString("user_username", user.username)
                     .putString("user_email", user.email)
                     .putBoolean("user_is_admin", user.isAdmin)
                     .apply()
                 if (forceChangePassword) {
-                    changePasswordUserId = user.id
+                    changePasswordUserId = user.id.toString()
                     mustChangePassword = true
                 }
             },
@@ -319,7 +320,7 @@ private fun MainAppScaffold(
             onUserUpdated = { updatedUser ->
                 currentUser = updatedUser
                 prefs.edit()
-                    .putString("user_id", updatedUser.id)
+                    .putString("user_id", updatedUser.id.toString())
                     .putString("user_username", updatedUser.username)
                     .putString("user_email", updatedUser.email)
                     .putBoolean("user_is_admin", updatedUser.isAdmin)
