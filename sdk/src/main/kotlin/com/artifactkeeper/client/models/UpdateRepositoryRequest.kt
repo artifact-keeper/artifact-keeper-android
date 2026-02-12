@@ -23,14 +23,18 @@ import kotlinx.serialization.Contextual
 /**
  * 
  *
- * @param description 
- * @param isPublic 
- * @param name 
- * @param quotaBytes 
+ * @param key
+ * @param description
+ * @param isPublic
+ * @param name
+ * @param quotaBytes
  */
 @Serializable
 
 data class UpdateRepositoryRequest (
+
+    @SerialName(value = "key")
+    val key: kotlin.String? = null,
 
     @SerialName(value = "description")
     val description: kotlin.String? = null,
