@@ -10,6 +10,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material.icons.filled.Download
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Groups
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Shield
@@ -25,6 +26,7 @@ import com.artifactkeeper.android.data.api.ApiClient
 import com.artifactkeeper.android.data.api.unwrap
 import com.artifactkeeper.android.data.models.Artifact
 import com.artifactkeeper.android.data.models.Repository
+import com.artifactkeeper.client.models.UpdateRepositoryRequest
 import com.artifactkeeper.android.ui.util.formatBytes
 import com.artifactkeeper.android.ui.util.formatDownloadCount
 import com.artifactkeeper.android.ui.util.formatRelativeTime
@@ -44,6 +46,7 @@ fun RepositoryDetailScreen(
     var isRefreshing by remember { mutableStateOf(false) }
     var errorMessage by remember { mutableStateOf<String?>(null) }
     var searchQuery by remember { mutableStateOf("") }
+    var showEditDialog by remember { mutableStateOf(false) }
     val coroutineScope = rememberCoroutineScope()
 
     fun loadData(refresh: Boolean = false) {
@@ -76,6 +79,11 @@ fun RepositoryDetailScreen(
             navigationIcon = {
                 IconButton(onClick = onBack) {
                     Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+                }
+            },
+            actions = {
+                IconButton(onClick = { showEditDialog = true }) {
+                    Icon(Icons.Default.Edit, contentDescription = "Edit Repository")
                 }
             },
         )
@@ -184,6 +192,22 @@ fun RepositoryDetailScreen(
                     }
                 }
             }
+        }
+
+        if (showEditDialog && repository != null) {
+            EditRepositoryDialog(
+                repository = repository!!,
+                onDismiss = { showEditDialog = false },
+                onSaved = { updatedRepo, originalKey ->
+                    showEditDialog = false
+                    if (updatedRepo.key != originalKey) {
+                        onBack()
+                    } else {
+                        repository = updatedRepo
+                        loadData(refresh = true)
+                    }
+                },
+            )
         }
     }
 }
@@ -380,4 +404,126 @@ private fun VirtualMembersCard(onClick: () -> Unit) {
             )
         }
     }
+}
+
+@Composable
+private fun EditRepositoryDialog(
+    repository: Repository,
+    onDismiss: () -> Unit,
+    onSaved: (updatedRepo: Repository, originalKey: String) -> Unit,
+) {
+    var key by remember { mutableStateOf(repository.key) }
+    var name by remember { mutableStateOf(repository.name) }
+    var description by remember { mutableStateOf(repository.description ?: "") }
+    var isPublic by remember { mutableStateOf(repository.isPublic) }
+    var isSaving by remember { mutableStateOf(false) }
+    var errorMessage by remember { mutableStateOf<String?>(null) }
+    val coroutineScope = rememberCoroutineScope()
+
+    AlertDialog(
+        onDismissRequest = { if (!isSaving) onDismiss() },
+        title = { Text("Edit Repository") },
+        text = {
+            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                OutlinedTextField(
+                    value = key,
+                    onValueChange = { key = it.lowercase() },
+                    label = { Text("Key") },
+                    modifier = Modifier.fillMaxWidth(),
+                    singleLine = true,
+                    enabled = !isSaving,
+                )
+
+                if (key != repository.key) {
+                    Text(
+                        text = "Changing the repository key will update all URLs. This may break existing client configurations.",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.error,
+                    )
+                }
+
+                OutlinedTextField(
+                    value = name,
+                    onValueChange = { name = it },
+                    label = { Text("Name") },
+                    modifier = Modifier.fillMaxWidth(),
+                    singleLine = true,
+                    enabled = !isSaving,
+                )
+
+                OutlinedTextField(
+                    value = description,
+                    onValueChange = { description = it },
+                    label = { Text("Description") },
+                    modifier = Modifier.fillMaxWidth(),
+                    minLines = 2,
+                    maxLines = 4,
+                    enabled = !isSaving,
+                )
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Text("Public", style = MaterialTheme.typography.bodyLarge)
+                    Switch(
+                        checked = isPublic,
+                        onCheckedChange = { isPublic = it },
+                        enabled = !isSaving,
+                    )
+                }
+
+                if (errorMessage != null) {
+                    Text(
+                        text = errorMessage ?: "",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.error,
+                    )
+                }
+            }
+        },
+        confirmButton = {
+            TextButton(
+                onClick = {
+                    coroutineScope.launch {
+                        isSaving = true
+                        errorMessage = null
+                        try {
+                            val request = UpdateRepositoryRequest(
+                                key = if (key != repository.key) key else null,
+                                name = name,
+                                description = description.ifBlank { null },
+                                isPublic = isPublic,
+                            )
+                            val updatedRepo = ApiClient.reposApi.updateRepository(
+                                repository.key,
+                                request,
+                            ).unwrap()
+                            onSaved(updatedRepo, repository.key)
+                        } catch (e: Exception) {
+                            errorMessage = e.message ?: "Failed to update repository"
+                        } finally {
+                            isSaving = false
+                        }
+                    }
+                },
+                enabled = !isSaving,
+            ) {
+                if (isSaving) {
+                    CircularProgressIndicator(modifier = Modifier.size(16.dp))
+                } else {
+                    Text("Save")
+                }
+            }
+        },
+        dismissButton = {
+            TextButton(
+                onClick = onDismiss,
+                enabled = !isSaving,
+            ) {
+                Text("Cancel")
+            }
+        },
+    )
 }
