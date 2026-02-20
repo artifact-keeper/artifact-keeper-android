@@ -103,6 +103,11 @@ jobs:
       - name: Run tests
         run: ./gradlew test
 
+      - name: SonarCloud Scan
+        uses: SonarSource/sonarqube-scan-action@v5
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+
   nightly:
     name: Nightly Release
     runs-on: ubuntu-latest
