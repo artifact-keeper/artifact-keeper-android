@@ -1,0 +1,113 @@
+name: Bug Report
+description: Report a bug or unexpected behavior in the Artifact Keeper Android app
+labels: ["bug", "needs-triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to report a bug.
+
+        If this is a **backend or API** issue, please file it in [artifact-keeper](https://github.com/artifact-keeper/artifact-keeper/issues/new).
+        If this is a **web UI** issue, please file it in [artifact-keeper-web](https://github.com/artifact-keeper/artifact-keeper-web/issues/new).
+        If you're unsure where the problem lives, go ahead and file it here and we'll move it to the right place.
+
+        For security vulnerabilities, please use [private security reporting](https://github.com/artifact-keeper/artifact-keeper-android/security/advisories/new) instead.
+
+  - type: textarea
+    id: description
+    attributes:
+      label: Description
+      description: A clear summary of the bug.
+    validations:
+      required: true
+
+  - type: textarea
+    id: environment
+    attributes:
+      label: Environment Information
+      description: Fill in the details about your device and environment.
+      value: |
+        - Device: (e.g., Pixel 9, Samsung Galaxy S25)
+        - Android Version: (e.g., 15, 14)
+        - App Version:
+        - RAM:
+        - Network conditions: (e.g., Wi-Fi, cellular, VPN)
+    validations:
+      required: true
+
+  - type: input
+    id: backend-version
+    attributes:
+      label: Backend Version
+      description: The version of the Artifact Keeper backend, if known.
+      placeholder: "e.g., 1.1.0"
+    validations:
+      required: false
+
+  - type: textarea
+    id: expected-behavior
+    attributes:
+      label: Expected Behavior
+      description: What you expected to happen.
+    validations:
+      required: true
+
+  - type: textarea
+    id: observed-behavior
+    attributes:
+      label: Observed Behavior
+      description: What actually happened.
+    validations:
+      required: true
+
+  - type: textarea
+    id: steps-to-reproduce
+    attributes:
+      label: Steps to Reproduce
+      description: Step-by-step instructions to reproduce the issue.
+      placeholder: |
+        1. Open the app
+        2. Navigate to ...
+        3. Tap on ...
+        4. Observe ...
+    validations:
+      required: true
+
+  - type: textarea
+    id: logcat-output
+    attributes:
+      label: Logcat Output
+      description: |
+        Relevant logcat output, if available.
+        Tip: Filter logcat with `adb logcat -s ArtifactKeeper` for relevant logs.
+      render: shell
+    validations:
+      required: false
+
+  - type: textarea
+    id: screenshots
+    attributes:
+      label: Screenshots or Screen Recording
+      description: Attach screenshots or a screen recording that demonstrates the issue.
+    validations:
+      required: false
+
+  - type: textarea
+    id: additional-context
+    attributes:
+      label: Additional Context
+      description: Any other information that might help us investigate.
+    validations:
+      required: false
+
+  - type: checkboxes
+    id: checklist
+    attributes:
+      label: Pre-submission Checklist
+      options:
+        - label: I have searched existing issues to make sure this has not already been reported.
+          required: true
+        - label: I have redacted any sensitive information (tokens, passwords, internal URLs).
+          required: true
+        - label: I am using a supported version of the app.
+          required: true

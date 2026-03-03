@@ -1,0 +1,79 @@
+name: Feature Request
+description: Suggest a new feature or enhancement for the Artifact Keeper Android app
+labels: ["enhancement", "needs-triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for suggesting a feature.
+
+        If this is a **backend or API** feature request, please file it in [artifact-keeper](https://github.com/artifact-keeper/artifact-keeper/issues/new).
+        If you're unsure whether the change belongs in the app or the backend, go ahead and file it here and we'll move it to the right place.
+
+  - type: textarea
+    id: problem-statement
+    attributes:
+      label: Problem Statement
+      description: Describe the problem or limitation you're running into.
+    validations:
+      required: true
+
+  - type: textarea
+    id: proposed-solution
+    attributes:
+      label: Proposed Solution
+      description: Describe how you'd like this to work.
+    validations:
+      required: true
+
+  - type: textarea
+    id: alternatives-considered
+    attributes:
+      label: Alternatives Considered
+      description: Any alternative approaches you've thought about.
+    validations:
+      required: false
+
+  - type: textarea
+    id: use-case
+    attributes:
+      label: Use Case
+      description: Describe the specific scenario where this feature would be useful.
+    validations:
+      required: false
+
+  - type: dropdown
+    id: component
+    attributes:
+      label: Component
+      description: Which part of the app does this relate to?
+      options:
+        - Artifacts Browser
+        - Integration
+        - Security / Scanning
+        - Operations
+        - Administration
+        - Notifications
+        - Widgets
+        - Material Design / UI
+        - Other
+    validations:
+      required: false
+
+  - type: textarea
+    id: additional-context
+    attributes:
+      label: Additional Context
+      description: Any other information, mockups, or references that might be helpful.
+    validations:
+      required: false
+
+  - type: checkboxes
+    id: checklist
+    attributes:
+      label: Pre-submission Checklist
+      options:
+        - label: I have searched existing issues to make sure this has not already been requested.
+          required: true
+        - label: I have reviewed the documentation to confirm this feature does not already exist.
+          required: true
