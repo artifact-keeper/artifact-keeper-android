@@ -23,6 +23,9 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.artifactkeeper.android.ui.components.EmptyState
+import com.artifactkeeper.android.ui.components.ItemTitleWithChip
+import com.artifactkeeper.android.ui.components.LoadingErrorContainer
 import com.artifactkeeper.android.data.models.StagingRepository
 import com.artifactkeeper.android.ui.util.formatBytes
 
@@ -52,74 +55,53 @@ fun StagingListScreen(
     }
 
     Column(modifier = Modifier.fillMaxSize()) {
-        when {
-            uiState.isLoadingRepos && uiState.stagingRepos.isEmpty() -> {
-                Box(
-                    modifier = Modifier.fillMaxSize(),
-                    contentAlignment = Alignment.Center,
-                ) {
-                    CircularProgressIndicator()
-                }
-            }
-            uiState.reposError != null && uiState.stagingRepos.isEmpty() -> {
-                Box(
-                    modifier = Modifier.fillMaxSize(),
-                    contentAlignment = Alignment.Center,
-                ) {
-                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                        Text(
-                            text = uiState.reposError ?: "Unknown error",
-                            color = MaterialTheme.colorScheme.error,
-                            style = MaterialTheme.typography.bodyLarge,
-                        )
-                        Spacer(modifier = Modifier.height(8.dp))
-                        TextButton(onClick = { viewModel.loadStagingRepos() }) {
-                            Text("Retry")
-                        }
-                    }
-                }
-            }
-            uiState.stagingRepos.isEmpty() -> {
-                Box(
-                    modifier = Modifier.fillMaxSize(),
-                    contentAlignment = Alignment.Center,
-                ) {
-                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                        Text(
-                            text = "No staging repositories",
-                            style = MaterialTheme.typography.bodyLarge,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        )
-                        Spacer(modifier = Modifier.height(4.dp))
-                        Text(
-                            text = "Staging repositories allow you to review and promote artifacts before release",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            modifier = Modifier.padding(horizontal = 32.dp),
-                        )
-                    }
-                }
-            }
-            else -> {
-                PullToRefreshBox(
-                    isRefreshing = isRefreshing,
-                    onRefresh = {
-                        isRefreshing = true
-                        viewModel.loadStagingRepos()
-                    },
-                    modifier = Modifier.fillMaxSize(),
-                ) {
-                    LazyColumn(
+        LoadingErrorContainer(
+            isLoading = uiState.isLoadingRepos && uiState.stagingRepos.isEmpty(),
+            error = if (uiState.stagingRepos.isEmpty()) uiState.reposError else null,
+            onRetry = { viewModel.loadStagingRepos() },
+            emptyState = EmptyState(
+                isEmpty = uiState.stagingRepos.isEmpty(),
+                content = {
+                    Box(
                         modifier = Modifier.fillMaxSize(),
-                        contentPadding = PaddingValues(16.dp),
-                        verticalArrangement = Arrangement.spacedBy(12.dp),
+                        contentAlignment = Alignment.Center,
                     ) {
-                        items(uiState.stagingRepos, key = { it.id }) { repo ->
-                            StagingRepoCard(
-                                repo = repo,
-                                onClick = { onRepoClick(repo) },
+                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                            Text(
+                                text = "No staging repositories",
+                                style = MaterialTheme.typography.bodyLarge,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            )
+                            Spacer(modifier = Modifier.height(4.dp))
+                            Text(
+                                text = "Staging repositories allow you to review and promote artifacts before release",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                modifier = Modifier.padding(horizontal = 32.dp),
                             )
                         }
+                    }
+                },
+            ),
+        ) {
+            PullToRefreshBox(
+                isRefreshing = isRefreshing,
+                onRefresh = {
+                    isRefreshing = true
+                    viewModel.loadStagingRepos()
+                },
+                modifier = Modifier.fillMaxSize(),
+            ) {
+                LazyColumn(
+                    modifier = Modifier.fillMaxSize(),
+                    contentPadding = PaddingValues(16.dp),
+                    verticalArrangement = Arrangement.spacedBy(12.dp),
+                ) {
+                    items(uiState.stagingRepos, key = { it.id }) { repo ->
+                        StagingRepoCard(
+                            repo = repo,
+                            onClick = { onRepoClick(repo) },
+                        )
                     }
                 }
             }
@@ -138,24 +120,7 @@ private fun StagingRepoCard(
             .clickable(onClick = onClick),
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                Text(
-                    text = repo.name,
-                    style = MaterialTheme.typography.titleMedium,
-                    modifier = Modifier.weight(1f),
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
-                )
-                Spacer(modifier = Modifier.width(8.dp))
-                AssistChip(
-                    onClick = {},
-                    label = { Text(repo.format.uppercase(), style = MaterialTheme.typography.labelSmall) },
-                )
-            }
+            ItemTitleWithChip(title = repo.name, chipLabel = repo.format.uppercase())
 
             if (!repo.description.isNullOrBlank()) {
                 Spacer(modifier = Modifier.height(4.dp))

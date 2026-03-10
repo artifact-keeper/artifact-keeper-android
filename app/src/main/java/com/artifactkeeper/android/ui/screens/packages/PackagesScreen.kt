@@ -1,5 +1,6 @@
 package com.artifactkeeper.android.ui.screens.packages
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -16,6 +17,9 @@ import androidx.compose.ui.unit.dp
 import com.artifactkeeper.android.data.api.ApiClient
 import com.artifactkeeper.android.data.api.unwrap
 import com.artifactkeeper.android.data.models.PackageItem
+import com.artifactkeeper.android.ui.components.EmptyState
+import com.artifactkeeper.android.ui.components.ItemTitleWithChip
+import com.artifactkeeper.android.ui.components.LoadingErrorContainer
 import com.artifactkeeper.android.ui.util.formatBytes
 import com.artifactkeeper.android.ui.util.formatDownloadCount
 import com.artifactkeeper.android.ui.util.formatRelativeTime
@@ -23,7 +27,7 @@ import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun PackagesScreen() {
+fun PackagesScreen(onPackageClick: (String) -> Unit = {}) {
     var packages by remember { mutableStateOf<List<PackageItem>>(emptyList()) }
     var isLoading by remember { mutableStateOf(true) }
     var isRefreshing by remember { mutableStateOf(false) }
@@ -65,59 +69,24 @@ fun PackagesScreen() {
 
         LaunchedEffect(searchQuery) { loadPackages() }
 
-        when {
-            isLoading -> {
-                Box(
+        LoadingErrorContainer(
+            isLoading = isLoading,
+            error = errorMessage,
+            onRetry = { loadPackages() },
+            emptyState = EmptyState(isEmpty = packages.isEmpty(), message = "No packages found"),
+        ) {
+            PullToRefreshBox(
+                isRefreshing = isRefreshing,
+                onRefresh = { loadPackages(refresh = true) },
+                modifier = Modifier.fillMaxSize(),
+            ) {
+                LazyColumn(
                     modifier = Modifier.fillMaxSize(),
-                    contentAlignment = Alignment.Center,
+                    contentPadding = PaddingValues(16.dp),
+                    verticalArrangement = Arrangement.spacedBy(12.dp),
                 ) {
-                    CircularProgressIndicator()
-                }
-            }
-            errorMessage != null -> {
-                Box(
-                    modifier = Modifier.fillMaxSize(),
-                    contentAlignment = Alignment.Center,
-                ) {
-                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                        Text(
-                            text = errorMessage ?: "Unknown error",
-                            color = MaterialTheme.colorScheme.error,
-                            style = MaterialTheme.typography.bodyLarge,
-                        )
-                        Spacer(modifier = Modifier.height(8.dp))
-                        TextButton(onClick = { loadPackages() }) {
-                            Text("Retry")
-                        }
-                    }
-                }
-            }
-            packages.isEmpty() -> {
-                Box(
-                    modifier = Modifier.fillMaxSize(),
-                    contentAlignment = Alignment.Center,
-                ) {
-                    Text(
-                        text = "No packages found",
-                        style = MaterialTheme.typography.bodyLarge,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    )
-                }
-            }
-            else -> {
-                PullToRefreshBox(
-                    isRefreshing = isRefreshing,
-                    onRefresh = { loadPackages(refresh = true) },
-                    modifier = Modifier.fillMaxSize(),
-                ) {
-                    LazyColumn(
-                        modifier = Modifier.fillMaxSize(),
-                        contentPadding = PaddingValues(16.dp),
-                        verticalArrangement = Arrangement.spacedBy(12.dp),
-                    ) {
-                        items(packages, key = { it.id }) { pkg ->
-                            PackageCard(pkg)
-                        }
+                    items(packages, key = { it.id }) { pkg ->
+                        PackageCard(pkg, onClick = { onPackageClick(pkg.id.toString()) })
                     }
                 }
             }
@@ -126,31 +95,16 @@ fun PackagesScreen() {
 }
 
 @Composable
-private fun PackageCard(pkg: PackageItem) {
+private fun PackageCard(pkg: PackageItem, onClick: () -> Unit = {}) {
     Card(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable(onClick = onClick),
     ) {
         Column(
             modifier = Modifier.padding(16.dp),
         ) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                Text(
-                    text = pkg.name,
-                    style = MaterialTheme.typography.titleMedium,
-                    modifier = Modifier.weight(1f),
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
-                )
-                Spacer(modifier = Modifier.width(8.dp))
-                AssistChip(
-                    onClick = {},
-                    label = { Text(pkg.format.uppercase(), style = MaterialTheme.typography.labelSmall) },
-                )
-            }
+            ItemTitleWithChip(title = pkg.name, chipLabel = pkg.format.uppercase())
 
             Spacer(modifier = Modifier.height(4.dp))
 

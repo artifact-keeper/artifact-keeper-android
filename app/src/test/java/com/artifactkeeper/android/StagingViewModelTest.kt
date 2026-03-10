@@ -1,10 +1,22 @@
 package com.artifactkeeper.android
 
+import com.artifactkeeper.android.data.api.ApiClient
+import com.artifactkeeper.android.data.api.StagingApi
 import com.artifactkeeper.android.data.models.PolicyStatus
 import com.artifactkeeper.android.data.models.StagingArtifact
+import com.artifactkeeper.android.data.models.StagingArtifactListResponse
 import com.artifactkeeper.android.data.models.StagingRepository
+import com.artifactkeeper.android.data.models.StagingRepositoryListResponse
 import com.artifactkeeper.android.ui.screens.staging.StagingUiState
 import com.artifactkeeper.android.ui.screens.staging.StagingViewModel
+import com.artifactkeeper.client.apis.RepositoriesApi
+import com.artifactkeeper.client.models.Pagination
+import com.artifactkeeper.client.models.RepositoryListResponse
+import io.mockk.coEvery
+import io.mockk.every
+import io.mockk.mockk
+import io.mockk.mockkObject
+import io.mockk.unmockkObject
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
@@ -17,22 +29,40 @@ import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
+import retrofit2.Response
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class StagingViewModelTest {
 
     private val testDispatcher = UnconfinedTestDispatcher()
     private lateinit var viewModel: StagingViewModel
+    private val mockStagingApi = mockk<StagingApi>()
+    private val mockReposApi = mockk<RepositoriesApi>()
+    private val mockApiClient = mockk<ApiClient>()
 
     @Before
     fun setUp() {
         Dispatchers.setMain(testDispatcher)
-        viewModel = StagingViewModel()
+        mockkObject(ApiClient)
+        every { ApiClient.stagingApi } returns mockStagingApi
+        every { ApiClient.reposApi } returns mockReposApi
+
+        // Default stub for API calls triggered by selectRepo/setFilterStatus
+        coEvery { mockStagingApi.listStagingArtifacts(any(), any(), any(), any()) } returns
+            Response.success(StagingArtifactListResponse(items = emptyList()))
+        coEvery { mockReposApi.listRepositories(any(), any(), any(), any(), any()) } returns
+            Response.success(RepositoryListResponse(
+                items = emptyList(),
+                pagination = Pagination(page = 1, perPage = 50, total = 0, totalPages = 1),
+            ))
+
+        viewModel = StagingViewModel(mockApiClient)
     }
 
     @After
     fun tearDown() {
         Dispatchers.resetMain()
+        unmockkObject(ApiClient)
     }
 
     // =========================================================================
@@ -69,14 +99,10 @@ class StagingViewModelTest {
     fun `selectRepo sets selectedRepo and clears artifacts and selection`() {
         val repo = makeStagingRepo("staging-maven")
 
-        // Pre-populate some state to verify it gets cleared
-        viewModel.uiState.value.let { /* initial state */ }
-
         viewModel.selectRepo(repo)
 
         val state = viewModel.uiState.value
         assertEquals(repo, state.selectedRepo)
-        // artifacts and selection should be cleared when selecting a new repo
         assertTrue(state.selectedArtifactIds.isEmpty())
         assertTrue(state.promotionHistory.isEmpty())
     }
@@ -170,8 +196,6 @@ class StagingViewModelTest {
 
     @Test
     fun `clearMessages resets promotion error and success`() {
-        // We cannot easily set promotionError/promotionSuccess without API calls,
-        // but we can verify clearMessages works on a clean state (no-op).
         viewModel.clearMessages()
         val state = viewModel.uiState.value
         assertNull(state.promotionError)
@@ -199,7 +223,6 @@ class StagingViewModelTest {
 
     @Test
     fun `promoteBulk does nothing when no repo selected`() {
-        // No repo selected, so promoteBulk should return immediately
         viewModel.toggleArtifactSelection("a1")
 
         var errorCalled = false
@@ -210,7 +233,6 @@ class StagingViewModelTest {
             onSuccess = { successCalled = true }
         )
 
-        // Neither callback should be called because the method returns early
         assertFalse(errorCalled)
         assertFalse(successCalled)
     }

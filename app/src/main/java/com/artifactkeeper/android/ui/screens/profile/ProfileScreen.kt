@@ -16,7 +16,9 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material.icons.filled.ContentCopy
+import androidx.compose.material.icons.filled.Key
 import androidx.compose.material.icons.filled.Shield
 import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.VisibilityOff
@@ -60,6 +62,7 @@ import com.artifactkeeper.android.data.models.TotpCodeRequest
 import com.artifactkeeper.android.data.models.TotpDisableRequest
 import com.artifactkeeper.android.data.models.TotpSetupResponse
 import com.artifactkeeper.android.data.models.UserInfo
+import com.artifactkeeper.client.models.UpdateUserRequest
 import com.google.zxing.BarcodeFormat
 import com.google.zxing.MultiFormatWriter
 import kotlinx.coroutines.launch
@@ -82,6 +85,7 @@ fun ProfileScreen(
     user: UserInfo,
     onDismiss: () -> Unit,
     onUserUpdated: (UserInfo) -> Unit,
+    onNavigateToTokens: () -> Unit = {},
 ) {
     val coroutineScope = rememberCoroutineScope()
     val clipboardManager = LocalClipboardManager.current
@@ -108,6 +112,14 @@ fun ProfileScreen(
     var verifyLoading by remember { mutableStateOf(false) }
     var verifyError by remember { mutableStateOf<String?>(null) }
     var backupCodes by remember { mutableStateOf<List<String>?>(null) }
+
+    // Profile edit state
+    var editDisplayName by remember { mutableStateOf(user.displayName ?: "") }
+    var editEmail by remember { mutableStateOf(user.email ?: "") }
+    var isEditingProfile by remember { mutableStateOf(false) }
+    var profileSaving by remember { mutableStateOf(false) }
+    var profileError by remember { mutableStateOf<String?>(null) }
+    var profileSuccess by remember { mutableStateOf(false) }
 
     // TOTP disable state
     var showDisableFlow by remember { mutableStateOf(false) }
@@ -147,7 +159,10 @@ fun ProfileScreen(
 
             item {
                 Card(modifier = Modifier.fillMaxWidth()) {
-                    Column(modifier = Modifier.padding(16.dp)) {
+                    Column(
+                        modifier = Modifier.padding(16.dp),
+                        verticalArrangement = Arrangement.spacedBy(8.dp),
+                    ) {
                         Row(
                             verticalAlignment = Alignment.CenterVertically,
                             horizontalArrangement = Arrangement.spacedBy(8.dp),
@@ -171,22 +186,177 @@ fun ProfileScreen(
                                 )
                             }
                         }
-                        user.email?.let { email ->
-                            Spacer(modifier = Modifier.height(4.dp))
+
+                        if (profileSuccess) {
                             Text(
-                                text = email,
+                                text = "Profile updated successfully.",
+                                color = MaterialTheme.colorScheme.primary,
                                 style = MaterialTheme.typography.bodyMedium,
+                            )
+                        }
+
+                        if (!isEditingProfile) {
+                            // View mode
+                            user.displayName?.let { name ->
+                                Text(
+                                    text = name,
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                )
+                            }
+                            user.email?.let { email ->
+                                Text(
+                                    text = email,
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                )
+                            }
+                            OutlinedButton(
+                                onClick = {
+                                    isEditingProfile = true
+                                    profileSuccess = false
+                                },
+                            ) {
+                                Text("Edit Profile")
+                            }
+                        } else {
+                            // Edit mode
+                            OutlinedTextField(
+                                value = editDisplayName,
+                                onValueChange = {
+                                    editDisplayName = it
+                                    profileError = null
+                                    profileSuccess = false
+                                },
+                                label = { Text("Display Name") },
+                                modifier = Modifier.fillMaxWidth(),
+                                singleLine = true,
+                                enabled = !profileSaving,
+                            )
+
+                            OutlinedTextField(
+                                value = editEmail,
+                                onValueChange = {
+                                    editEmail = it
+                                    profileError = null
+                                    profileSuccess = false
+                                },
+                                label = { Text("Email") },
+                                modifier = Modifier.fillMaxWidth(),
+                                singleLine = true,
+                                enabled = !profileSaving,
+                            )
+
+                            profileError?.let {
+                                Text(
+                                    text = it,
+                                    color = MaterialTheme.colorScheme.error,
+                                    style = MaterialTheme.typography.bodySmall,
+                                )
+                            }
+
+                            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                                OutlinedButton(
+                                    onClick = {
+                                        isEditingProfile = false
+                                        editDisplayName = user.displayName ?: ""
+                                        editEmail = user.email ?: ""
+                                        profileError = null
+                                    },
+                                    enabled = !profileSaving,
+                                ) {
+                                    Text("Cancel")
+                                }
+
+                                Button(
+                                    onClick = {
+                                        coroutineScope.launch {
+                                            profileSaving = true
+                                            profileError = null
+                                            try {
+                                                val request = UpdateUserRequest(
+                                                    displayName = editDisplayName.ifBlank { null },
+                                                    email = editEmail.ifBlank { null },
+                                                )
+                                                val updatedUser = ApiClient.usersApi.updateUser(
+                                                    user.id,
+                                                    request,
+                                                ).unwrap()
+                                                onUserUpdated(updatedUser)
+                                                isEditingProfile = false
+                                                profileSuccess = true
+                                                editDisplayName = updatedUser.displayName ?: ""
+                                                editEmail = updatedUser.email ?: ""
+                                            } catch (e: Exception) {
+                                                profileError = e.message ?: "Failed to update profile"
+                                            } finally {
+                                                profileSaving = false
+                                            }
+                                        }
+                                    },
+                                    enabled = !profileSaving,
+                                ) {
+                                    if (profileSaving) {
+                                        CircularProgressIndicator(
+                                            modifier = Modifier.size(16.dp),
+                                            strokeWidth = 2.dp,
+                                        )
+                                    } else {
+                                        Text("Save")
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            item {
+                HorizontalDivider(modifier = Modifier.padding(vertical = 4.dp))
+            }
+
+            // --- API Tokens Card ---
+            item {
+                Text(
+                    text = "API Tokens",
+                    style = MaterialTheme.typography.titleMedium,
+                )
+            }
+
+            item {
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    onClick = onNavigateToTokens,
+                ) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(16.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        Icon(
+                            Icons.Default.Key,
+                            contentDescription = null,
+                            modifier = Modifier.size(24.dp),
+                            tint = MaterialTheme.colorScheme.primary,
+                        )
+                        Spacer(modifier = Modifier.width(12.dp))
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text(
+                                text = "Manage API Tokens",
+                                style = MaterialTheme.typography.titleSmall,
+                            )
+                            Text(
+                                text = "Create, view, and revoke API tokens for programmatic access",
+                                style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                             )
                         }
-                        user.displayName?.let { name ->
-                            Spacer(modifier = Modifier.height(4.dp))
-                            Text(
-                                text = name,
-                                style = MaterialTheme.typography.bodyMedium,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            )
-                        }
+                        Icon(
+                            Icons.AutoMirrored.Filled.ArrowForward,
+                            contentDescription = "Navigate",
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
                     }
                 }
             }

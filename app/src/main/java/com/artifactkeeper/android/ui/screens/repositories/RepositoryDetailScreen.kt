@@ -2,6 +2,8 @@ package com.artifactkeeper.android.ui.screens.repositories
 
 import android.content.Intent
 import android.net.Uri
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -14,6 +16,7 @@ import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Groups
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Shield
+import androidx.compose.material.icons.filled.Upload
 import androidx.compose.material3.*
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.*
@@ -26,11 +29,17 @@ import com.artifactkeeper.android.data.api.ApiClient
 import com.artifactkeeper.android.data.api.unwrap
 import com.artifactkeeper.android.data.models.Artifact
 import com.artifactkeeper.android.data.models.Repository
+import com.artifactkeeper.android.ui.components.MetadataFooterRow
 import com.artifactkeeper.client.models.UpdateRepositoryRequest
 import com.artifactkeeper.android.ui.util.formatBytes
 import com.artifactkeeper.android.ui.util.formatDownloadCount
 import com.artifactkeeper.android.ui.util.formatRelativeTime
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import okhttp3.MediaType.Companion.toMediaType
+import okhttp3.Request
+import okhttp3.RequestBody.Companion.toRequestBody
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -47,7 +56,11 @@ fun RepositoryDetailScreen(
     var errorMessage by remember { mutableStateOf<String?>(null) }
     var searchQuery by remember { mutableStateOf("") }
     var showEditDialog by remember { mutableStateOf(false) }
+    var isUploading by remember { mutableStateOf(false) }
+    var uploadError by remember { mutableStateOf<String?>(null) }
+    var uploadSuccess by remember { mutableStateOf<String?>(null) }
     val coroutineScope = rememberCoroutineScope()
+    val context = LocalContext.current
 
     fun loadData(refresh: Boolean = false) {
         coroutineScope.launch {
@@ -70,6 +83,64 @@ fun RepositoryDetailScreen(
         }
     }
 
+    val filePickerLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.GetContent(),
+    ) { uri: Uri? ->
+        if (uri == null) return@rememberLauncherForActivityResult
+        coroutineScope.launch {
+            isUploading = true
+            uploadError = null
+            uploadSuccess = null
+            try {
+                // Read the file name from the URI
+                val cursor = context.contentResolver.query(uri, null, null, null, null)
+                val fileName = cursor?.use {
+                    if (it.moveToFirst()) {
+                        val nameIndex = it.getColumnIndex(android.provider.OpenableColumns.DISPLAY_NAME)
+                        if (nameIndex >= 0) it.getString(nameIndex) else null
+                    } else null
+                } ?: "uploaded-file"
+
+                val contentType = context.contentResolver.getType(uri) ?: "application/octet-stream"
+
+                // Read file bytes
+                val bytes = withContext(Dispatchers.IO) {
+                    context.contentResolver.openInputStream(uri)?.use { it.readBytes() }
+                        ?: throw Exception("Could not read file")
+                }
+
+                // Upload via OkHttp PUT
+                val uploadUrl = "${ApiClient.baseUrl}api/v1/repositories/$repoKey/artifacts/$fileName"
+                val requestBody = bytes.toRequestBody(contentType.toMediaType())
+                val request = Request.Builder()
+                    .url(uploadUrl)
+                    .put(requestBody)
+                    .apply {
+                        ApiClient.token?.let { token ->
+                            addHeader("Authorization", "Bearer $token")
+                        }
+                    }
+                    .build()
+
+                val response = withContext(Dispatchers.IO) {
+                    ApiClient.httpClient.newCall(request).execute()
+                }
+
+                if (response.isSuccessful) {
+                    uploadSuccess = "Uploaded $fileName (${formatBytes(bytes.size.toLong())})"
+                    loadData(refresh = true)
+                } else {
+                    val errorBody = response.body?.string() ?: "HTTP ${response.code}"
+                    uploadError = "Upload failed: $errorBody"
+                }
+            } catch (e: Exception) {
+                uploadError = e.message ?: "Upload failed"
+            } finally {
+                isUploading = false
+            }
+        }
+    }
+
     LaunchedEffect(Unit) { loadData() }
     LaunchedEffect(searchQuery) { loadData() }
 
@@ -82,6 +153,18 @@ fun RepositoryDetailScreen(
                 }
             },
             actions = {
+                if (!isUploading) {
+                    IconButton(onClick = { filePickerLauncher.launch("*/*") }) {
+                        Icon(Icons.Default.Upload, contentDescription = "Upload Artifact")
+                    }
+                } else {
+                    CircularProgressIndicator(
+                        modifier = Modifier
+                            .padding(horizontal = 12.dp)
+                            .size(24.dp),
+                        strokeWidth = 2.dp,
+                    )
+                }
                 IconButton(onClick = { showEditDialog = true }) {
                     Icon(Icons.Default.Edit, contentDescription = "Edit Repository")
                 }
@@ -154,6 +237,64 @@ fun RepositoryDetailScreen(
                                 leadingIcon = { Icon(Icons.Default.Search, contentDescription = "Search") },
                                 singleLine = true,
                             )
+                        }
+
+                        // Upload status messages
+                        if (uploadSuccess != null) {
+                            item(key = "upload-success") {
+                                Card(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    colors = CardDefaults.cardColors(
+                                        containerColor = MaterialTheme.colorScheme.primaryContainer,
+                                    ),
+                                ) {
+                                    Row(
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .padding(12.dp),
+                                        horizontalArrangement = Arrangement.SpaceBetween,
+                                        verticalAlignment = Alignment.CenterVertically,
+                                    ) {
+                                        Text(
+                                            text = uploadSuccess ?: "",
+                                            style = MaterialTheme.typography.bodyMedium,
+                                            color = MaterialTheme.colorScheme.onPrimaryContainer,
+                                            modifier = Modifier.weight(1f),
+                                        )
+                                        TextButton(onClick = { uploadSuccess = null }) {
+                                            Text("Dismiss")
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                        if (uploadError != null) {
+                            item(key = "upload-error") {
+                                Card(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    colors = CardDefaults.cardColors(
+                                        containerColor = MaterialTheme.colorScheme.errorContainer,
+                                    ),
+                                ) {
+                                    Row(
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .padding(12.dp),
+                                        horizontalArrangement = Arrangement.SpaceBetween,
+                                        verticalAlignment = Alignment.CenterVertically,
+                                    ) {
+                                        Text(
+                                            text = uploadError ?: "",
+                                            style = MaterialTheme.typography.bodyMedium,
+                                            color = MaterialTheme.colorScheme.onErrorContainer,
+                                            modifier = Modifier.weight(1f),
+                                        )
+                                        TextButton(onClick = { uploadError = null }) {
+                                            Text("Dismiss")
+                                        }
+                                    }
+                                }
+                            }
                         }
 
                         // Artifacts section title
@@ -253,24 +394,10 @@ private fun RepoDetailHeader(repo: Repository) {
             }
 
             Spacer(modifier = Modifier.height(8.dp))
-            HorizontalDivider()
-            Spacer(modifier = Modifier.height(8.dp))
-
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-            ) {
-                Text(
-                    text = formatBytes(repo.storageUsedBytes),
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
-                Text(
-                    text = formatRelativeTime(repo.createdAt),
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
-            }
+            MetadataFooterRow(
+                startText = formatBytes(repo.storageUsedBytes),
+                endText = formatRelativeTime(repo.createdAt),
+            )
         }
     }
 }

@@ -16,6 +16,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
+import com.artifactkeeper.android.data.EncryptedPrefsManager
 import com.artifactkeeper.android.data.ServerManager
 import com.artifactkeeper.android.data.api.ApiClient
 import com.artifactkeeper.android.data.api.unwrap
@@ -28,9 +29,6 @@ import kotlinx.coroutines.launch
 @Composable
 fun SettingsScreen(onBack: () -> Unit, onDisconnect: () -> Unit = {}) {
     val context = LocalContext.current
-    val prefs = remember {
-        context.getSharedPreferences("artifact_keeper_prefs", android.content.Context.MODE_PRIVATE)
-    }
 
     val servers by ServerManager.servers.collectAsState()
     val activeServerId by ServerManager.activeServerId.collectAsState()
@@ -47,11 +45,11 @@ fun SettingsScreen(onBack: () -> Unit, onDisconnect: () -> Unit = {}) {
 
     // Restore auth user info on load
     LaunchedEffect(Unit) {
-        val savedToken = prefs.getString("auth_token", null)
-        val savedUsername = prefs.getString("user_username", null)
-        val savedEmail = prefs.getString("user_email", null)
-        val savedIsAdmin = prefs.getBoolean("user_is_admin", false)
-        val savedUserId = prefs.getString("user_id", null)
+        val savedToken = EncryptedPrefsManager.getString(context, EncryptedPrefsManager.KEY_AUTH_TOKEN)
+        val savedUsername = EncryptedPrefsManager.getString(context, EncryptedPrefsManager.KEY_USER_USERNAME)
+        val savedEmail = EncryptedPrefsManager.getString(context, EncryptedPrefsManager.KEY_USER_EMAIL)
+        val savedIsAdmin = EncryptedPrefsManager.getBoolean(context, EncryptedPrefsManager.KEY_USER_IS_ADMIN)
+        val savedUserId = EncryptedPrefsManager.getString(context, EncryptedPrefsManager.KEY_USER_ID)
 
         if (savedToken != null && savedUsername != null && savedUserId != null) {
             currentUser = UserInfo(
@@ -111,13 +109,7 @@ fun SettingsScreen(onBack: () -> Unit, onDisconnect: () -> Unit = {}) {
                             // Clear auth credentials for the removed server
                             currentUser = null
                             ApiClient.setToken(null)
-                            prefs.edit()
-                                .remove("auth_token")
-                                .remove("user_id")
-                                .remove("user_username")
-                                .remove("user_email")
-                                .remove("user_is_admin")
-                                .apply()
+                            EncryptedPrefsManager.clearAuthData(context)
                         }
                         showRemoveDialog = null
                         // Check the updated server list directly from ServerManager
@@ -146,7 +138,7 @@ fun SettingsScreen(onBack: () -> Unit, onDisconnect: () -> Unit = {}) {
             onDismiss = { showAddServerDialog = false },
             onServerAdded = { name, url ->
                 ServerManager.addServer(name, url)
-                prefs.edit().putString("server_url", url).apply()
+                EncryptedPrefsManager.putString(context, EncryptedPrefsManager.KEY_SERVER_URL, url)
                 ApiClient.configure(url, null)
                 showAddServerDialog = false
             },
@@ -173,7 +165,7 @@ fun SettingsScreen(onBack: () -> Unit, onDisconnect: () -> Unit = {}) {
                 isActive = isActive,
                 onSwitch = {
                     ServerManager.switchTo(server.id)
-                    prefs.edit().putString("server_url", server.url).apply()
+                    EncryptedPrefsManager.putString(context, EncryptedPrefsManager.KEY_SERVER_URL, server.url)
                 },
                 onRemove = { showRemoveDialog = server },
             )
@@ -246,13 +238,7 @@ fun SettingsScreen(onBack: () -> Unit, onDisconnect: () -> Unit = {}) {
                     onClick = {
                         currentUser = null
                         ApiClient.setToken(null)
-                        prefs.edit()
-                            .remove("auth_token")
-                            .remove("user_id")
-                            .remove("user_username")
-                            .remove("user_email")
-                            .remove("user_is_admin")
-                            .apply()
+                        EncryptedPrefsManager.clearAuthData(context)
                     },
                     modifier = Modifier.fillMaxWidth(),
                     colors = ButtonDefaults.outlinedButtonColors(
@@ -311,13 +297,14 @@ fun SettingsScreen(onBack: () -> Unit, onDisconnect: () -> Unit = {}) {
                                     ApiClient.setToken(response.accessToken)
                                     val user = ApiClient.authApi.getCurrentUser().unwrap()
                                     currentUser = user
-                                    prefs.edit()
-                                        .putString("auth_token", response.accessToken)
-                                        .putString("user_id", user.id.toString())
-                                        .putString("user_username", user.username)
-                                        .putString("user_email", user.email)
-                                        .putBoolean("user_is_admin", user.isAdmin)
-                                        .apply()
+                                    EncryptedPrefsManager.saveLoginData(
+                                        context = context,
+                                        token = response.accessToken,
+                                        userId = user.id.toString(),
+                                        username = user.username,
+                                        email = user.email,
+                                        isAdmin = user.isAdmin,
+                                    )
                                     username = ""
                                     password = ""
                                 } catch (e: Exception) {

@@ -21,7 +21,7 @@ import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.hilt.navigation.compose.hiltViewModel
 import com.artifactkeeper.android.data.models.Repository
 import com.artifactkeeper.android.data.models.VirtualMember
 import kotlinx.coroutines.launch
@@ -33,7 +33,7 @@ fun VirtualMembersScreen(
     repoName: String,
     repoFormat: String,
     onBack: () -> Unit,
-    viewModel: VirtualMembersViewModel = viewModel(),
+    viewModel: VirtualMembersViewModel = hiltViewModel(),
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val snackbarHostState = remember { SnackbarHostState() }

@@ -13,6 +13,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import com.artifactkeeper.android.ui.components.ItemTitleWithChip
 import com.artifactkeeper.android.data.api.ApiClient
 import com.artifactkeeper.android.data.api.unwrap
 import com.artifactkeeper.android.data.models.PackageItem
@@ -185,24 +186,7 @@ fun SearchScreen() {
 private fun RepoSearchResultCard(repo: Repository) {
     Card(modifier = Modifier.fillMaxWidth()) {
         Column(modifier = Modifier.padding(16.dp)) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                Text(
-                    text = repo.name,
-                    style = MaterialTheme.typography.titleMedium,
-                    modifier = Modifier.weight(1f),
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
-                )
-                Spacer(modifier = Modifier.width(8.dp))
-                AssistChip(
-                    onClick = {},
-                    label = { Text(repo.format.uppercase(), style = MaterialTheme.typography.labelSmall) },
-                )
-            }
+            ItemTitleWithChip(title = repo.name, chipLabel = repo.format.uppercase())
 
             Spacer(modifier = Modifier.height(4.dp))
 
@@ -261,24 +245,7 @@ private fun RepoSearchResultCard(repo: Repository) {
 private fun ArtifactSearchResultCard(pkg: PackageItem) {
     Card(modifier = Modifier.fillMaxWidth()) {
         Column(modifier = Modifier.padding(16.dp)) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                Text(
-                    text = pkg.name,
-                    style = MaterialTheme.typography.titleMedium,
-                    modifier = Modifier.weight(1f),
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
-                )
-                Spacer(modifier = Modifier.width(8.dp))
-                AssistChip(
-                    onClick = {},
-                    label = { Text(pkg.format.uppercase(), style = MaterialTheme.typography.labelSmall) },
-                )
-            }
+            ItemTitleWithChip(title = pkg.name, chipLabel = pkg.format.uppercase())
 
             Spacer(modifier = Modifier.height(4.dp))
 

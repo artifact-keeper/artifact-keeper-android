@@ -1,6 +1,7 @@
 package com.artifactkeeper.android.ui.screens.builds
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
@@ -20,6 +21,8 @@ import androidx.compose.ui.unit.dp
 import com.artifactkeeper.android.data.api.ApiClient
 import com.artifactkeeper.android.data.api.unwrap
 import com.artifactkeeper.android.data.models.BuildItem
+import com.artifactkeeper.android.ui.components.EmptyState
+import com.artifactkeeper.android.ui.components.LoadingErrorContainer
 import com.artifactkeeper.android.ui.util.formatDuration
 import com.artifactkeeper.android.ui.util.formatRelativeTime
 import kotlinx.coroutines.launch
@@ -31,7 +34,7 @@ private val StatusPending = Color(0xFF8C8C8C)
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun BuildsScreen() {
+fun BuildsScreen(onBuildClick: (String) -> Unit = {}) {
     var builds by remember { mutableStateOf<List<BuildItem>>(emptyList()) }
     var isLoading by remember { mutableStateOf(true) }
     var isRefreshing by remember { mutableStateOf(false) }
@@ -95,59 +98,27 @@ fun BuildsScreen() {
 
         LaunchedEffect(searchQuery, selectedStatus) { loadBuilds() }
 
-        when {
-            isLoading -> {
-                Box(
+        LoadingErrorContainer(
+            isLoading = isLoading,
+            error = errorMessage,
+            onRetry = { loadBuilds() },
+            emptyState = EmptyState(isEmpty = builds.isEmpty(), message = "No builds found"),
+        ) {
+            PullToRefreshBox(
+                isRefreshing = isRefreshing,
+                onRefresh = { loadBuilds(refresh = true) },
+                modifier = Modifier.fillMaxSize(),
+            ) {
+                LazyColumn(
                     modifier = Modifier.fillMaxSize(),
-                    contentAlignment = Alignment.Center,
+                    contentPadding = PaddingValues(16.dp),
+                    verticalArrangement = Arrangement.spacedBy(8.dp),
                 ) {
-                    CircularProgressIndicator()
-                }
-            }
-            errorMessage != null -> {
-                Box(
-                    modifier = Modifier.fillMaxSize(),
-                    contentAlignment = Alignment.Center,
-                ) {
-                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                        Text(
-                            text = errorMessage ?: "Unknown error",
-                            color = MaterialTheme.colorScheme.error,
-                            style = MaterialTheme.typography.bodyLarge,
+                    items(builds, key = { it.id }) { build ->
+                        BuildCard(
+                            build = build,
+                            onClick = { onBuildClick(build.id.toString()) },
                         )
-                        Spacer(modifier = Modifier.height(8.dp))
-                        TextButton(onClick = { loadBuilds() }) {
-                            Text("Retry")
-                        }
-                    }
-                }
-            }
-            builds.isEmpty() -> {
-                Box(
-                    modifier = Modifier.fillMaxSize(),
-                    contentAlignment = Alignment.Center,
-                ) {
-                    Text(
-                        text = "No builds found",
-                        style = MaterialTheme.typography.bodyLarge,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    )
-                }
-            }
-            else -> {
-                PullToRefreshBox(
-                    isRefreshing = isRefreshing,
-                    onRefresh = { loadBuilds(refresh = true) },
-                    modifier = Modifier.fillMaxSize(),
-                ) {
-                    LazyColumn(
-                        modifier = Modifier.fillMaxSize(),
-                        contentPadding = PaddingValues(16.dp),
-                        verticalArrangement = Arrangement.spacedBy(8.dp),
-                    ) {
-                        items(builds, key = { it.id }) { build ->
-                            BuildCard(build)
-                        }
                     }
                 }
             }
@@ -156,7 +127,7 @@ fun BuildsScreen() {
 }
 
 @Composable
-private fun BuildCard(build: BuildItem) {
+private fun BuildCard(build: BuildItem, onClick: () -> Unit = {}) {
     val statusColor = when (build.status.lowercase()) {
         "success" -> StatusSuccess
         "failed", "error" -> StatusFailed
@@ -165,7 +136,9 @@ private fun BuildCard(build: BuildItem) {
     }
 
     Card(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable(onClick = onClick),
     ) {
         Row(
             modifier = Modifier.padding(16.dp),

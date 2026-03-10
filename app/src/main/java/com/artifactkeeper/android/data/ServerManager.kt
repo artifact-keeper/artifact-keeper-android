@@ -2,6 +2,7 @@ package com.artifactkeeper.android.data
 
 import android.content.Context
 import android.content.SharedPreferences
+import androidx.annotation.VisibleForTesting
 import com.artifactkeeper.android.data.api.ApiClient
 import com.artifactkeeper.android.data.models.SavedServer
 import kotlinx.coroutines.Dispatchers
@@ -15,12 +16,13 @@ import java.net.HttpURLConnection
 import java.net.URL
 
 object ServerManager {
-    private const val PREFS_NAME = "artifact_keeper_prefs"
     private const val PREFS_KEY = "saved_servers"
     private const val ACTIVE_KEY = "active_server_id"
 
     private val json = Json { ignoreUnknownKeys = true }
-    private lateinit var prefs: SharedPreferences
+
+    @VisibleForTesting
+    internal lateinit var prefs: SharedPreferences
 
     private val _servers = MutableStateFlow<List<SavedServer>>(emptyList())
     val servers: StateFlow<List<SavedServer>> = _servers.asStateFlow()
@@ -30,6 +32,16 @@ object ServerManager {
 
     private val _serverStatuses = MutableStateFlow<Map<String, Boolean>>(emptyMap())
     val serverStatuses: StateFlow<Map<String, Boolean>> = _serverStatuses.asStateFlow()
+
+    /** Inject a SharedPreferences and reset all state. Test-only. */
+    @VisibleForTesting
+    internal fun initForTesting(testPrefs: SharedPreferences) {
+        prefs = testPrefs
+        _servers.value = emptyList()
+        _activeServerId.value = null
+        _serverStatuses.value = emptyMap()
+        loadFromPrefs()
+    }
 
     suspend fun refreshStatuses() = withContext(Dispatchers.IO) {
         val results = mutableMapOf<String, Boolean>()
@@ -51,7 +63,8 @@ object ServerManager {
     }
 
     fun init(context: Context) {
-        prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+        prefs = EncryptedPrefsManager.getPrefs(context)
+        migrateFromPlaintextServerPrefs(context)
         loadFromPrefs()
     }
 
@@ -101,8 +114,9 @@ object ServerManager {
     }
 
     fun migrateIfNeeded(context: Context) {
-        val legacyPrefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
-        val legacyUrl = legacyPrefs.getString("server_url", null)
+        // Check encrypted prefs for a legacy single-server URL that needs
+        // converting into the multi-server list.
+        val legacyUrl = prefs.getString(EncryptedPrefsManager.KEY_SERVER_URL, null)
         if (!legacyUrl.isNullOrBlank() && _servers.value.isEmpty()) {
             val host = try {
                 java.net.URI(legacyUrl).host ?: legacyUrl
@@ -113,7 +127,36 @@ object ServerManager {
         }
     }
 
-    private fun loadFromPrefs() {
+    /**
+     * One-time migration: if the old plaintext "artifact_keeper_prefs" file
+     * contains saved_servers or active_server_id, copy them to encrypted
+     * storage and remove the plaintext entries.
+     */
+    @VisibleForTesting
+    internal fun migrateFromPlaintextServerPrefs(context: Context) {
+        val legacy = context.getSharedPreferences("artifact_keeper_prefs", Context.MODE_PRIVATE)
+        val hasLegacy = legacy.contains(PREFS_KEY) || legacy.contains(ACTIVE_KEY)
+        if (!hasLegacy) return
+
+        val editor = prefs.edit()
+        val legacyEditor = legacy.edit()
+
+        val serversJson = legacy.getString(PREFS_KEY, null)
+        if (serversJson != null && !prefs.contains(PREFS_KEY)) {
+            editor.putString(PREFS_KEY, serversJson)
+        }
+        val activeId = legacy.getString(ACTIVE_KEY, null)
+        if (activeId != null && !prefs.contains(ACTIVE_KEY)) {
+            editor.putString(ACTIVE_KEY, activeId)
+        }
+
+        legacyEditor.remove(PREFS_KEY).remove(ACTIVE_KEY)
+        editor.apply()
+        legacyEditor.apply()
+    }
+
+    @VisibleForTesting
+    internal fun loadFromPrefs() {
         val serversJson = prefs.getString(PREFS_KEY, null)
         if (serversJson != null) {
             try {
@@ -125,7 +168,8 @@ object ServerManager {
         _activeServerId.value = prefs.getString(ACTIVE_KEY, null)
     }
 
-    private fun saveToPrefs() {
+    @VisibleForTesting
+    internal fun saveToPrefs() {
         prefs.edit()
             .putString(PREFS_KEY, json.encodeToString(_servers.value))
             .putString(ACTIVE_KEY, _activeServerId.value)

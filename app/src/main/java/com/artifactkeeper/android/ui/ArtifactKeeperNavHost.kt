@@ -25,10 +25,13 @@ import androidx.compose.ui.res.painterResource
 import com.artifactkeeper.android.R
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.navigation.NavGraphBuilder
+import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import com.artifactkeeper.android.data.EncryptedPrefsManager
 import com.artifactkeeper.android.data.ServerManager
 import com.artifactkeeper.android.data.api.ApiClient
 import com.artifactkeeper.android.data.models.UserInfo
@@ -38,6 +41,7 @@ import com.artifactkeeper.android.ui.components.AccountMenu
 import com.artifactkeeper.android.ui.screens.admin.GroupsScreen
 import com.artifactkeeper.android.ui.screens.admin.SSOScreen
 import com.artifactkeeper.android.ui.screens.admin.UsersScreen
+import com.artifactkeeper.android.ui.screens.builds.BuildDetailScreen
 import com.artifactkeeper.android.ui.screens.builds.BuildsScreen
 import com.artifactkeeper.android.ui.screens.integration.PeersScreen
 import com.artifactkeeper.android.ui.screens.integration.ReplicationScreen
@@ -45,7 +49,9 @@ import com.artifactkeeper.android.ui.screens.integration.WebhooksScreen
 import com.artifactkeeper.android.ui.screens.operations.AnalyticsScreen
 import com.artifactkeeper.android.ui.screens.operations.MonitoringScreen
 import com.artifactkeeper.android.ui.screens.operations.TelemetryScreen
+import com.artifactkeeper.android.ui.screens.packages.PackageDetailScreen
 import com.artifactkeeper.android.ui.screens.packages.PackagesScreen
+import com.artifactkeeper.android.ui.screens.repositories.CreateRepositoryScreen
 import com.artifactkeeper.android.ui.screens.repositories.RepositoriesScreen
 import com.artifactkeeper.android.ui.screens.repositories.RepositoryDetailScreen
 import com.artifactkeeper.android.ui.screens.repositories.VirtualMembersScreen
@@ -58,13 +64,14 @@ import com.artifactkeeper.android.ui.screens.security.ScansScreen
 import com.artifactkeeper.android.ui.screens.security.SecurityScreen
 import com.artifactkeeper.android.ui.screens.settings.SettingsScreen
 import com.artifactkeeper.android.ui.screens.auth.ChangePasswordScreen
+import com.artifactkeeper.android.ui.screens.profile.ApiTokensScreen
 import com.artifactkeeper.android.ui.screens.profile.ProfileScreen
 import com.artifactkeeper.android.ui.screens.welcome.WelcomeScreen
 import com.artifactkeeper.android.ui.screens.staging.StagingListScreen
 import com.artifactkeeper.android.ui.screens.staging.StagingDetailScreen
 import com.artifactkeeper.android.ui.screens.staging.PromotionHistoryScreen
 import com.artifactkeeper.android.ui.screens.staging.StagingViewModel
-import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.hilt.navigation.compose.hiltViewModel
 
 private data class BottomTab(
     val route: String,
@@ -99,9 +106,7 @@ fun ArtifactKeeperNavHost(
     widthSizeClass: WindowWidthSizeClass = WindowWidthSizeClass.Medium,
 ) {
     val context = LocalContext.current
-    val prefs = remember {
-        context.getSharedPreferences("artifact_keeper_prefs", android.content.Context.MODE_PRIVATE)
-    }
+    val prefs = remember { EncryptedPrefsManager.getPrefs(context) }
 
     // Initialize ServerManager
     LaunchedEffect(Unit) {
@@ -111,8 +116,8 @@ fun ArtifactKeeperNavHost(
 
     // Restore saved server URL and auth token on app start
     var isConfigured by remember {
-        val savedUrl = prefs.getString("server_url", null)
-        val savedToken = prefs.getString("auth_token", null)
+        val savedUrl = prefs.getString(EncryptedPrefsManager.KEY_SERVER_URL, null)
+        val savedToken = prefs.getString(EncryptedPrefsManager.KEY_AUTH_TOKEN, null)
         if (!savedUrl.isNullOrBlank()) {
             ApiClient.configure(savedUrl, savedToken)
         }
@@ -132,14 +137,7 @@ fun ArtifactKeeperNavHost(
         MainAppScaffold(
             widthSizeClass = widthSizeClass,
             onDisconnect = {
-                prefs.edit()
-                    .remove("server_url")
-                    .remove("auth_token")
-                    .remove("user_id")
-                    .remove("user_username")
-                    .remove("user_email")
-                    .remove("user_is_admin")
-                    .apply()
+                EncryptedPrefsManager.clearAll(context)
                 ApiClient.clearConfig()
                 isConfigured = false
             },
@@ -155,9 +153,7 @@ private fun MainAppScaffold(
     onDisconnect: () -> Unit,
 ) {
     val context = LocalContext.current
-    val prefs = remember {
-        context.getSharedPreferences("artifact_keeper_prefs", android.content.Context.MODE_PRIVATE)
-    }
+    val prefs = remember { EncryptedPrefsManager.getPrefs(context) }
     val navController = rememberNavController()
     var selectedTab by remember { mutableIntStateOf(0) }
     val useRail = widthSizeClass == WindowWidthSizeClass.Expanded
@@ -168,12 +164,13 @@ private fun MainAppScaffold(
     var mustChangePassword by remember { mutableStateOf(false) }
     var changePasswordUserId by remember { mutableStateOf("") }
     var showProfile by remember { mutableStateOf(false) }
+    var showApiTokens by remember { mutableStateOf(false) }
     LaunchedEffect(Unit) {
-        val savedToken = prefs.getString("auth_token", null)
-        val savedUsername = prefs.getString("user_username", null)
-        val savedUserId = prefs.getString("user_id", null)
-        val savedEmail = prefs.getString("user_email", null)
-        val savedIsAdmin = prefs.getBoolean("user_is_admin", false)
+        val savedToken = EncryptedPrefsManager.getString(context, EncryptedPrefsManager.KEY_AUTH_TOKEN)
+        val savedUsername = EncryptedPrefsManager.getString(context, EncryptedPrefsManager.KEY_USER_USERNAME)
+        val savedUserId = EncryptedPrefsManager.getString(context, EncryptedPrefsManager.KEY_USER_ID)
+        val savedEmail = EncryptedPrefsManager.getString(context, EncryptedPrefsManager.KEY_USER_EMAIL)
+        val savedIsAdmin = EncryptedPrefsManager.getBoolean(context, EncryptedPrefsManager.KEY_USER_IS_ADMIN)
         if (savedToken != null && savedUsername != null && savedUserId != null) {
             currentUser = UserInfo(
                 id = java.util.UUID.fromString(savedUserId),
@@ -198,13 +195,14 @@ private fun MainAppScaffold(
             serverStatuses = serverStatuses,
             onLoggedIn = { user, token, forceChangePassword ->
                 currentUser = user
-                prefs.edit()
-                    .putString("auth_token", token)
-                    .putString("user_id", user.id.toString())
-                    .putString("user_username", user.username)
-                    .putString("user_email", user.email)
-                    .putBoolean("user_is_admin", user.isAdmin)
-                    .apply()
+                EncryptedPrefsManager.saveLoginData(
+                    context = context,
+                    token = token,
+                    userId = user.id.toString(),
+                    username = user.username,
+                    email = user.email,
+                    isAdmin = user.isAdmin,
+                )
                 if (forceChangePassword) {
                     changePasswordUserId = user.id.toString()
                     mustChangePassword = true
@@ -213,13 +211,7 @@ private fun MainAppScaffold(
             onLoggedOut = {
                 currentUser = null
                 ApiClient.setToken(null)
-                prefs.edit()
-                    .remove("auth_token")
-                    .remove("user_id")
-                    .remove("user_username")
-                    .remove("user_email")
-                    .remove("user_is_admin")
-                    .apply()
+                EncryptedPrefsManager.clearAuthData(context)
             },
             onProfileClick = {
                 if (currentUser != null) {
@@ -229,33 +221,21 @@ private fun MainAppScaffold(
             onSwitchServer = { serverId ->
                 currentUser = null
                 ApiClient.setToken(null)
-                prefs.edit()
-                    .remove("auth_token")
-                    .remove("user_id")
-                    .remove("user_username")
-                    .remove("user_email")
-                    .remove("user_is_admin")
-                    .apply()
+                EncryptedPrefsManager.clearAuthData(context)
                 ServerManager.switchTo(serverId)
                 val server = ServerManager.getActiveServer()
                 if (server != null) {
-                    prefs.edit().putString("server_url", server.url).apply()
+                    EncryptedPrefsManager.putString(context, EncryptedPrefsManager.KEY_SERVER_URL, server.url)
                 }
             },
             onAddServer = { name, url ->
                 ServerManager.addServer(name = name, url = url)
                 val server = ServerManager.getActiveServer()
                 if (server != null) {
-                    prefs.edit().putString("server_url", server.url).apply()
+                    EncryptedPrefsManager.putString(context, EncryptedPrefsManager.KEY_SERVER_URL, server.url)
                     currentUser = null
                     ApiClient.setToken(null)
-                    prefs.edit()
-                        .remove("auth_token")
-                        .remove("user_id")
-                        .remove("user_username")
-                        .remove("user_email")
-                        .remove("user_is_admin")
-                        .apply()
+                    EncryptedPrefsManager.clearAuthData(context)
                 }
             },
             onRemoveServer = { serverId ->
@@ -264,19 +244,13 @@ private fun MainAppScaffold(
                 if (wasActive) {
                     val remaining = ServerManager.getActiveServer()
                     if (remaining != null) {
-                        prefs.edit().putString("server_url", remaining.url).apply()
+                        EncryptedPrefsManager.putString(context, EncryptedPrefsManager.KEY_SERVER_URL, remaining.url)
                     } else {
                         onDisconnect()
                     }
                     currentUser = null
                     ApiClient.setToken(null)
-                    prefs.edit()
-                        .remove("auth_token")
-                        .remove("user_id")
-                        .remove("user_username")
-                        .remove("user_email")
-                        .remove("user_is_admin")
-                        .apply()
+                    EncryptedPrefsManager.clearAuthData(context)
                 }
             },
             onRefreshStatuses = {
@@ -313,18 +287,31 @@ private fun MainAppScaffold(
 
     val showNav = currentRoute in allSectionRoutes || currentRoute == null
 
+    if (showApiTokens) {
+        ApiTokensScreen(
+            onBack = { showApiTokens = false },
+        )
+        return
+    }
+
     if (showProfile && currentUser != null) {
         ProfileScreen(
             user = currentUser!!,
             onDismiss = { showProfile = false },
             onUserUpdated = { updatedUser ->
                 currentUser = updatedUser
-                prefs.edit()
-                    .putString("user_id", updatedUser.id.toString())
-                    .putString("user_username", updatedUser.username)
-                    .putString("user_email", updatedUser.email)
-                    .putBoolean("user_is_admin", updatedUser.isAdmin)
-                    .apply()
+                EncryptedPrefsManager.saveLoginData(
+                    context = context,
+                    token = EncryptedPrefsManager.getString(context, EncryptedPrefsManager.KEY_AUTH_TOKEN) ?: "",
+                    userId = updatedUser.id.toString(),
+                    username = updatedUser.username,
+                    email = updatedUser.email,
+                    isAdmin = updatedUser.isAdmin,
+                )
+            },
+            onNavigateToTokens = {
+                showProfile = false
+                showApiTokens = true
             },
         )
         return
@@ -340,13 +327,7 @@ private fun MainAppScaffold(
                 mustChangePassword = false
                 currentUser = null
                 ApiClient.setToken(null)
-                prefs.edit()
-                    .remove("auth_token")
-                    .remove("user_id")
-                    .remove("user_username")
-                    .remove("user_email")
-                    .remove("user_is_admin")
-                    .apply()
+                EncryptedPrefsManager.clearAuthData(context)
             },
         )
         return
@@ -381,6 +362,9 @@ private fun MainAppScaffold(
                     ArtifactsSection(
                         isCompact = false,
                         onRepoClick = { key -> navController.navigate("repos/$key") },
+                        onCreateRepo = { navController.navigate("create-repo") },
+                        onPackageClick = { id -> navController.navigate("packages/$id") },
+                        onBuildClick = { id -> navController.navigate("builds/$id") },
                         accountActions = accountActions,
                     )
                 }
@@ -388,39 +372,7 @@ private fun MainAppScaffold(
                 composable("security") { SecuritySection(isCompact = false, accountActions = accountActions) }
                 composable("operations") { OperationsSection(isCompact = false, accountActions = accountActions) }
                 composable("admin") { AdminSection(isCompact = false, onDisconnect = onDisconnect, accountActions = accountActions) }
-                composable("repos/{key}") { backStackEntry ->
-                    val key = backStackEntry.arguments?.getString("key") ?: return@composable
-                    RepositoryDetailScreen(
-                        repoKey = key,
-                        onBack = { navController.popBackStack() },
-                        onArtifactSecurityClick = { id, name ->
-                            navController.navigate("artifacts/$id/security?name=$name")
-                        },
-                        onNavigateToMembers = { repoKey, repoName, repoFormat ->
-                            navController.navigate("repos/$repoKey/members?name=$repoName&format=$repoFormat")
-                        },
-                    )
-                }
-                composable("artifacts/{id}/security?name={name}") { backStackEntry ->
-                    val id = backStackEntry.arguments?.getString("id") ?: return@composable
-                    val name = backStackEntry.arguments?.getString("name") ?: "Artifact"
-                    SbomScreen(
-                        artifactId = id,
-                        artifactName = name,
-                        onBack = { navController.popBackStack() },
-                    )
-                }
-                composable("repos/{key}/members?name={name}&format={format}") { backStackEntry ->
-                    val key = backStackEntry.arguments?.getString("key") ?: return@composable
-                    val name = backStackEntry.arguments?.getString("name") ?: key
-                    val format = backStackEntry.arguments?.getString("format") ?: ""
-                    VirtualMembersScreen(
-                        repoKey = key,
-                        repoName = name,
-                        repoFormat = format,
-                        onBack = { navController.popBackStack() },
-                    )
-                }
+                detailRoutes(navController)
             }
         }
     } else {
@@ -464,6 +416,9 @@ private fun MainAppScaffold(
                     ArtifactsSection(
                         isCompact = isCompact,
                         onRepoClick = { key -> navController.navigate("repos/$key") },
+                        onCreateRepo = { navController.navigate("create-repo") },
+                        onPackageClick = { id -> navController.navigate("packages/$id") },
+                        onBuildClick = { id -> navController.navigate("builds/$id") },
                         accountActions = accountActions,
                     )
                 }
@@ -471,39 +426,7 @@ private fun MainAppScaffold(
                 composable("security") { SecuritySection(isCompact = isCompact, accountActions = accountActions) }
                 composable("operations") { OperationsSection(isCompact = isCompact, accountActions = accountActions) }
                 composable("admin") { AdminSection(isCompact = isCompact, onDisconnect = onDisconnect, accountActions = accountActions) }
-                composable("repos/{key}") { backStackEntry ->
-                    val key = backStackEntry.arguments?.getString("key") ?: return@composable
-                    RepositoryDetailScreen(
-                        repoKey = key,
-                        onBack = { navController.popBackStack() },
-                        onArtifactSecurityClick = { id, name ->
-                            navController.navigate("artifacts/$id/security?name=$name")
-                        },
-                        onNavigateToMembers = { repoKey, repoName, repoFormat ->
-                            navController.navigate("repos/$repoKey/members?name=$repoName&format=$repoFormat")
-                        },
-                    )
-                }
-                composable("artifacts/{id}/security?name={name}") { backStackEntry ->
-                    val id = backStackEntry.arguments?.getString("id") ?: return@composable
-                    val name = backStackEntry.arguments?.getString("name") ?: "Artifact"
-                    SbomScreen(
-                        artifactId = id,
-                        artifactName = name,
-                        onBack = { navController.popBackStack() },
-                    )
-                }
-                composable("repos/{key}/members?name={name}&format={format}") { backStackEntry ->
-                    val key = backStackEntry.arguments?.getString("key") ?: return@composable
-                    val name = backStackEntry.arguments?.getString("name") ?: key
-                    val format = backStackEntry.arguments?.getString("format") ?: ""
-                    VirtualMembersScreen(
-                        repoKey = key,
-                        repoName = name,
-                        repoFormat = format,
-                        onBack = { navController.popBackStack() },
-                    )
-                }
+                detailRoutes(navController)
             }
         }
     }
@@ -534,6 +457,9 @@ private fun AppLogo() {
 private fun ArtifactsSection(
     isCompact: Boolean,
     onRepoClick: (String) -> Unit,
+    onCreateRepo: () -> Unit,
+    onPackageClick: (String) -> Unit,
+    onBuildClick: (String) -> Unit,
     accountActions: @Composable () -> Unit,
 ) {
     val subTabs = if (isCompact) listOf("Repos", "Staging", "Pkgs", "Builds", "Search")
@@ -541,7 +467,7 @@ private fun ArtifactsSection(
     var selectedTab by remember { mutableIntStateOf(0) }
 
     // Staging navigation state
-    val stagingViewModel: StagingViewModel = viewModel()
+    val stagingViewModel: StagingViewModel = hiltViewModel()
     val stagingUiState by stagingViewModel.uiState.collectAsState()
     var showStagingHistory by remember { mutableStateOf(false) }
 
@@ -588,30 +514,40 @@ private fun ArtifactsSection(
                 }
             }
             when (selectedTab) {
-                0 -> RepositoriesScreen(onRepoClick = onRepoClick)
+                0 -> RepositoriesScreen(onRepoClick = onRepoClick, onCreateRepo = onCreateRepo)
                 1 -> StagingListScreen(
                     viewModel = stagingViewModel,
                     onRepoClick = { repo ->
                         stagingViewModel.selectRepo(repo)
                     },
                 )
-                2 -> PackagesScreen()
-                3 -> BuildsScreen()
+                2 -> PackagesScreen(onPackageClick = onPackageClick)
+                3 -> BuildsScreen(onBuildClick = onBuildClick)
                 4 -> SearchScreen()
             }
         }
     }
 }
 
+// ---------------------------------------------------------------------------
+// Shared section scaffold with TopAppBar + ScrollableTabRow
+// ---------------------------------------------------------------------------
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun IntegrationSection(isCompact: Boolean, accountActions: @Composable () -> Unit) {
-    val subTabs = listOf("Peers", "Replication", "Webhooks")
+private fun SectionWithTabs(
+    title: String,
+    subTabs: List<String>,
+    isCompact: Boolean,
+    accountActions: @Composable () -> Unit,
+    onTabSelected: ((Int) -> Unit)? = null,
+    content: @Composable (selectedTab: Int) -> Unit,
+) {
     var selectedTab by remember { mutableIntStateOf(0) }
 
     Column(modifier = Modifier.fillMaxSize()) {
         TopAppBar(
-            title = { Text("Integration") },
+            title = { Text(title) },
             navigationIcon = { AppLogo() },
             actions = { accountActions() },
         )
@@ -619,14 +555,29 @@ private fun IntegrationSection(isCompact: Boolean, accountActions: @Composable (
             selectedTabIndex = selectedTab,
             edgePadding = if (isCompact) 4.dp else 16.dp,
         ) {
-            subTabs.forEachIndexed { index, title ->
+            subTabs.forEachIndexed { index, tabTitle ->
                 Tab(
                     selected = selectedTab == index,
-                    onClick = { selectedTab = index },
-                    text = { Text(title, maxLines = 1) },
+                    onClick = {
+                        selectedTab = index
+                        onTabSelected?.invoke(index)
+                    },
+                    text = { Text(tabTitle, maxLines = 1) },
                 )
             }
         }
+        content(selectedTab)
+    }
+}
+
+@Composable
+private fun IntegrationSection(isCompact: Boolean, accountActions: @Composable () -> Unit) {
+    SectionWithTabs(
+        title = "Integration",
+        subTabs = listOf("Peers", "Replication", "Webhooks"),
+        isCompact = isCompact,
+        accountActions = accountActions,
+    ) { selectedTab ->
         when (selectedTab) {
             0 -> PeersScreen()
             1 -> ReplicationScreen()
@@ -676,31 +627,17 @@ private fun SecuritySection(isCompact: Boolean, accountActions: @Composable () -
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun OperationsSection(isCompact: Boolean, accountActions: @Composable () -> Unit) {
     val subTabs = if (isCompact) listOf("Stats", "Health", "Metrics")
                   else listOf("Analytics", "Monitoring", "Telemetry")
-    var selectedTab by remember { mutableIntStateOf(0) }
 
-    Column(modifier = Modifier.fillMaxSize()) {
-        TopAppBar(
-            title = { Text("Operations") },
-            navigationIcon = { AppLogo() },
-            actions = { accountActions() },
-        )
-        ScrollableTabRow(
-            selectedTabIndex = selectedTab,
-            edgePadding = if (isCompact) 4.dp else 16.dp,
-        ) {
-            subTabs.forEachIndexed { index, title ->
-                Tab(
-                    selected = selectedTab == index,
-                    onClick = { selectedTab = index },
-                    text = { Text(title, maxLines = 1) },
-                )
-            }
-        }
+    SectionWithTabs(
+        title = "Operations",
+        subTabs = subTabs,
+        isCompact = isCompact,
+        accountActions = accountActions,
+    ) { selectedTab ->
         when (selectedTab) {
             0 -> AnalyticsScreen()
             1 -> MonitoringScreen()
@@ -709,38 +646,85 @@ private fun OperationsSection(isCompact: Boolean, accountActions: @Composable ()
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun AdminSection(isCompact: Boolean, onDisconnect: () -> Unit, accountActions: @Composable () -> Unit) {
-    val subTabs = listOf("Users", "Groups", "SSO", "Settings")
-    var selectedTab by remember { mutableIntStateOf(0) }
-
-    Column(modifier = Modifier.fillMaxSize()) {
-        TopAppBar(
-            title = { Text("Admin") },
-            navigationIcon = { AppLogo() },
-            actions = { accountActions() },
-        )
-        ScrollableTabRow(
-            selectedTabIndex = selectedTab,
-            edgePadding = if (isCompact) 4.dp else 16.dp,
-        ) {
-            subTabs.forEachIndexed { index, title ->
-                Tab(
-                    selected = selectedTab == index,
-                    onClick = { selectedTab = index },
-                    text = { Text(title, maxLines = 1) },
-                )
-            }
-        }
+    SectionWithTabs(
+        title = "Admin",
+        subTabs = listOf("Users", "Groups", "SSO", "Settings"),
+        isCompact = isCompact,
+        accountActions = accountActions,
+    ) { selectedTab ->
         when (selectedTab) {
             0 -> UsersScreen()
             1 -> GroupsScreen()
             2 -> SSOScreen()
             3 -> SettingsScreen(
-                onBack = { selectedTab = 0 },
+                onBack = { },
                 onDisconnect = onDisconnect,
             )
         }
+    }
+}
+
+// ---------------------------------------------------------------------------
+// Shared detail route definitions for NavHost (used by both rail and bottom nav)
+// ---------------------------------------------------------------------------
+
+private fun NavGraphBuilder.detailRoutes(navController: NavHostController) {
+    composable("create-repo") {
+        CreateRepositoryScreen(
+            onBack = { navController.popBackStack() },
+            onCreated = { repoKey ->
+                navController.popBackStack()
+                navController.navigate("repos/$repoKey")
+            },
+        )
+    }
+    composable("repos/{key}") { backStackEntry ->
+        val key = backStackEntry.arguments?.getString("key") ?: return@composable
+        RepositoryDetailScreen(
+            repoKey = key,
+            onBack = { navController.popBackStack() },
+            onArtifactSecurityClick = { id, name ->
+                navController.navigate("artifacts/$id/security?name=$name")
+            },
+            onNavigateToMembers = { repoKey, repoName, repoFormat ->
+                navController.navigate("repos/$repoKey/members?name=$repoName&format=$repoFormat")
+            },
+        )
+    }
+    composable("packages/{id}") { backStackEntry ->
+        val id = backStackEntry.arguments?.getString("id") ?: return@composable
+        PackageDetailScreen(
+            packageId = id,
+            onBack = { navController.popBackStack() },
+        )
+    }
+    composable("builds/{id}") { backStackEntry ->
+        val id = backStackEntry.arguments?.getString("id") ?: return@composable
+        BuildDetailScreen(
+            buildId = id,
+            onBack = { navController.popBackStack() },
+        )
+    }
+    composable("artifacts/{id}/security?name={name}") { backStackEntry ->
+        val id = backStackEntry.arguments?.getString("id") ?: return@composable
+        val name = backStackEntry.arguments?.getString("name") ?: "Artifact"
+        SbomScreen(
+            artifactId = id,
+            artifactName = name,
+            onBack = { navController.popBackStack() },
+        )
+    }
+    composable("repos/{key}/members?name={name}&format={format}") { backStackEntry ->
+        val key = backStackEntry.arguments?.getString("key") ?: return@composable
+        val name = backStackEntry.arguments?.getString("name") ?: key
+        val format = backStackEntry.arguments?.getString("format") ?: ""
+        VirtualMembersScreen(
+            repoKey = key,
+            repoName = name,
+            repoFormat = format,
+            onBack = { navController.popBackStack() },
+        )
     }
 }

@@ -18,6 +18,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.artifactkeeper.android.R
+import com.artifactkeeper.android.data.EncryptedPrefsManager
 import com.artifactkeeper.android.data.ServerManager
 import com.artifactkeeper.android.data.api.ApiClient
 import com.artifactkeeper.android.data.api.unwrap
@@ -26,9 +27,6 @@ import kotlinx.coroutines.launch
 @Composable
 fun WelcomeScreen(onConnected: () -> Unit) {
     val context = LocalContext.current
-    val prefs = remember {
-        context.getSharedPreferences("artifact_keeper_prefs", android.content.Context.MODE_PRIVATE)
-    }
 
     var serverUrl by remember { mutableStateOf("") }
     var isTesting by remember { mutableStateOf(false) }
@@ -124,7 +122,7 @@ fun WelcomeScreen(onConnected: () -> Unit) {
                             ApiClient.configure(url)
                             ApiClient.healthApi.healthCheck().unwrap()
                             // Connection succeeded -- save and register with ServerManager
-                            prefs.edit().putString("server_url", url).apply()
+                            EncryptedPrefsManager.putString(context, EncryptedPrefsManager.KEY_SERVER_URL, url)
                             val host = try {
                                 java.net.URI(url).host ?: url
                             } catch (_: Exception) {

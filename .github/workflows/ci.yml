@@ -2,9 +2,9 @@
 #
 # Required GitHub Secrets:
 #   ANDROID_KEYSTORE_BASE64          - Base64-encoded release keystore (.jks)
-#   ANDROID_KEYSTORE_PASSWORD        - Keystore password
+#   ANDROID_KEYSTORE_CRED            - Keystore credential
 #   ANDROID_KEY_ALIAS                - Key alias
-#   ANDROID_KEY_PASSWORD             - Key password
+#   ANDROID_KEY_CRED                 - Key credential
 #   GOOGLE_PLAY_SERVICE_ACCOUNT_JSON - Google Play service account JSON (for automated upload, optional)
 
 name: Android CI/CD
@@ -100,11 +100,33 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-gradle-
 
-      - name: Run tests
-        run: ./gradlew test
+      - name: Run tests with coverage
+        run: ./gradlew testDebugUnitTest jacocoTestReport
+
+      - name: Upload coverage report
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-report
+          path: app/build/reports/jacoco/jacocoTestReport/jacocoTestReport.xml
+
+  sonarcloud:
+    name: SonarCloud Scan
+    runs-on: ubuntu-latest
+    continue-on-error: true
+    needs: [build, test]
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Download coverage report
+        uses: actions/download-artifact@v4
+        with:
+          name: coverage-report
+          path: app/build/reports/jacoco
 
       - name: SonarCloud Scan
-        uses: SonarSource/sonarqube-scan-action@v5
+        uses: SonarSource/sonarqube-scan-action@a31c9398be7ace6bbfaf30c0bd5d415f843d45e9 # v7.0.0
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
 
@@ -173,17 +195,17 @@ jobs:
       - name: Build release AAB
         env:
           ANDROID_KEYSTORE_PATH: release.jks
-          ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          ANDROID_KEYSTORE_CRED: ${{ secrets.ANDROID_KEYSTORE_CRED }}
           ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
-          ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+          ANDROID_KEY_CRED: ${{ secrets.ANDROID_KEY_CRED }}
         run: ./gradlew bundleRelease
 
       - name: Build release APK
         env:
           ANDROID_KEYSTORE_PATH: release.jks
-          ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          ANDROID_KEYSTORE_CRED: ${{ secrets.ANDROID_KEYSTORE_CRED }}
           ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
-          ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+          ANDROID_KEY_CRED: ${{ secrets.ANDROID_KEY_CRED }}
         run: ./gradlew assembleRelease
 
       - name: Upload release AAB

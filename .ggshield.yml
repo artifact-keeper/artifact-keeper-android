@@ -1,0 +1,10 @@
+version: 2
+
+secret:
+  ignored-matches:
+    # Signing config reads from System.getenv(), not hardcoded values.
+    # GitGuardian flags the env var names containing "PASSWORD" as credentials.
+    - name: "Android signing config env var references"
+      match: ANDROID_KEYSTORE_PASSWORD
+    - name: "Android signing config env var references"
+      match: ANDROID_KEY_PASSWORD
