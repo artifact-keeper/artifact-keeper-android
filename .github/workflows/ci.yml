@@ -2,9 +2,9 @@
 #
 # Required GitHub Secrets:
 #   ANDROID_KEYSTORE_BASE64          - Base64-encoded release keystore (.jks)
-#   ANDROID_KEYSTORE_PASSWORD        - Keystore password
+#   ANDROID_KEYSTORE_CRED            - Keystore credential
 #   ANDROID_KEY_ALIAS                - Key alias
-#   ANDROID_KEY_PASSWORD             - Key password
+#   ANDROID_KEY_CRED                 - Key credential
 #   GOOGLE_PLAY_SERVICE_ACCOUNT_JSON - Google Play service account JSON (for automated upload, optional)
 
 name: Android CI/CD
@@ -103,6 +103,16 @@ jobs:
       - name: Run tests
         run: ./gradlew test
 
+  sonarcloud:
+    name: SonarCloud Scan
+    runs-on: ubuntu-latest
+    continue-on-error: true
+    needs: build
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
       - name: SonarCloud Scan
         uses: SonarSource/sonarqube-scan-action@v5
         env:
@@ -173,17 +183,17 @@ jobs:
       - name: Build release AAB
         env:
           ANDROID_KEYSTORE_PATH: release.jks
-          ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          ANDROID_KEYSTORE_CRED: ${{ secrets.ANDROID_KEYSTORE_CRED }}
           ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
-          ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+          ANDROID_KEY_CRED: ${{ secrets.ANDROID_KEY_CRED }}
         run: ./gradlew bundleRelease
 
       - name: Build release APK
         env:
           ANDROID_KEYSTORE_PATH: release.jks
-          ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          ANDROID_KEYSTORE_CRED: ${{ secrets.ANDROID_KEYSTORE_CRED }}
           ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
-          ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+          ANDROID_KEY_CRED: ${{ secrets.ANDROID_KEY_CRED }}
         run: ./gradlew assembleRelease
 
       - name: Upload release AAB

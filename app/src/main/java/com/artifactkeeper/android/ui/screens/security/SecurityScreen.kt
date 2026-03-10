@@ -14,8 +14,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import com.artifactkeeper.android.data.api.ApiClient
-import com.artifactkeeper.android.data.api.unwrap
+import androidx.hilt.navigation.compose.hiltViewModel
 import com.artifactkeeper.android.data.models.CveTrends
 import com.artifactkeeper.android.data.models.DtPortfolioMetrics
 import com.artifactkeeper.android.data.models.DtStatus
@@ -25,7 +24,6 @@ import com.artifactkeeper.android.ui.theme.Critical
 import com.artifactkeeper.android.ui.theme.High
 import com.artifactkeeper.android.ui.theme.Low
 import com.artifactkeeper.android.ui.theme.Medium
-import kotlinx.coroutines.launch
 
 private val GradeA = Color(0xFF52C41A)
 private val GradeB = Color(0xFF36CFC9)
@@ -40,58 +38,14 @@ private val DtProjects = Color(0xFF1890FF)
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun SecurityScreen() {
-    var scores by remember { mutableStateOf<List<RepoSecurityScore>>(emptyList()) }
-    var repoMap by remember { mutableStateOf<Map<java.util.UUID, Repository>>(emptyMap()) }
-    var cveTrends by remember { mutableStateOf<CveTrends?>(null) }
-    var isLoading by remember { mutableStateOf(true) }
-    var isRefreshing by remember { mutableStateOf(false) }
-    var errorMessage by remember { mutableStateOf<String?>(null) }
-    var dtStatus by remember { mutableStateOf<DtStatus?>(null) }
-    var dtPortfolioMetrics by remember { mutableStateOf<DtPortfolioMetrics?>(null) }
-    val coroutineScope = rememberCoroutineScope()
-
-    fun loadData(refresh: Boolean = false) {
-        coroutineScope.launch {
-            if (refresh) isRefreshing = true else isLoading = true
-            errorMessage = null
-            try {
-                scores = ApiClient.securityApi.getAllScores().unwrap()
-                val repos = ApiClient.reposApi.listRepositories(perPage = 100).unwrap().items
-                repoMap = repos.associateBy { it.id }
-                try {
-                    cveTrends = ApiClient.sbomApi.getCveTrends().unwrap()
-                } catch (_: Exception) {
-                    // CVE trends are optional
-                }
-
-                // Load Dependency-Track status (non-blocking)
-                try {
-                    val status = ApiClient.securityApi.dtStatus().unwrap()
-                    dtStatus = status
-                    if (status.enabled && status.healthy) {
-                        dtPortfolioMetrics = ApiClient.securityApi.getPortfolioMetrics().unwrap()
-                    } else {
-                        dtPortfolioMetrics = null
-                    }
-                } catch (_: Exception) {
-                    dtStatus = null
-                    dtPortfolioMetrics = null
-                }
-            } catch (e: Exception) {
-                errorMessage = e.message ?: "Failed to load security data"
-            } finally {
-                isLoading = false
-                isRefreshing = false
-            }
-        }
-    }
-
-    LaunchedEffect(Unit) { loadData() }
+fun SecurityScreen(
+    viewModel: SecurityViewModel = hiltViewModel(),
+) {
+    val uiState by viewModel.uiState.collectAsState()
 
     Column(modifier = Modifier.fillMaxSize()) {
         when {
-            isLoading -> {
+            uiState.isLoading -> {
                 Box(
                     modifier = Modifier.fillMaxSize(),
                     contentAlignment = Alignment.Center,
@@ -99,25 +53,25 @@ fun SecurityScreen() {
                     CircularProgressIndicator()
                 }
             }
-            errorMessage != null -> {
+            uiState.error != null -> {
                 Box(
                     modifier = Modifier.fillMaxSize(),
                     contentAlignment = Alignment.Center,
                 ) {
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
                         Text(
-                            text = errorMessage ?: "Unknown error",
+                            text = uiState.error ?: "Unknown error",
                             color = MaterialTheme.colorScheme.error,
                             style = MaterialTheme.typography.bodyLarge,
                         )
                         Spacer(modifier = Modifier.height(8.dp))
-                        TextButton(onClick = { loadData() }) {
+                        TextButton(onClick = { viewModel.loadData() }) {
                             Text("Retry")
                         }
                     }
                 }
             }
-            scores.isEmpty() && cveTrends == null && dtStatus?.enabled != true -> {
+            uiState.scores.isEmpty() && uiState.cveTrends == null && uiState.dtStatus?.enabled != true -> {
                 Box(
                     modifier = Modifier.fillMaxSize(),
                     contentAlignment = Alignment.Center,
@@ -131,8 +85,8 @@ fun SecurityScreen() {
             }
             else -> {
                 PullToRefreshBox(
-                    isRefreshing = isRefreshing,
-                    onRefresh = { loadData(refresh = true) },
+                    isRefreshing = uiState.isRefreshing,
+                    onRefresh = { viewModel.loadData(refresh = true) },
                     modifier = Modifier.fillMaxSize(),
                 ) {
                     LazyColumn(
@@ -140,30 +94,30 @@ fun SecurityScreen() {
                         contentPadding = PaddingValues(16.dp),
                         verticalArrangement = Arrangement.spacedBy(12.dp),
                     ) {
-                        cveTrends?.let { trends ->
+                        uiState.cveTrends?.let { trends ->
                             item(key = "cve-trends") {
                                 CveTrendsSummaryCard(trends)
                             }
                         }
 
                         // Dependency-Track section (only when enabled)
-                        if (dtStatus?.enabled == true) {
+                        if (uiState.dtStatus?.enabled == true) {
                             item(key = "dt-status") {
-                                DtStatusCard(dtStatus!!)
+                                DtStatusCard(uiState.dtStatus!!)
                             }
 
-                            if (dtPortfolioMetrics != null) {
+                            if (uiState.dtPortfolioMetrics != null) {
                                 item(key = "dt-metrics") {
-                                    DtPortfolioMetricsCard(dtPortfolioMetrics!!)
+                                    DtPortfolioMetricsCard(uiState.dtPortfolioMetrics!!)
                                 }
 
                                 item(key = "dt-audit") {
-                                    DtAuditProgressCard(dtPortfolioMetrics!!)
+                                    DtAuditProgressCard(uiState.dtPortfolioMetrics!!)
                                 }
                             }
                         }
 
-                        if (scores.isNotEmpty()) {
+                        if (uiState.scores.isNotEmpty()) {
                             item(key = "scores-header") {
                                 Text(
                                     text = "Repository Scores",
@@ -171,8 +125,8 @@ fun SecurityScreen() {
                                     modifier = Modifier.padding(top = 4.dp),
                                 )
                             }
-                            items(scores, key = { it.id }) { score ->
-                                SecurityScoreCard(score, repoMap[score.repositoryId])
+                            items(uiState.scores, key = { it.id }) { score ->
+                                SecurityScoreCard(score, uiState.repoMap[score.repositoryId])
                             }
                         }
                     }

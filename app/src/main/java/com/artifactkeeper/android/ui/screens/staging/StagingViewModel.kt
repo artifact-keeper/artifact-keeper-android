@@ -13,11 +13,13 @@ import com.artifactkeeper.android.data.models.PromotionResponse
 import com.artifactkeeper.android.data.models.Repository
 import com.artifactkeeper.android.data.models.StagingArtifact
 import com.artifactkeeper.android.data.models.StagingRepository
+import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import javax.inject.Inject
 
 data class StagingUiState(
     val stagingRepos: List<StagingRepository> = emptyList(),
@@ -38,7 +40,10 @@ data class StagingUiState(
     val filterStatus: PolicyStatus? = null,
 )
 
-class StagingViewModel : ViewModel() {
+@HiltViewModel
+class StagingViewModel @Inject constructor(
+    private val apiClient: ApiClient,
+) : ViewModel() {
 
     private val _uiState = MutableStateFlow(StagingUiState())
     val uiState: StateFlow<StagingUiState> = _uiState.asStateFlow()

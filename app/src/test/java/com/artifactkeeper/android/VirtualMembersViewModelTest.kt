@@ -1,7 +1,9 @@
 package com.artifactkeeper.android
 
+import com.artifactkeeper.android.data.api.ApiClient
 import com.artifactkeeper.android.ui.screens.repositories.VirtualMembersUiState
 import com.artifactkeeper.android.ui.screens.repositories.VirtualMembersViewModel
+import io.mockk.mockk
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
@@ -19,12 +21,13 @@ import org.junit.Test
 class VirtualMembersViewModelTest {
 
     private val testDispatcher = UnconfinedTestDispatcher()
+    private val mockApiClient = mockk<ApiClient>()
     private lateinit var viewModel: VirtualMembersViewModel
 
     @Before
     fun setUp() {
         Dispatchers.setMain(testDispatcher)
-        viewModel = VirtualMembersViewModel()
+        viewModel = VirtualMembersViewModel(mockApiClient)
     }
 
     @After

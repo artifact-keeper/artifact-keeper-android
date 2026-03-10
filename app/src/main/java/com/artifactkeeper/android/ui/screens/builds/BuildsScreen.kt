@@ -1,6 +1,7 @@
 package com.artifactkeeper.android.ui.screens.builds
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
@@ -31,7 +32,7 @@ private val StatusPending = Color(0xFF8C8C8C)
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun BuildsScreen() {
+fun BuildsScreen(onBuildClick: (String) -> Unit = {}) {
     var builds by remember { mutableStateOf<List<BuildItem>>(emptyList()) }
     var isLoading by remember { mutableStateOf(true) }
     var isRefreshing by remember { mutableStateOf(false) }
@@ -146,7 +147,10 @@ fun BuildsScreen() {
                         verticalArrangement = Arrangement.spacedBy(8.dp),
                     ) {
                         items(builds, key = { it.id }) { build ->
-                            BuildCard(build)
+                            BuildCard(
+                                build = build,
+                                onClick = { onBuildClick(build.id.toString()) },
+                            )
                         }
                     }
                 }
@@ -156,7 +160,7 @@ fun BuildsScreen() {
 }
 
 @Composable
-private fun BuildCard(build: BuildItem) {
+private fun BuildCard(build: BuildItem, onClick: () -> Unit = {}) {
     val statusColor = when (build.status.lowercase()) {
         "success" -> StatusSuccess
         "failed", "error" -> StatusFailed
@@ -165,7 +169,9 @@ private fun BuildCard(build: BuildItem) {
     }
 
     Card(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable(onClick = onClick),
     ) {
         Row(
             modifier = Modifier.padding(16.dp),

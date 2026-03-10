@@ -1,5 +1,6 @@
 package com.artifactkeeper.android.ui.screens.packages
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -23,7 +24,7 @@ import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun PackagesScreen() {
+fun PackagesScreen(onPackageClick: (String) -> Unit = {}) {
     var packages by remember { mutableStateOf<List<PackageItem>>(emptyList()) }
     var isLoading by remember { mutableStateOf(true) }
     var isRefreshing by remember { mutableStateOf(false) }
@@ -116,7 +117,7 @@ fun PackagesScreen() {
                         verticalArrangement = Arrangement.spacedBy(12.dp),
                     ) {
                         items(packages, key = { it.id }) { pkg ->
-                            PackageCard(pkg)
+                            PackageCard(pkg, onClick = { onPackageClick(pkg.id.toString()) })
                         }
                     }
                 }
@@ -126,9 +127,11 @@ fun PackagesScreen() {
 }
 
 @Composable
-private fun PackageCard(pkg: PackageItem) {
+private fun PackageCard(pkg: PackageItem, onClick: () -> Unit = {}) {
     Card(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable(onClick = onClick),
     ) {
         Column(
             modifier = Modifier.padding(16.dp),

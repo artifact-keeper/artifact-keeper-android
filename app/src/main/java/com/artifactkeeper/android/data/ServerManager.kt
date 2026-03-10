@@ -15,7 +15,6 @@ import java.net.HttpURLConnection
 import java.net.URL
 
 object ServerManager {
-    private const val PREFS_NAME = "artifact_keeper_prefs"
     private const val PREFS_KEY = "saved_servers"
     private const val ACTIVE_KEY = "active_server_id"
 
@@ -51,7 +50,8 @@ object ServerManager {
     }
 
     fun init(context: Context) {
-        prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+        prefs = EncryptedPrefsManager.getPrefs(context)
+        migrateFromPlaintextServerPrefs(context)
         loadFromPrefs()
     }
 
@@ -101,8 +101,9 @@ object ServerManager {
     }
 
     fun migrateIfNeeded(context: Context) {
-        val legacyPrefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
-        val legacyUrl = legacyPrefs.getString("server_url", null)
+        // Check encrypted prefs for a legacy single-server URL that needs
+        // converting into the multi-server list.
+        val legacyUrl = prefs.getString(EncryptedPrefsManager.KEY_SERVER_URL, null)
         if (!legacyUrl.isNullOrBlank() && _servers.value.isEmpty()) {
             val host = try {
                 java.net.URI(legacyUrl).host ?: legacyUrl
@@ -111,6 +112,33 @@ object ServerManager {
             }
             addServer(name = host, url = legacyUrl)
         }
+    }
+
+    /**
+     * One-time migration: if the old plaintext "artifact_keeper_prefs" file
+     * contains saved_servers or active_server_id, copy them to encrypted
+     * storage and remove the plaintext entries.
+     */
+    private fun migrateFromPlaintextServerPrefs(context: Context) {
+        val legacy = context.getSharedPreferences("artifact_keeper_prefs", Context.MODE_PRIVATE)
+        val hasLegacy = legacy.contains(PREFS_KEY) || legacy.contains(ACTIVE_KEY)
+        if (!hasLegacy) return
+
+        val editor = prefs.edit()
+        val legacyEditor = legacy.edit()
+
+        val serversJson = legacy.getString(PREFS_KEY, null)
+        if (serversJson != null && !prefs.contains(PREFS_KEY)) {
+            editor.putString(PREFS_KEY, serversJson)
+        }
+        val activeId = legacy.getString(ACTIVE_KEY, null)
+        if (activeId != null && !prefs.contains(ACTIVE_KEY)) {
+            editor.putString(ACTIVE_KEY, activeId)
+        }
+
+        legacyEditor.remove(PREFS_KEY).remove(ACTIVE_KEY)
+        editor.apply()
+        legacyEditor.apply()
     }
 
     private fun loadFromPrefs() {

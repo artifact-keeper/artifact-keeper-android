@@ -4,6 +4,8 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material3.*
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.*
@@ -11,43 +13,23 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import com.artifactkeeper.android.data.api.ApiClient
-import com.artifactkeeper.android.data.api.unwrap
+import androidx.hilt.navigation.compose.hiltViewModel
 import com.artifactkeeper.android.data.models.Repository
 import com.artifactkeeper.android.ui.util.formatBytes
 import com.artifactkeeper.android.ui.util.formatRelativeTime
-import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun RepositoriesScreen(onRepoClick: (String) -> Unit = {}) {
-    var repositories by remember { mutableStateOf<List<Repository>>(emptyList()) }
-    var isLoading by remember { mutableStateOf(true) }
-    var isRefreshing by remember { mutableStateOf(false) }
-    var errorMessage by remember { mutableStateOf<String?>(null) }
-    val coroutineScope = rememberCoroutineScope()
+fun RepositoriesScreen(
+    onRepoClick: (String) -> Unit = {},
+    onCreateRepo: () -> Unit = {},
+    viewModel: RepositoriesViewModel = hiltViewModel(),
+) {
+    val uiState by viewModel.uiState.collectAsState()
 
-    fun loadRepositories(refresh: Boolean = false) {
-        coroutineScope.launch {
-            if (refresh) isRefreshing = true else isLoading = true
-            errorMessage = null
-            try {
-                val response = ApiClient.reposApi.listRepositories().unwrap()
-                repositories = response.items
-            } catch (e: Exception) {
-                errorMessage = e.message ?: "Failed to load repositories"
-            } finally {
-                isLoading = false
-                isRefreshing = false
-            }
-        }
-    }
-
-    LaunchedEffect(Unit) { loadRepositories() }
-
-    Column(modifier = Modifier.fillMaxSize()) {
+    Box(modifier = Modifier.fillMaxSize()) {
         when {
-            isLoading -> {
+            uiState.isLoading -> {
                 Box(
                     modifier = Modifier.fillMaxSize(),
                     contentAlignment = Alignment.Center,
@@ -55,25 +37,25 @@ fun RepositoriesScreen(onRepoClick: (String) -> Unit = {}) {
                     CircularProgressIndicator()
                 }
             }
-            errorMessage != null -> {
+            uiState.error != null -> {
                 Box(
                     modifier = Modifier.fillMaxSize(),
                     contentAlignment = Alignment.Center,
                 ) {
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
                         Text(
-                            text = errorMessage ?: "Unknown error",
+                            text = uiState.error ?: "Unknown error",
                             color = MaterialTheme.colorScheme.error,
                             style = MaterialTheme.typography.bodyLarge,
                         )
                         Spacer(modifier = Modifier.height(8.dp))
-                        TextButton(onClick = { loadRepositories() }) {
+                        TextButton(onClick = { viewModel.loadRepositories() }) {
                             Text("Retry")
                         }
                     }
                 }
             }
-            repositories.isEmpty() -> {
+            uiState.repositories.isEmpty() -> {
                 Box(
                     modifier = Modifier.fillMaxSize(),
                     contentAlignment = Alignment.Center,
@@ -87,8 +69,8 @@ fun RepositoriesScreen(onRepoClick: (String) -> Unit = {}) {
             }
             else -> {
                 PullToRefreshBox(
-                    isRefreshing = isRefreshing,
-                    onRefresh = { loadRepositories(refresh = true) },
+                    isRefreshing = uiState.isRefreshing,
+                    onRefresh = { viewModel.loadRepositories(refresh = true) },
                     modifier = Modifier.fillMaxSize(),
                 ) {
                     LazyColumn(
@@ -96,12 +78,22 @@ fun RepositoriesScreen(onRepoClick: (String) -> Unit = {}) {
                         contentPadding = PaddingValues(16.dp),
                         verticalArrangement = Arrangement.spacedBy(12.dp),
                     ) {
-                        items(repositories, key = { it.id }) { repo ->
+                        items(uiState.repositories, key = { it.id }) { repo ->
                             RepositoryCard(repo, onClick = { onRepoClick(repo.key) })
                         }
                     }
                 }
             }
+        }
+
+        // Floating action button for creating new repositories
+        FloatingActionButton(
+            onClick = onCreateRepo,
+            modifier = Modifier
+                .align(Alignment.BottomEnd)
+                .padding(16.dp),
+        ) {
+            Icon(Icons.Default.Add, contentDescription = "Create repository")
         }
     }
 }

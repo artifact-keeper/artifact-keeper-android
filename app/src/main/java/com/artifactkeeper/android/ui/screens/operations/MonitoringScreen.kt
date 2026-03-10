@@ -17,72 +17,24 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import com.artifactkeeper.android.data.api.ApiClient
-import com.artifactkeeper.android.data.api.unwrap
+import androidx.hilt.navigation.compose.hiltViewModel
 import com.artifactkeeper.android.data.models.AlertState
-import com.artifactkeeper.android.data.models.DtStatus
 import com.artifactkeeper.android.data.models.HealthCheck
 import com.artifactkeeper.android.data.models.HealthLogEntry
-import com.artifactkeeper.android.data.models.LocalHealthResponse
 import com.artifactkeeper.android.ui.util.formatRelativeTime
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
-import kotlinx.serialization.json.Json
-import okhttp3.Request
 
 private val StatusOk = Color(0xFF52C41A)
 private val StatusFail = Color(0xFFF5222D)
 
-private val json = Json { ignoreUnknownKeys = true }
-
 @Composable
-fun MonitoringScreen() {
-    var health by remember { mutableStateOf<LocalHealthResponse?>(null) }
-    var dtStatus by remember { mutableStateOf<DtStatus?>(null) }
-    var alerts by remember { mutableStateOf<List<AlertState>>(emptyList()) }
-    var healthLog by remember { mutableStateOf<List<HealthLogEntry>>(emptyList()) }
-    var isLoading by remember { mutableStateOf(true) }
-    var isRefreshing by remember { mutableStateOf(false) }
-    var errorMessage by remember { mutableStateOf<String?>(null) }
-    val coroutineScope = rememberCoroutineScope()
-
-    fun loadData(refresh: Boolean = false) {
-        coroutineScope.launch {
-            if (refresh) isRefreshing = true else isLoading = true
-            errorMessage = null
-            try {
-                // Fetch health via OkHttp directly (not under /api/v1)
-                health = withContext(Dispatchers.IO) {
-                    val healthUrl = ApiClient.baseUrl + "health"
-                    val client = ApiClient.httpClient
-                    val request = Request.Builder().url(healthUrl).build()
-                    val response = client.newCall(request).execute()
-                    val body = response.body?.string() ?: "{}"
-                    json.decodeFromString<LocalHealthResponse>(body)
-                }
-                // Fetch Dependency-Track status
-                try {
-                    dtStatus = ApiClient.securityApi.dtStatus().unwrap()
-                } catch (_: Exception) {
-                    dtStatus = null
-                }
-                alerts = ApiClient.monitoringApi.getAlertStates().unwrap()
-                healthLog = ApiClient.monitoringApi.getHealthLog().unwrap()
-            } catch (e: Exception) {
-                errorMessage = e.message ?: "Failed to load monitoring data"
-            } finally {
-                isLoading = false
-                isRefreshing = false
-            }
-        }
-    }
-
-    LaunchedEffect(Unit) { loadData() }
+fun MonitoringScreen(
+    viewModel: MonitoringViewModel = hiltViewModel(),
+) {
+    val uiState by viewModel.uiState.collectAsState()
 
     Column(modifier = Modifier.fillMaxSize()) {
         when {
-            isLoading -> {
+            uiState.isLoading -> {
                 Box(
                     modifier = Modifier.fillMaxSize(),
                     contentAlignment = Alignment.Center,
@@ -90,19 +42,19 @@ fun MonitoringScreen() {
                     CircularProgressIndicator()
                 }
             }
-            errorMessage != null -> {
+            uiState.error != null -> {
                 Box(
                     modifier = Modifier.fillMaxSize(),
                     contentAlignment = Alignment.Center,
                 ) {
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
                         Text(
-                            text = errorMessage ?: "Unknown error",
+                            text = uiState.error ?: "Unknown error",
                             color = MaterialTheme.colorScheme.error,
                             style = MaterialTheme.typography.bodyLarge,
                         )
                         Spacer(modifier = Modifier.height(8.dp))
-                        TextButton(onClick = { loadData() }) {
+                        TextButton(onClick = { viewModel.loadData() }) {
                             Text("Retry")
                         }
                     }
@@ -110,8 +62,8 @@ fun MonitoringScreen() {
             }
             else -> {
                 PullToRefreshBox(
-                    isRefreshing = isRefreshing,
-                    onRefresh = { loadData(refresh = true) },
+                    isRefreshing = uiState.isRefreshing,
+                    onRefresh = { viewModel.loadData(refresh = true) },
                     modifier = Modifier.fillMaxSize(),
                 ) {
                     LazyColumn(
@@ -127,7 +79,7 @@ fun MonitoringScreen() {
                             )
                         }
 
-                        val healthChecks = health?.checks?.entries?.toList() ?: emptyList()
+                        val healthChecks = uiState.health?.checks?.entries?.toList() ?: emptyList()
                         if (healthChecks.isEmpty()) {
                             item {
                                 Text(
@@ -143,12 +95,12 @@ fun MonitoringScreen() {
                         }
 
                         // Dependency-Track health (from separate endpoint)
-                        if (dtStatus?.enabled == true) {
+                        if (uiState.dtStatus?.enabled == true) {
                             item(key = "check-dependency-track") {
                                 ServiceHealthCard(
                                     name = "Dependency-Track",
                                     check = HealthCheck(
-                                        status = if (dtStatus!!.healthy) "healthy" else "unhealthy",
+                                        status = if (uiState.dtStatus!!.healthy) "healthy" else "unhealthy",
                                         responseTimeMs = null,
                                     ),
                                 )
@@ -164,7 +116,7 @@ fun MonitoringScreen() {
                             )
                         }
 
-                        if (alerts.isEmpty()) {
+                        if (uiState.alerts.isEmpty()) {
                             item {
                                 Text(
                                     text = "No active alerts",
@@ -174,7 +126,7 @@ fun MonitoringScreen() {
                             }
                         }
 
-                        items(alerts, key = { "alert-${it.serviceName}" }) { alert ->
+                        items(uiState.alerts, key = { "alert-${it.serviceName}" }) { alert ->
                             AlertCard(alert)
                         }
 
@@ -187,7 +139,7 @@ fun MonitoringScreen() {
                             )
                         }
 
-                        if (healthLog.isEmpty()) {
+                        if (uiState.healthLog.isEmpty()) {
                             item {
                                 Text(
                                     text = "No health log entries",
@@ -197,8 +149,8 @@ fun MonitoringScreen() {
                             }
                         }
 
-                        items(healthLog.size) { index ->
-                            val entry = healthLog[index]
+                        items(uiState.healthLog.size) { index ->
+                            val entry = uiState.healthLog[index]
                             HealthLogCard(entry)
                         }
 

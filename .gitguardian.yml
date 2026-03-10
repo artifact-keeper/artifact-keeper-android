@@ -1,0 +1,7 @@
+paths-ignore:
+  # Gradle build files reference environment variable names for signing config,
+  # not actual credentials. GitGuardian flags these as false positives.
+  - "**/*.gradle.kts"
+  - "**/gradle/**"
+  # CI workflow files map GitHub secrets to env vars using ${{ secrets.* }} syntax.
+  - ".github/workflows/**"

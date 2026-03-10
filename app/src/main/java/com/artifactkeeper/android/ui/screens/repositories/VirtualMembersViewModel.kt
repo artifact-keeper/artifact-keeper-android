@@ -9,11 +9,13 @@ import com.artifactkeeper.android.data.models.Repository
 import com.artifactkeeper.android.data.models.VirtualMember
 import com.artifactkeeper.client.models.UpdateVirtualMembersRequest
 import com.artifactkeeper.client.models.VirtualMemberPriority
+import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import javax.inject.Inject
 
 data class VirtualMembersUiState(
     val members: List<VirtualMember> = emptyList(),
@@ -25,7 +27,10 @@ data class VirtualMembersUiState(
     val successMessage: String? = null,
 )
 
-class VirtualMembersViewModel : ViewModel() {
+@HiltViewModel
+class VirtualMembersViewModel @Inject constructor(
+    private val apiClient: ApiClient,
+) : ViewModel() {
 
     private val _uiState = MutableStateFlow(VirtualMembersUiState())
     val uiState: StateFlow<VirtualMembersUiState> = _uiState.asStateFlow()
