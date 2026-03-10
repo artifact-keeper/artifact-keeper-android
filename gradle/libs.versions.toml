@@ -15,7 +15,7 @@ security-crypto = "1.1.0-alpha06"
 zxing = "3.5.3"
 junit = "4.13.2"
 mockk = "1.13.13"
-turbine = "1.2.0"
+turbine = "1.2.1"
 android-test-ext = "1.2.1"
 
 [libraries]
