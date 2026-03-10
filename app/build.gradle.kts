@@ -5,6 +5,7 @@ plugins {
     alias(libs.plugins.hilt.android)
     alias(libs.plugins.kotlin.serialization)
     id("com.google.devtools.ksp")
+    jacoco
 }
 
 // Derive versionCode from CI environment or fall back to a git-based count.
@@ -76,7 +77,20 @@ android {
         }
     }
 
+    @Suppress("UnstableApiUsage")
+    testOptions {
+        unitTests.all {
+            it.extensions.configure<JacocoTaskExtension> {
+                isIncludeNoLocationClasses = true
+                excludes = listOf("jdk.internal.*")
+            }
+        }
+    }
+
     buildTypes {
+        debug {
+            enableUnitTestCoverage = true
+        }
         release {
             val releaseSigning = signingConfigs.getByName("release")
             signingConfig = if (releaseSigning.storeFile != null) releaseSigning else signingConfigs.getByName("debug")
@@ -140,4 +154,23 @@ dependencies {
     androidTestImplementation(platform(libs.compose.bom))
     androidTestImplementation(libs.compose.ui.test.junit4)
     debugImplementation(libs.compose.ui.tooling)
+}
+
+tasks.register<JacocoReport>("jacocoTestReport") {
+    dependsOn("testDebugUnitTest")
+    reports {
+        xml.required.set(true)
+        html.required.set(false)
+    }
+    val debugTree = fileTree("${layout.buildDirectory.get()}/tmp/kotlin-classes/debug") {
+        exclude("**/R.class", "**/R\$*.class", "**/BuildConfig.*", "**/Manifest*.*",
+            "**/*_Hilt*.class", "**/Hilt_*.class", "**/*_Factory.class",
+            "**/*_MembersInjector.class", "**/*Module_*.class")
+    }
+    val mainSrc = "${project.projectDir}/src/main/java"
+    sourceDirectories.setFrom(files(mainSrc))
+    classDirectories.setFrom(files(debugTree))
+    executionData.setFrom(fileTree(layout.buildDirectory) {
+        include("outputs/unit_test_code_coverage/debugUnitTest/testDebugUnitTest.exec")
+    })
 }

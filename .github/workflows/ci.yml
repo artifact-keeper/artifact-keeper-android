@@ -100,18 +100,30 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-gradle-
 
-      - name: Run tests
-        run: ./gradlew test
+      - name: Run tests with coverage
+        run: ./gradlew testDebugUnitTest jacocoTestReport
+
+      - name: Upload coverage report
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-report
+          path: app/build/reports/jacoco/jacocoTestReport/jacocoTestReport.xml
 
   sonarcloud:
     name: SonarCloud Scan
     runs-on: ubuntu-latest
     continue-on-error: true
-    needs: build
+    needs: [build, test]
     steps:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
+
+      - name: Download coverage report
+        uses: actions/download-artifact@v4
+        with:
+          name: coverage-report
+          path: app/build/reports/jacoco
 
       - name: SonarCloud Scan
         uses: SonarSource/sonarqube-scan-action@a31c9398be7ace6bbfaf30c0bd5d415f843d45e9 # v7.0.0
