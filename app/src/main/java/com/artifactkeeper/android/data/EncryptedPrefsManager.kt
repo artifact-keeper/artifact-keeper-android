@@ -3,6 +3,7 @@ package com.artifactkeeper.android.data
 import android.content.Context
 import android.content.SharedPreferences
 import android.util.Log
+import androidx.annotation.VisibleForTesting
 import androidx.security.crypto.EncryptedSharedPreferences
 import androidx.security.crypto.MasterKey
 
@@ -42,6 +43,18 @@ object EncryptedPrefsManager {
 
     @Volatile
     private var encryptedPrefs: SharedPreferences? = null
+
+    /** Replace the backing SharedPreferences with the given instance. Test-only. */
+    @VisibleForTesting
+    internal fun setPrefsForTesting(prefs: SharedPreferences) {
+        encryptedPrefs = prefs
+    }
+
+    /** Reset internal state so the next [getPrefs] call re-creates the instance. Test-only. */
+    @VisibleForTesting
+    internal fun resetForTesting() {
+        encryptedPrefs = null
+    }
 
     /**
      * Returns the encrypted SharedPreferences instance, creating it on first
@@ -132,7 +145,12 @@ object EncryptedPrefsManager {
 
     // ----- migration from plaintext prefs -----
 
-    private fun migrateFromPlaintext(context: Context, encPrefs: SharedPreferences) {
+    /**
+     * Exposed with internal visibility for testing. Production code calls this
+     * via [getPrefs] during initialization.
+     */
+    @VisibleForTesting
+    internal fun migrateFromPlaintext(context: Context, encPrefs: SharedPreferences) {
         val legacy = context.getSharedPreferences(LEGACY_PREFS_NAME, Context.MODE_PRIVATE)
 
         // Check whether there is anything to migrate. If the legacy file has

@@ -3,6 +3,7 @@ package com.artifactkeeper.android
 import com.artifactkeeper.android.data.ServerManager
 import com.artifactkeeper.android.data.api.ApiClient
 import com.artifactkeeper.android.di.AppModule
+import kotlinx.coroutines.Dispatchers
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertSame
 import org.junit.Test
@@ -55,5 +56,20 @@ class AppModuleTest {
     @Test
     fun `provideServerManager returns non-null`() {
         assertNotNull(AppModule.provideServerManager())
+    }
+
+    // =========================================================================
+    // provideIoDispatcher
+    // =========================================================================
+
+    @Test
+    fun `provideIoDispatcher returns Dispatchers IO`() {
+        val dispatcher = AppModule.provideIoDispatcher()
+        assertSame(Dispatchers.IO, dispatcher)
+    }
+
+    @Test
+    fun `provideIoDispatcher returns non-null`() {
+        assertNotNull(AppModule.provideIoDispatcher())
     }
 }

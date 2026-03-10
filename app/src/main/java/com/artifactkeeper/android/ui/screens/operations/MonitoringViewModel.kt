@@ -8,7 +8,9 @@ import com.artifactkeeper.android.data.models.AlertState
 import com.artifactkeeper.android.data.models.DtStatus
 import com.artifactkeeper.android.data.models.HealthLogEntry
 import com.artifactkeeper.android.data.models.LocalHealthResponse
+import com.artifactkeeper.android.di.IoDispatcher
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -35,6 +37,7 @@ private val json = Json { ignoreUnknownKeys = true }
 @HiltViewModel
 class MonitoringViewModel @Inject constructor(
     private val apiClient: ApiClient,
+    @IoDispatcher private val ioDispatcher: CoroutineDispatcher,
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(MonitoringUiState())
@@ -52,7 +55,7 @@ class MonitoringViewModel @Inject constructor(
             }
             try {
                 // Fetch health via OkHttp directly (not under /api/v1)
-                val health = withContext(Dispatchers.IO) {
+                val health = withContext(ioDispatcher) {
                     val healthUrl = apiClient.baseUrl + "health"
                     val client = apiClient.httpClient
                     val request = Request.Builder().url(healthUrl).build()

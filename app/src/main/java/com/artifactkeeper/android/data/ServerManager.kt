@@ -2,6 +2,7 @@ package com.artifactkeeper.android.data
 
 import android.content.Context
 import android.content.SharedPreferences
+import androidx.annotation.VisibleForTesting
 import com.artifactkeeper.android.data.api.ApiClient
 import com.artifactkeeper.android.data.models.SavedServer
 import kotlinx.coroutines.Dispatchers
@@ -19,7 +20,9 @@ object ServerManager {
     private const val ACTIVE_KEY = "active_server_id"
 
     private val json = Json { ignoreUnknownKeys = true }
-    private lateinit var prefs: SharedPreferences
+
+    @VisibleForTesting
+    internal lateinit var prefs: SharedPreferences
 
     private val _servers = MutableStateFlow<List<SavedServer>>(emptyList())
     val servers: StateFlow<List<SavedServer>> = _servers.asStateFlow()
@@ -29,6 +32,16 @@ object ServerManager {
 
     private val _serverStatuses = MutableStateFlow<Map<String, Boolean>>(emptyMap())
     val serverStatuses: StateFlow<Map<String, Boolean>> = _serverStatuses.asStateFlow()
+
+    /** Inject a SharedPreferences and reset all state. Test-only. */
+    @VisibleForTesting
+    internal fun initForTesting(testPrefs: SharedPreferences) {
+        prefs = testPrefs
+        _servers.value = emptyList()
+        _activeServerId.value = null
+        _serverStatuses.value = emptyMap()
+        loadFromPrefs()
+    }
 
     suspend fun refreshStatuses() = withContext(Dispatchers.IO) {
         val results = mutableMapOf<String, Boolean>()
@@ -119,7 +132,8 @@ object ServerManager {
      * contains saved_servers or active_server_id, copy them to encrypted
      * storage and remove the plaintext entries.
      */
-    private fun migrateFromPlaintextServerPrefs(context: Context) {
+    @VisibleForTesting
+    internal fun migrateFromPlaintextServerPrefs(context: Context) {
         val legacy = context.getSharedPreferences("artifact_keeper_prefs", Context.MODE_PRIVATE)
         val hasLegacy = legacy.contains(PREFS_KEY) || legacy.contains(ACTIVE_KEY)
         if (!hasLegacy) return
@@ -141,7 +155,8 @@ object ServerManager {
         legacyEditor.apply()
     }
 
-    private fun loadFromPrefs() {
+    @VisibleForTesting
+    internal fun loadFromPrefs() {
         val serversJson = prefs.getString(PREFS_KEY, null)
         if (serversJson != null) {
             try {
@@ -153,7 +168,8 @@ object ServerManager {
         _activeServerId.value = prefs.getString(ACTIVE_KEY, null)
     }
 
-    private fun saveToPrefs() {
+    @VisibleForTesting
+    internal fun saveToPrefs() {
         prefs.edit()
             .putString(PREFS_KEY, json.encodeToString(_servers.value))
             .putString(ACTIVE_KEY, _activeServerId.value)
