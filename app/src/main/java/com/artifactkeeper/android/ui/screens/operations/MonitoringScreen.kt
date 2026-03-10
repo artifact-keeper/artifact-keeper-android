@@ -18,6 +18,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.artifactkeeper.android.ui.components.LoadingErrorContainer
 import com.artifactkeeper.android.data.models.AlertState
 import com.artifactkeeper.android.data.models.HealthCheck
 import com.artifactkeeper.android.data.models.HealthLogEntry
@@ -32,135 +33,110 @@ fun MonitoringScreen(
 ) {
     val uiState by viewModel.uiState.collectAsState()
 
-    Column(modifier = Modifier.fillMaxSize()) {
-        when {
-            uiState.isLoading -> {
-                Box(
-                    modifier = Modifier.fillMaxSize(),
-                    contentAlignment = Alignment.Center,
-                ) {
-                    CircularProgressIndicator()
+    LoadingErrorContainer(
+        isLoading = uiState.isLoading,
+        error = uiState.error,
+        onRetry = { viewModel.loadData() },
+    ) {
+        PullToRefreshBox(
+            isRefreshing = uiState.isRefreshing,
+            onRefresh = { viewModel.loadData(refresh = true) },
+            modifier = Modifier.fillMaxSize(),
+        ) {
+            LazyColumn(
+                modifier = Modifier.fillMaxSize(),
+                contentPadding = PaddingValues(16.dp),
+                verticalArrangement = Arrangement.spacedBy(12.dp),
+            ) {
+                // Service health section
+                item {
+                    Text(
+                        text = "Service Health",
+                        style = MaterialTheme.typography.titleMedium,
+                    )
                 }
-            }
-            uiState.error != null -> {
-                Box(
-                    modifier = Modifier.fillMaxSize(),
-                    contentAlignment = Alignment.Center,
-                ) {
-                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+
+                val healthChecks = uiState.health?.checks?.entries?.toList() ?: emptyList()
+                if (healthChecks.isEmpty()) {
+                    item {
                         Text(
-                            text = uiState.error ?: "Unknown error",
-                            color = MaterialTheme.colorScheme.error,
-                            style = MaterialTheme.typography.bodyLarge,
+                            text = "No health checks available",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
                         )
-                        Spacer(modifier = Modifier.height(8.dp))
-                        TextButton(onClick = { viewModel.loadData() }) {
-                            Text("Retry")
-                        }
                     }
                 }
-            }
-            else -> {
-                PullToRefreshBox(
-                    isRefreshing = uiState.isRefreshing,
-                    onRefresh = { viewModel.loadData(refresh = true) },
-                    modifier = Modifier.fillMaxSize(),
-                ) {
-                    LazyColumn(
-                        modifier = Modifier.fillMaxSize(),
-                        contentPadding = PaddingValues(16.dp),
-                        verticalArrangement = Arrangement.spacedBy(12.dp),
-                    ) {
-                        // Service health section
-                        item {
-                            Text(
-                                text = "Service Health",
-                                style = MaterialTheme.typography.titleMedium,
-                            )
-                        }
 
-                        val healthChecks = uiState.health?.checks?.entries?.toList() ?: emptyList()
-                        if (healthChecks.isEmpty()) {
-                            item {
-                                Text(
-                                    text = "No health checks available",
-                                    style = MaterialTheme.typography.bodyMedium,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                )
-                            }
-                        }
+                items(healthChecks, key = { "check-${it.key}" }) { (name, check) ->
+                    ServiceHealthCard(name, check)
+                }
 
-                        items(healthChecks, key = { "check-${it.key}" }) { (name, check) ->
-                            ServiceHealthCard(name, check)
-                        }
-
-                        // Dependency-Track health (from separate endpoint)
-                        if (uiState.dtStatus?.enabled == true) {
-                            item(key = "check-dependency-track") {
-                                ServiceHealthCard(
-                                    name = "Dependency-Track",
-                                    check = HealthCheck(
-                                        status = if (uiState.dtStatus!!.healthy) "healthy" else "unhealthy",
-                                        responseTimeMs = null,
-                                    ),
-                                )
-                            }
-                        }
-
-                        // Alerts section
-                        item {
-                            Spacer(modifier = Modifier.height(8.dp))
-                            Text(
-                                text = "Alerts",
-                                style = MaterialTheme.typography.titleMedium,
-                            )
-                        }
-
-                        if (uiState.alerts.isEmpty()) {
-                            item {
-                                Text(
-                                    text = "No active alerts",
-                                    style = MaterialTheme.typography.bodyMedium,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                )
-                            }
-                        }
-
-                        items(uiState.alerts, key = { "alert-${it.serviceName}" }) { alert ->
-                            AlertCard(alert)
-                        }
-
-                        // Health log section
-                        item {
-                            Spacer(modifier = Modifier.height(8.dp))
-                            Text(
-                                text = "Health Log",
-                                style = MaterialTheme.typography.titleMedium,
-                            )
-                        }
-
-                        if (uiState.healthLog.isEmpty()) {
-                            item {
-                                Text(
-                                    text = "No health log entries",
-                                    style = MaterialTheme.typography.bodyMedium,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                )
-                            }
-                        }
-
-                        items(uiState.healthLog.size) { index ->
-                            val entry = uiState.healthLog[index]
-                            HealthLogCard(entry)
-                        }
-
-                        item { Spacer(modifier = Modifier.height(16.dp)) }
+                // Dependency-Track health (from separate endpoint)
+                if (uiState.dtStatus?.enabled == true) {
+                    item(key = "check-dependency-track") {
+                        ServiceHealthCard(
+                            name = "Dependency-Track",
+                            check = HealthCheck(
+                                status = if (uiState.dtStatus!!.healthy) "healthy" else "unhealthy",
+                                responseTimeMs = null,
+                            ),
+                        )
                     }
                 }
+
+                // Alerts section
+                item {
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Text(
+                        text = "Alerts",
+                        style = MaterialTheme.typography.titleMedium,
+                    )
+                }
+
+                if (uiState.alerts.isEmpty()) {
+                    item {
+                        Text(
+                            text = "No active alerts",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                    }
+                }
+
+                items(uiState.alerts, key = { "alert-${it.serviceName}" }) { alert ->
+                    AlertCard(alert)
+                }
+
+                // Health log section
+                item {
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Text(
+                        text = "Health Log",
+                        style = MaterialTheme.typography.titleMedium,
+                    )
+                }
+
+                if (uiState.healthLog.isEmpty()) {
+                    item {
+                        Text(
+                            text = "No health log entries",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                    }
+                }
+
+                items(uiState.healthLog.size) { index ->
+                    val entry = uiState.healthLog[index]
+                    HealthLogCard(entry)
+                }
+
+                item { Spacer(modifier = Modifier.height(16.dp)) }
             }
         }
     }
 }
+
 
 @Composable
 private fun ServiceHealthCard(name: String, check: HealthCheck) {

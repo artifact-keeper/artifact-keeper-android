@@ -29,6 +29,7 @@ import com.artifactkeeper.android.data.api.ApiClient
 import com.artifactkeeper.android.data.api.unwrap
 import com.artifactkeeper.android.data.models.Artifact
 import com.artifactkeeper.android.data.models.Repository
+import com.artifactkeeper.android.ui.components.MetadataFooterRow
 import com.artifactkeeper.client.models.UpdateRepositoryRequest
 import com.artifactkeeper.android.ui.util.formatBytes
 import com.artifactkeeper.android.ui.util.formatDownloadCount
@@ -393,24 +394,10 @@ private fun RepoDetailHeader(repo: Repository) {
             }
 
             Spacer(modifier = Modifier.height(8.dp))
-            HorizontalDivider()
-            Spacer(modifier = Modifier.height(8.dp))
-
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-            ) {
-                Text(
-                    text = formatBytes(repo.storageUsedBytes),
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
-                Text(
-                    text = formatRelativeTime(repo.createdAt),
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
-            }
+            MetadataFooterRow(
+                startText = formatBytes(repo.storageUsedBytes),
+                endText = formatRelativeTime(repo.createdAt),
+            )
         }
     }
 }

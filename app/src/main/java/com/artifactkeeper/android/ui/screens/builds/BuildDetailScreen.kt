@@ -16,6 +16,7 @@ import androidx.compose.ui.unit.dp
 import com.artifactkeeper.android.data.api.ApiClient
 import com.artifactkeeper.android.data.api.unwrap
 import com.artifactkeeper.android.data.models.BuildItem
+import com.artifactkeeper.android.ui.components.LoadingErrorContainer
 import kotlinx.coroutines.launch
 
 private val StatusSuccess = Color(0xFF52C41A)
@@ -62,46 +63,20 @@ fun BuildDetailScreen(
             )
         },
     ) { innerPadding ->
-        when {
-            isLoading -> {
-                Box(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(innerPadding),
-                    contentAlignment = Alignment.Center,
-                ) {
-                    CircularProgressIndicator()
-                }
-            }
-            errorMessage != null -> {
-                Box(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(innerPadding),
-                    contentAlignment = Alignment.Center,
-                ) {
-                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                        Text(
-                            text = errorMessage ?: "Unknown error",
-                            color = MaterialTheme.colorScheme.error,
-                            style = MaterialTheme.typography.bodyLarge,
-                        )
-                        Spacer(modifier = Modifier.height(8.dp))
-                        TextButton(onClick = { loadData() }) {
-                            Text("Retry")
-                        }
-                    }
-                }
-            }
-            build != null -> {
-                val b = build!!
-                LazyColumn(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(innerPadding),
-                    contentPadding = PaddingValues(16.dp),
-                    verticalArrangement = Arrangement.spacedBy(12.dp),
-                ) {
+        LoadingErrorContainer(
+            isLoading = isLoading,
+            error = errorMessage,
+            onRetry = { loadData() },
+            modifier = Modifier.padding(innerPadding),
+            isEmpty = build == null,
+            emptyMessage = "Build not found",
+        ) {
+            val b = build ?: return@LoadingErrorContainer
+            LazyColumn(
+                modifier = Modifier.fillMaxSize(),
+                contentPadding = PaddingValues(16.dp),
+                verticalArrangement = Arrangement.spacedBy(12.dp),
+            ) {
                     // Build overview card
                     item(key = "overview") {
                         Card(modifier = Modifier.fillMaxWidth()) {
@@ -233,15 +208,14 @@ fun BuildDetailScreen(
                             )
                         }
 
-                        items(b.modules!!, key = { it.id.toString() }) { module ->
-                            Card(modifier = Modifier.fillMaxWidth()) {
-                                Column(modifier = Modifier.padding(16.dp)) {
-                                    Text(
-                                        text = module.id.toString(),
-                                        style = MaterialTheme.typography.titleSmall,
-                                        fontWeight = FontWeight.Bold,
-                                    )
-                                }
+                    items(b.modules!!, key = { it.id.toString() }) { module ->
+                        Card(modifier = Modifier.fillMaxWidth()) {
+                            Column(modifier = Modifier.padding(16.dp)) {
+                                Text(
+                                    text = module.id.toString(),
+                                    style = MaterialTheme.typography.titleSmall,
+                                    fontWeight = FontWeight.Bold,
+                                )
                             }
                         }
                     }

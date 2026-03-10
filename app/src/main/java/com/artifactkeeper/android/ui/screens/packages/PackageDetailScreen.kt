@@ -17,6 +17,7 @@ import androidx.compose.ui.unit.dp
 import com.artifactkeeper.android.data.api.ApiClient
 import com.artifactkeeper.android.data.api.unwrap
 import com.artifactkeeper.android.data.models.PackageItem
+import com.artifactkeeper.android.ui.components.LoadingErrorContainer
 import com.artifactkeeper.android.ui.util.formatBytes
 import com.artifactkeeper.client.models.PackageVersionResponse
 import kotlinx.coroutines.launch
@@ -66,45 +67,17 @@ fun PackageDetailScreen(
             )
         },
     ) { innerPadding ->
-        when {
-            isLoading -> {
-                Box(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(innerPadding),
-                    contentAlignment = Alignment.Center,
-                ) {
-                    CircularProgressIndicator()
-                }
-            }
-            errorMessage != null -> {
-                Box(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(innerPadding),
-                    contentAlignment = Alignment.Center,
-                ) {
-                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                        Text(
-                            text = errorMessage ?: "Unknown error",
-                            color = MaterialTheme.colorScheme.error,
-                            style = MaterialTheme.typography.bodyLarge,
-                        )
-                        Spacer(modifier = Modifier.height(8.dp))
-                        TextButton(onClick = { loadData() }) {
-                            Text("Retry")
-                        }
-                    }
-                }
-            }
-            else -> {
-                PullToRefreshBox(
-                    isRefreshing = isRefreshing,
-                    onRefresh = { loadData(refresh = true) },
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(innerPadding),
-                ) {
+        LoadingErrorContainer(
+            isLoading = isLoading,
+            error = errorMessage,
+            onRetry = { loadData() },
+            modifier = Modifier.padding(innerPadding),
+        ) {
+            PullToRefreshBox(
+                isRefreshing = isRefreshing,
+                onRefresh = { loadData(refresh = true) },
+                modifier = Modifier.fillMaxSize(),
+            ) {
                     LazyColumn(
                         modifier = Modifier.fillMaxSize(),
                         contentPadding = PaddingValues(16.dp),
@@ -196,9 +169,8 @@ fun PackageDetailScreen(
                             }
                         }
 
-                        items(versions, key = { it.version }) { version ->
-                            VersionCard(version)
-                        }
+                    items(versions, key = { it.version }) { version ->
+                        VersionCard(version)
                     }
                 }
             }

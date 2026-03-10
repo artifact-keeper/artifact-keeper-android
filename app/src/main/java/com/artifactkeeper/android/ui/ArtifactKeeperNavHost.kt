@@ -25,6 +25,8 @@ import androidx.compose.ui.res.painterResource
 import com.artifactkeeper.android.R
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.navigation.NavGraphBuilder
+import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
@@ -370,62 +372,7 @@ private fun MainAppScaffold(
                 composable("security") { SecuritySection(isCompact = false, accountActions = accountActions) }
                 composable("operations") { OperationsSection(isCompact = false, accountActions = accountActions) }
                 composable("admin") { AdminSection(isCompact = false, onDisconnect = onDisconnect, accountActions = accountActions) }
-                composable("create-repo") {
-                    CreateRepositoryScreen(
-                        onBack = { navController.popBackStack() },
-                        onCreated = { repoKey ->
-                            navController.popBackStack()
-                            navController.navigate("repos/$repoKey")
-                        },
-                    )
-                }
-                composable("repos/{key}") { backStackEntry ->
-                    val key = backStackEntry.arguments?.getString("key") ?: return@composable
-                    RepositoryDetailScreen(
-                        repoKey = key,
-                        onBack = { navController.popBackStack() },
-                        onArtifactSecurityClick = { id, name ->
-                            navController.navigate("artifacts/$id/security?name=$name")
-                        },
-                        onNavigateToMembers = { repoKey, repoName, repoFormat ->
-                            navController.navigate("repos/$repoKey/members?name=$repoName&format=$repoFormat")
-                        },
-                    )
-                }
-                composable("packages/{id}") { backStackEntry ->
-                    val id = backStackEntry.arguments?.getString("id") ?: return@composable
-                    PackageDetailScreen(
-                        packageId = id,
-                        onBack = { navController.popBackStack() },
-                    )
-                }
-                composable("builds/{id}") { backStackEntry ->
-                    val id = backStackEntry.arguments?.getString("id") ?: return@composable
-                    BuildDetailScreen(
-                        buildId = id,
-                        onBack = { navController.popBackStack() },
-                    )
-                }
-                composable("artifacts/{id}/security?name={name}") { backStackEntry ->
-                    val id = backStackEntry.arguments?.getString("id") ?: return@composable
-                    val name = backStackEntry.arguments?.getString("name") ?: "Artifact"
-                    SbomScreen(
-                        artifactId = id,
-                        artifactName = name,
-                        onBack = { navController.popBackStack() },
-                    )
-                }
-                composable("repos/{key}/members?name={name}&format={format}") { backStackEntry ->
-                    val key = backStackEntry.arguments?.getString("key") ?: return@composable
-                    val name = backStackEntry.arguments?.getString("name") ?: key
-                    val format = backStackEntry.arguments?.getString("format") ?: ""
-                    VirtualMembersScreen(
-                        repoKey = key,
-                        repoName = name,
-                        repoFormat = format,
-                        onBack = { navController.popBackStack() },
-                    )
-                }
+                detailRoutes(navController)
             }
         }
     } else {
@@ -479,62 +426,7 @@ private fun MainAppScaffold(
                 composable("security") { SecuritySection(isCompact = isCompact, accountActions = accountActions) }
                 composable("operations") { OperationsSection(isCompact = isCompact, accountActions = accountActions) }
                 composable("admin") { AdminSection(isCompact = isCompact, onDisconnect = onDisconnect, accountActions = accountActions) }
-                composable("create-repo") {
-                    CreateRepositoryScreen(
-                        onBack = { navController.popBackStack() },
-                        onCreated = { repoKey ->
-                            navController.popBackStack()
-                            navController.navigate("repos/$repoKey")
-                        },
-                    )
-                }
-                composable("repos/{key}") { backStackEntry ->
-                    val key = backStackEntry.arguments?.getString("key") ?: return@composable
-                    RepositoryDetailScreen(
-                        repoKey = key,
-                        onBack = { navController.popBackStack() },
-                        onArtifactSecurityClick = { id, name ->
-                            navController.navigate("artifacts/$id/security?name=$name")
-                        },
-                        onNavigateToMembers = { repoKey, repoName, repoFormat ->
-                            navController.navigate("repos/$repoKey/members?name=$repoName&format=$repoFormat")
-                        },
-                    )
-                }
-                composable("packages/{id}") { backStackEntry ->
-                    val id = backStackEntry.arguments?.getString("id") ?: return@composable
-                    PackageDetailScreen(
-                        packageId = id,
-                        onBack = { navController.popBackStack() },
-                    )
-                }
-                composable("builds/{id}") { backStackEntry ->
-                    val id = backStackEntry.arguments?.getString("id") ?: return@composable
-                    BuildDetailScreen(
-                        buildId = id,
-                        onBack = { navController.popBackStack() },
-                    )
-                }
-                composable("artifacts/{id}/security?name={name}") { backStackEntry ->
-                    val id = backStackEntry.arguments?.getString("id") ?: return@composable
-                    val name = backStackEntry.arguments?.getString("name") ?: "Artifact"
-                    SbomScreen(
-                        artifactId = id,
-                        artifactName = name,
-                        onBack = { navController.popBackStack() },
-                    )
-                }
-                composable("repos/{key}/members?name={name}&format={format}") { backStackEntry ->
-                    val key = backStackEntry.arguments?.getString("key") ?: return@composable
-                    val name = backStackEntry.arguments?.getString("name") ?: key
-                    val format = backStackEntry.arguments?.getString("format") ?: ""
-                    VirtualMembersScreen(
-                        repoKey = key,
-                        repoName = name,
-                        repoFormat = format,
-                        onBack = { navController.popBackStack() },
-                    )
-                }
+                detailRoutes(navController)
             }
         }
     }
@@ -637,15 +529,25 @@ private fun ArtifactsSection(
     }
 }
 
+// ---------------------------------------------------------------------------
+// Shared section scaffold with TopAppBar + ScrollableTabRow
+// ---------------------------------------------------------------------------
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun IntegrationSection(isCompact: Boolean, accountActions: @Composable () -> Unit) {
-    val subTabs = listOf("Peers", "Replication", "Webhooks")
+private fun SectionWithTabs(
+    title: String,
+    subTabs: List<String>,
+    isCompact: Boolean,
+    accountActions: @Composable () -> Unit,
+    onTabSelected: ((Int) -> Unit)? = null,
+    content: @Composable (selectedTab: Int) -> Unit,
+) {
     var selectedTab by remember { mutableIntStateOf(0) }
 
     Column(modifier = Modifier.fillMaxSize()) {
         TopAppBar(
-            title = { Text("Integration") },
+            title = { Text(title) },
             navigationIcon = { AppLogo() },
             actions = { accountActions() },
         )
@@ -653,14 +555,29 @@ private fun IntegrationSection(isCompact: Boolean, accountActions: @Composable (
             selectedTabIndex = selectedTab,
             edgePadding = if (isCompact) 4.dp else 16.dp,
         ) {
-            subTabs.forEachIndexed { index, title ->
+            subTabs.forEachIndexed { index, tabTitle ->
                 Tab(
                     selected = selectedTab == index,
-                    onClick = { selectedTab = index },
-                    text = { Text(title, maxLines = 1) },
+                    onClick = {
+                        selectedTab = index
+                        onTabSelected?.invoke(index)
+                    },
+                    text = { Text(tabTitle, maxLines = 1) },
                 )
             }
         }
+        content(selectedTab)
+    }
+}
+
+@Composable
+private fun IntegrationSection(isCompact: Boolean, accountActions: @Composable () -> Unit) {
+    SectionWithTabs(
+        title = "Integration",
+        subTabs = listOf("Peers", "Replication", "Webhooks"),
+        isCompact = isCompact,
+        accountActions = accountActions,
+    ) { selectedTab ->
         when (selectedTab) {
             0 -> PeersScreen()
             1 -> ReplicationScreen()
@@ -710,31 +627,17 @@ private fun SecuritySection(isCompact: Boolean, accountActions: @Composable () -
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun OperationsSection(isCompact: Boolean, accountActions: @Composable () -> Unit) {
     val subTabs = if (isCompact) listOf("Stats", "Health", "Metrics")
                   else listOf("Analytics", "Monitoring", "Telemetry")
-    var selectedTab by remember { mutableIntStateOf(0) }
 
-    Column(modifier = Modifier.fillMaxSize()) {
-        TopAppBar(
-            title = { Text("Operations") },
-            navigationIcon = { AppLogo() },
-            actions = { accountActions() },
-        )
-        ScrollableTabRow(
-            selectedTabIndex = selectedTab,
-            edgePadding = if (isCompact) 4.dp else 16.dp,
-        ) {
-            subTabs.forEachIndexed { index, title ->
-                Tab(
-                    selected = selectedTab == index,
-                    onClick = { selectedTab = index },
-                    text = { Text(title, maxLines = 1) },
-                )
-            }
-        }
+    SectionWithTabs(
+        title = "Operations",
+        subTabs = subTabs,
+        isCompact = isCompact,
+        accountActions = accountActions,
+    ) { selectedTab ->
         when (selectedTab) {
             0 -> AnalyticsScreen()
             1 -> MonitoringScreen()
@@ -743,38 +646,85 @@ private fun OperationsSection(isCompact: Boolean, accountActions: @Composable ()
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun AdminSection(isCompact: Boolean, onDisconnect: () -> Unit, accountActions: @Composable () -> Unit) {
-    val subTabs = listOf("Users", "Groups", "SSO", "Settings")
-    var selectedTab by remember { mutableIntStateOf(0) }
-
-    Column(modifier = Modifier.fillMaxSize()) {
-        TopAppBar(
-            title = { Text("Admin") },
-            navigationIcon = { AppLogo() },
-            actions = { accountActions() },
-        )
-        ScrollableTabRow(
-            selectedTabIndex = selectedTab,
-            edgePadding = if (isCompact) 4.dp else 16.dp,
-        ) {
-            subTabs.forEachIndexed { index, title ->
-                Tab(
-                    selected = selectedTab == index,
-                    onClick = { selectedTab = index },
-                    text = { Text(title, maxLines = 1) },
-                )
-            }
-        }
+    SectionWithTabs(
+        title = "Admin",
+        subTabs = listOf("Users", "Groups", "SSO", "Settings"),
+        isCompact = isCompact,
+        accountActions = accountActions,
+    ) { selectedTab ->
         when (selectedTab) {
             0 -> UsersScreen()
             1 -> GroupsScreen()
             2 -> SSOScreen()
             3 -> SettingsScreen(
-                onBack = { selectedTab = 0 },
+                onBack = { },
                 onDisconnect = onDisconnect,
             )
         }
+    }
+}
+
+// ---------------------------------------------------------------------------
+// Shared detail route definitions for NavHost (used by both rail and bottom nav)
+// ---------------------------------------------------------------------------
+
+private fun NavGraphBuilder.detailRoutes(navController: NavHostController) {
+    composable("create-repo") {
+        CreateRepositoryScreen(
+            onBack = { navController.popBackStack() },
+            onCreated = { repoKey ->
+                navController.popBackStack()
+                navController.navigate("repos/$repoKey")
+            },
+        )
+    }
+    composable("repos/{key}") { backStackEntry ->
+        val key = backStackEntry.arguments?.getString("key") ?: return@composable
+        RepositoryDetailScreen(
+            repoKey = key,
+            onBack = { navController.popBackStack() },
+            onArtifactSecurityClick = { id, name ->
+                navController.navigate("artifacts/$id/security?name=$name")
+            },
+            onNavigateToMembers = { repoKey, repoName, repoFormat ->
+                navController.navigate("repos/$repoKey/members?name=$repoName&format=$repoFormat")
+            },
+        )
+    }
+    composable("packages/{id}") { backStackEntry ->
+        val id = backStackEntry.arguments?.getString("id") ?: return@composable
+        PackageDetailScreen(
+            packageId = id,
+            onBack = { navController.popBackStack() },
+        )
+    }
+    composable("builds/{id}") { backStackEntry ->
+        val id = backStackEntry.arguments?.getString("id") ?: return@composable
+        BuildDetailScreen(
+            buildId = id,
+            onBack = { navController.popBackStack() },
+        )
+    }
+    composable("artifacts/{id}/security?name={name}") { backStackEntry ->
+        val id = backStackEntry.arguments?.getString("id") ?: return@composable
+        val name = backStackEntry.arguments?.getString("name") ?: "Artifact"
+        SbomScreen(
+            artifactId = id,
+            artifactName = name,
+            onBack = { navController.popBackStack() },
+        )
+    }
+    composable("repos/{key}/members?name={name}&format={format}") { backStackEntry ->
+        val key = backStackEntry.arguments?.getString("key") ?: return@composable
+        val name = backStackEntry.arguments?.getString("name") ?: key
+        val format = backStackEntry.arguments?.getString("format") ?: ""
+        VirtualMembersScreen(
+            repoKey = key,
+            repoName = name,
+            repoFormat = format,
+            onBack = { navController.popBackStack() },
+        )
     }
 }

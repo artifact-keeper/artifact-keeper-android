@@ -14,6 +14,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.artifactkeeper.android.ui.components.ItemTitleWithChip
+import com.artifactkeeper.android.ui.components.LoadingErrorContainer
+import com.artifactkeeper.android.ui.components.MetadataFooterRow
 import com.artifactkeeper.android.data.models.Repository
 import com.artifactkeeper.android.ui.util.formatBytes
 import com.artifactkeeper.android.ui.util.formatRelativeTime
@@ -28,59 +31,25 @@ fun RepositoriesScreen(
     val uiState by viewModel.uiState.collectAsState()
 
     Box(modifier = Modifier.fillMaxSize()) {
-        when {
-            uiState.isLoading -> {
-                Box(
+        LoadingErrorContainer(
+            isLoading = uiState.isLoading,
+            error = uiState.error,
+            onRetry = { viewModel.loadRepositories() },
+            isEmpty = uiState.repositories.isEmpty(),
+            emptyMessage = "No repositories found",
+        ) {
+            PullToRefreshBox(
+                isRefreshing = uiState.isRefreshing,
+                onRefresh = { viewModel.loadRepositories(refresh = true) },
+                modifier = Modifier.fillMaxSize(),
+            ) {
+                LazyColumn(
                     modifier = Modifier.fillMaxSize(),
-                    contentAlignment = Alignment.Center,
+                    contentPadding = PaddingValues(16.dp),
+                    verticalArrangement = Arrangement.spacedBy(12.dp),
                 ) {
-                    CircularProgressIndicator()
-                }
-            }
-            uiState.error != null -> {
-                Box(
-                    modifier = Modifier.fillMaxSize(),
-                    contentAlignment = Alignment.Center,
-                ) {
-                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                        Text(
-                            text = uiState.error ?: "Unknown error",
-                            color = MaterialTheme.colorScheme.error,
-                            style = MaterialTheme.typography.bodyLarge,
-                        )
-                        Spacer(modifier = Modifier.height(8.dp))
-                        TextButton(onClick = { viewModel.loadRepositories() }) {
-                            Text("Retry")
-                        }
-                    }
-                }
-            }
-            uiState.repositories.isEmpty() -> {
-                Box(
-                    modifier = Modifier.fillMaxSize(),
-                    contentAlignment = Alignment.Center,
-                ) {
-                    Text(
-                        text = "No repositories found",
-                        style = MaterialTheme.typography.bodyLarge,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    )
-                }
-            }
-            else -> {
-                PullToRefreshBox(
-                    isRefreshing = uiState.isRefreshing,
-                    onRefresh = { viewModel.loadRepositories(refresh = true) },
-                    modifier = Modifier.fillMaxSize(),
-                ) {
-                    LazyColumn(
-                        modifier = Modifier.fillMaxSize(),
-                        contentPadding = PaddingValues(16.dp),
-                        verticalArrangement = Arrangement.spacedBy(12.dp),
-                    ) {
-                        items(uiState.repositories, key = { it.id }) { repo ->
-                            RepositoryCard(repo, onClick = { onRepoClick(repo.key) })
-                        }
+                    items(uiState.repositories, key = { it.id }) { repo ->
+                        RepositoryCard(repo, onClick = { onRepoClick(repo.key) })
                     }
                 }
             }
@@ -106,24 +75,7 @@ private fun RepositoryCard(repo: Repository, onClick: () -> Unit) {
             .clickable(onClick = onClick),
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                Text(
-                    text = repo.name,
-                    style = MaterialTheme.typography.titleMedium,
-                    modifier = Modifier.weight(1f),
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
-                )
-                Spacer(modifier = Modifier.width(8.dp))
-                AssistChip(
-                    onClick = {},
-                    label = { Text(repo.format.uppercase(), style = MaterialTheme.typography.labelSmall) },
-                )
-            }
+            ItemTitleWithChip(title = repo.name, chipLabel = repo.format.uppercase())
 
             Spacer(modifier = Modifier.height(4.dp))
 
@@ -152,24 +104,10 @@ private fun RepositoryCard(repo: Repository, onClick: () -> Unit) {
             }
 
             Spacer(modifier = Modifier.height(8.dp))
-            HorizontalDivider()
-            Spacer(modifier = Modifier.height(8.dp))
-
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-            ) {
-                Text(
-                    text = formatBytes(repo.storageUsedBytes),
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
-                Text(
-                    text = formatRelativeTime(repo.createdAt),
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
-            }
+            MetadataFooterRow(
+                startText = formatBytes(repo.storageUsedBytes),
+                endText = formatRelativeTime(repo.createdAt),
+            )
         }
     }
 }

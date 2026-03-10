@@ -15,6 +15,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.artifactkeeper.android.ui.components.LoadingErrorContainer
 import com.artifactkeeper.android.data.models.CveTrends
 import com.artifactkeeper.android.data.models.DtPortfolioMetrics
 import com.artifactkeeper.android.data.models.DtStatus
@@ -44,90 +45,56 @@ fun SecurityScreen(
     val uiState by viewModel.uiState.collectAsState()
 
     Column(modifier = Modifier.fillMaxSize()) {
-        when {
-            uiState.isLoading -> {
-                Box(
+        LoadingErrorContainer(
+            isLoading = uiState.isLoading,
+            error = uiState.error,
+            onRetry = { viewModel.loadData() },
+            isEmpty = uiState.scores.isEmpty() && uiState.cveTrends == null && uiState.dtStatus?.enabled != true,
+            emptyMessage = "No security data available",
+        ) {
+            PullToRefreshBox(
+                isRefreshing = uiState.isRefreshing,
+                onRefresh = { viewModel.loadData(refresh = true) },
+                modifier = Modifier.fillMaxSize(),
+            ) {
+                LazyColumn(
                     modifier = Modifier.fillMaxSize(),
-                    contentAlignment = Alignment.Center,
+                    contentPadding = PaddingValues(16.dp),
+                    verticalArrangement = Arrangement.spacedBy(12.dp),
                 ) {
-                    CircularProgressIndicator()
-                }
-            }
-            uiState.error != null -> {
-                Box(
-                    modifier = Modifier.fillMaxSize(),
-                    contentAlignment = Alignment.Center,
-                ) {
-                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                        Text(
-                            text = uiState.error ?: "Unknown error",
-                            color = MaterialTheme.colorScheme.error,
-                            style = MaterialTheme.typography.bodyLarge,
-                        )
-                        Spacer(modifier = Modifier.height(8.dp))
-                        TextButton(onClick = { viewModel.loadData() }) {
-                            Text("Retry")
+                    uiState.cveTrends?.let { trends ->
+                        item(key = "cve-trends") {
+                            CveTrendsSummaryCard(trends)
                         }
                     }
-                }
-            }
-            uiState.scores.isEmpty() && uiState.cveTrends == null && uiState.dtStatus?.enabled != true -> {
-                Box(
-                    modifier = Modifier.fillMaxSize(),
-                    contentAlignment = Alignment.Center,
-                ) {
-                    Text(
-                        text = "No security data available",
-                        style = MaterialTheme.typography.bodyLarge,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    )
-                }
-            }
-            else -> {
-                PullToRefreshBox(
-                    isRefreshing = uiState.isRefreshing,
-                    onRefresh = { viewModel.loadData(refresh = true) },
-                    modifier = Modifier.fillMaxSize(),
-                ) {
-                    LazyColumn(
-                        modifier = Modifier.fillMaxSize(),
-                        contentPadding = PaddingValues(16.dp),
-                        verticalArrangement = Arrangement.spacedBy(12.dp),
-                    ) {
-                        uiState.cveTrends?.let { trends ->
-                            item(key = "cve-trends") {
-                                CveTrendsSummaryCard(trends)
-                            }
+
+                    // Dependency-Track section (only when enabled)
+                    if (uiState.dtStatus?.enabled == true) {
+                        item(key = "dt-status") {
+                            DtStatusCard(uiState.dtStatus!!)
                         }
 
-                        // Dependency-Track section (only when enabled)
-                        if (uiState.dtStatus?.enabled == true) {
-                            item(key = "dt-status") {
-                                DtStatusCard(uiState.dtStatus!!)
+                        if (uiState.dtPortfolioMetrics != null) {
+                            item(key = "dt-metrics") {
+                                DtPortfolioMetricsCard(uiState.dtPortfolioMetrics!!)
                             }
 
-                            if (uiState.dtPortfolioMetrics != null) {
-                                item(key = "dt-metrics") {
-                                    DtPortfolioMetricsCard(uiState.dtPortfolioMetrics!!)
-                                }
-
-                                item(key = "dt-audit") {
-                                    DtAuditProgressCard(uiState.dtPortfolioMetrics!!)
-                                }
+                            item(key = "dt-audit") {
+                                DtAuditProgressCard(uiState.dtPortfolioMetrics!!)
                             }
                         }
+                    }
 
-                        if (uiState.scores.isNotEmpty()) {
-                            item(key = "scores-header") {
-                                Text(
-                                    text = "Repository Scores",
-                                    style = MaterialTheme.typography.titleMedium,
-                                    modifier = Modifier.padding(top = 4.dp),
-                                )
-                            }
-                            items(uiState.scores, key = { it.id }) { score ->
-                                SecurityScoreCard(score, uiState.repoMap[score.repositoryId])
-                            }
+                    if (uiState.scores.isNotEmpty()) {
+                        item(key = "scores-header") {
+                            Text(
+                                text = "Repository Scores",
+                                style = MaterialTheme.typography.titleMedium,
+                                modifier = Modifier.padding(top = 4.dp),
+                            )
+                        }
+                        items(uiState.scores, key = { it.id }) { score ->
+                            SecurityScoreCard(score, uiState.repoMap[score.repositoryId])
                         }
                     }
                 }
