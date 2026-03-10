@@ -21,6 +21,7 @@ import androidx.compose.ui.unit.dp
 import com.artifactkeeper.android.data.api.ApiClient
 import com.artifactkeeper.android.data.api.unwrap
 import com.artifactkeeper.android.data.models.BuildItem
+import com.artifactkeeper.android.ui.components.EmptyState
 import com.artifactkeeper.android.ui.components.LoadingErrorContainer
 import com.artifactkeeper.android.ui.util.formatDuration
 import com.artifactkeeper.android.ui.util.formatRelativeTime
@@ -101,8 +102,7 @@ fun BuildsScreen(onBuildClick: (String) -> Unit = {}) {
             isLoading = isLoading,
             error = errorMessage,
             onRetry = { loadBuilds() },
-            isEmpty = builds.isEmpty(),
-            emptyMessage = "No builds found",
+            emptyState = EmptyState(isEmpty = builds.isEmpty(), message = "No builds found"),
         ) {
             PullToRefreshBox(
                 isRefreshing = isRefreshing,

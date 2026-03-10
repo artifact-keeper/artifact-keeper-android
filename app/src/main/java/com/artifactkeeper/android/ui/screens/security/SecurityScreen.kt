@@ -15,6 +15,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.artifactkeeper.android.ui.components.EmptyState
 import com.artifactkeeper.android.ui.components.LoadingErrorContainer
 import com.artifactkeeper.android.data.models.CveTrends
 import com.artifactkeeper.android.data.models.DtPortfolioMetrics
@@ -49,8 +50,10 @@ fun SecurityScreen(
             isLoading = uiState.isLoading,
             error = uiState.error,
             onRetry = { viewModel.loadData() },
-            isEmpty = uiState.scores.isEmpty() && uiState.cveTrends == null && uiState.dtStatus?.enabled != true,
-            emptyMessage = "No security data available",
+            emptyState = EmptyState(
+                isEmpty = uiState.scores.isEmpty() && uiState.cveTrends == null && uiState.dtStatus?.enabled != true,
+                message = "No security data available",
+            ),
         ) {
             PullToRefreshBox(
                 isRefreshing = uiState.isRefreshing,

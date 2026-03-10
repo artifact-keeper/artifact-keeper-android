@@ -16,6 +16,7 @@ import androidx.compose.ui.unit.dp
 import com.artifactkeeper.android.data.api.ApiClient
 import com.artifactkeeper.android.data.api.unwrap
 import com.artifactkeeper.android.data.models.BuildItem
+import com.artifactkeeper.android.ui.components.EmptyState
 import com.artifactkeeper.android.ui.components.LoadingErrorContainer
 import kotlinx.coroutines.launch
 
@@ -68,8 +69,7 @@ fun BuildDetailScreen(
             error = errorMessage,
             onRetry = { loadData() },
             modifier = Modifier.padding(innerPadding),
-            isEmpty = build == null,
-            emptyMessage = "Build not found",
+            emptyState = EmptyState(isEmpty = build == null, message = "Build not found"),
         ) {
             val b = build ?: return@LoadingErrorContainer
             LazyColumn(

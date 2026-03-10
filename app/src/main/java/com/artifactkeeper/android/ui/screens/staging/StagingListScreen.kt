@@ -23,6 +23,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.artifactkeeper.android.ui.components.EmptyState
 import com.artifactkeeper.android.ui.components.ItemTitleWithChip
 import com.artifactkeeper.android.ui.components.LoadingErrorContainer
 import com.artifactkeeper.android.data.models.StagingRepository
@@ -58,28 +59,30 @@ fun StagingListScreen(
             isLoading = uiState.isLoadingRepos && uiState.stagingRepos.isEmpty(),
             error = if (uiState.stagingRepos.isEmpty()) uiState.reposError else null,
             onRetry = { viewModel.loadStagingRepos() },
-            isEmpty = uiState.stagingRepos.isEmpty(),
-            emptyContent = {
-                Box(
-                    modifier = Modifier.fillMaxSize(),
-                    contentAlignment = Alignment.Center,
-                ) {
-                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                        Text(
-                            text = "No staging repositories",
-                            style = MaterialTheme.typography.bodyLarge,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        )
-                        Spacer(modifier = Modifier.height(4.dp))
-                        Text(
-                            text = "Staging repositories allow you to review and promote artifacts before release",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            modifier = Modifier.padding(horizontal = 32.dp),
-                        )
+            emptyState = EmptyState(
+                isEmpty = uiState.stagingRepos.isEmpty(),
+                content = {
+                    Box(
+                        modifier = Modifier.fillMaxSize(),
+                        contentAlignment = Alignment.Center,
+                    ) {
+                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                            Text(
+                                text = "No staging repositories",
+                                style = MaterialTheme.typography.bodyLarge,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            )
+                            Spacer(modifier = Modifier.height(4.dp))
+                            Text(
+                                text = "Staging repositories allow you to review and promote artifacts before release",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                modifier = Modifier.padding(horizontal = 32.dp),
+                            )
+                        }
                     }
-                }
-            },
+                },
+            ),
         ) {
             PullToRefreshBox(
                 isRefreshing = isRefreshing,

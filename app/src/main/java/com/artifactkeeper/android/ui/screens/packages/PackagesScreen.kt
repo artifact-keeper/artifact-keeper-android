@@ -17,6 +17,7 @@ import androidx.compose.ui.unit.dp
 import com.artifactkeeper.android.data.api.ApiClient
 import com.artifactkeeper.android.data.api.unwrap
 import com.artifactkeeper.android.data.models.PackageItem
+import com.artifactkeeper.android.ui.components.EmptyState
 import com.artifactkeeper.android.ui.components.ItemTitleWithChip
 import com.artifactkeeper.android.ui.components.LoadingErrorContainer
 import com.artifactkeeper.android.ui.util.formatBytes
@@ -72,8 +73,7 @@ fun PackagesScreen(onPackageClick: (String) -> Unit = {}) {
             isLoading = isLoading,
             error = errorMessage,
             onRetry = { loadPackages() },
-            isEmpty = packages.isEmpty(),
-            emptyMessage = "No packages found",
+            emptyState = EmptyState(isEmpty = packages.isEmpty(), message = "No packages found"),
         ) {
             PullToRefreshBox(
                 isRefreshing = isRefreshing,

@@ -14,6 +14,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.artifactkeeper.android.ui.components.EmptyState
 import com.artifactkeeper.android.ui.components.ItemTitleWithChip
 import com.artifactkeeper.android.ui.components.LoadingErrorContainer
 import com.artifactkeeper.android.ui.components.MetadataFooterRow
@@ -35,8 +36,7 @@ fun RepositoriesScreen(
             isLoading = uiState.isLoading,
             error = uiState.error,
             onRetry = { viewModel.loadRepositories() },
-            isEmpty = uiState.repositories.isEmpty(),
-            emptyMessage = "No repositories found",
+            emptyState = EmptyState(isEmpty = uiState.repositories.isEmpty(), message = "No repositories found"),
         ) {
             PullToRefreshBox(
                 isRefreshing = uiState.isRefreshing,

@@ -8,6 +8,16 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 
 /**
+ * Configuration for how the container should handle an empty data state.
+ * Extracted as a data class to keep the LoadingErrorContainer parameter count at 7.
+ */
+data class EmptyState(
+    val isEmpty: Boolean = false,
+    val message: String = "No data available",
+    val content: (@Composable () -> Unit)? = null,
+)
+
+/**
  * Displays a centered loading indicator, error state with retry, or the provided content.
  * Used across many screens (SecurityScreen, MonitoringScreen, RepositoriesScreen,
  * PackagesScreen, BuildsScreen, etc.) to avoid duplicating the loading/error scaffold.
@@ -18,9 +28,7 @@ fun LoadingErrorContainer(
     error: String?,
     onRetry: () -> Unit,
     modifier: Modifier = Modifier,
-    isEmpty: Boolean = false,
-    emptyMessage: String = "No data available",
-    emptyContent: (@Composable () -> Unit)? = null,
+    emptyState: EmptyState = EmptyState(),
     content: @Composable () -> Unit,
 ) {
     when {
@@ -50,16 +58,16 @@ fun LoadingErrorContainer(
                 }
             }
         }
-        isEmpty -> {
-            if (emptyContent != null) {
-                emptyContent()
+        emptyState.isEmpty -> {
+            if (emptyState.content != null) {
+                emptyState.content.invoke()
             } else {
                 Box(
                     modifier = modifier.fillMaxSize(),
                     contentAlignment = Alignment.Center,
                 ) {
                     Text(
-                        text = emptyMessage,
+                        text = emptyState.message,
                         style = MaterialTheme.typography.bodyLarge,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
