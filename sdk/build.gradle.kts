@@ -15,10 +15,11 @@ android {
         sourceCompatibility = JavaVersion.VERSION_17
         targetCompatibility = JavaVersion.VERSION_17
     }
+}
 
-    kotlinOptions {
-        jvmTarget = "17"
-        freeCompilerArgs += "-opt-in=kotlinx.serialization.ExperimentalSerializationApi"
+kotlin {
+    compilerOptions {
+        freeCompilerArgs.add("-opt-in=kotlinx.serialization.ExperimentalSerializationApi")
     }
 }
 
