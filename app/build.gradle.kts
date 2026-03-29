@@ -35,7 +35,7 @@ fun resolvedVersionName(): String {
 
 android {
     namespace = "com.artifactkeeper.android"
-    compileSdk = 35
+    compileSdk = 36
 
     buildFeatures {
         buildConfig = true

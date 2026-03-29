@@ -5,7 +5,7 @@ plugins {
 
 android {
     namespace = "com.artifactkeeper.client"
-    compileSdk = 35
+    compileSdk = 36
 
     defaultConfig {
         minSdk = 28
