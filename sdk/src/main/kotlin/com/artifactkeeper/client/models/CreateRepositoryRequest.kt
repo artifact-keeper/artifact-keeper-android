@@ -15,6 +15,7 @@
 
 package com.artifactkeeper.client.models
 
+import com.artifactkeeper.client.models.CreateVirtualMemberInput
 
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.SerialName
@@ -28,9 +29,16 @@ import kotlinx.serialization.Contextual
  * @param name 
  * @param repoType 
  * @param description 
+ * @param formatKey Custom format key for WASM plugin format handlers (e.g. \"rpm-custom\").
+ * @param indexUpstreamUrl Separate index host for Cargo registries that split index and download across two hosts (e.g. crates.io uses `https://index.crates.io` for the sparse index but `https://crates.io` for tarball downloads). Stored in `repository_config` under the key `index_upstream_url`.
  * @param isPublic 
+ * @param memberRepos Member repositories to add when creating a virtual repository. Each entry specifies a repository key and optional priority.
  * @param quotaBytes 
+ * @param storageBackend Override the default storage backend for this repository. When omitted, the server's configured default is used. Non-admin users may only use the default backend.
+ * @param upstreamAuthType Upstream auth type: \"basic\" or \"bearer\". Only valid for remote repos.
+ * @param upstreamPassword Password (basic) or token (bearer). Write-only, never returned in responses.
  * @param upstreamUrl 
+ * @param upstreamUsername Username for basic auth.
  */
 @Serializable
 
@@ -51,14 +59,42 @@ data class CreateRepositoryRequest (
     @SerialName(value = "description")
     val description: kotlin.String? = null,
 
+    /* Custom format key for WASM plugin format handlers (e.g. \"rpm-custom\"). */
+    @SerialName(value = "format_key")
+    val formatKey: kotlin.String? = null,
+
+    /* Separate index host for Cargo registries that split index and download across two hosts (e.g. crates.io uses `https://index.crates.io` for the sparse index but `https://crates.io` for tarball downloads). Stored in `repository_config` under the key `index_upstream_url`. */
+    @SerialName(value = "index_upstream_url")
+    val indexUpstreamUrl: kotlin.String? = null,
+
     @SerialName(value = "is_public")
     val isPublic: kotlin.Boolean? = null,
+
+    /* Member repositories to add when creating a virtual repository. Each entry specifies a repository key and optional priority. */
+    @SerialName(value = "member_repos")
+    val memberRepos: kotlin.collections.List<CreateVirtualMemberInput>? = null,
 
     @SerialName(value = "quota_bytes")
     val quotaBytes: kotlin.Long? = null,
 
+    /* Override the default storage backend for this repository. When omitted, the server's configured default is used. Non-admin users may only use the default backend. */
+    @SerialName(value = "storage_backend")
+    val storageBackend: kotlin.String? = null,
+
+    /* Upstream auth type: \"basic\" or \"bearer\". Only valid for remote repos. */
+    @SerialName(value = "upstream_auth_type")
+    val upstreamAuthType: kotlin.String? = null,
+
+    /* Password (basic) or token (bearer). Write-only, never returned in responses. */
+    @SerialName(value = "upstream_password")
+    val upstreamPassword: kotlin.String? = null,
+
     @SerialName(value = "upstream_url")
-    val upstreamUrl: kotlin.String? = null
+    val upstreamUrl: kotlin.String? = null,
+
+    /* Username for basic auth. */
+    @SerialName(value = "upstream_username")
+    val upstreamUsername: kotlin.String? = null
 
 ) {
 

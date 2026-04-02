@@ -26,6 +26,7 @@ import kotlinx.serialization.Contextual
  *
  * @param database 
  * @param storage 
+ * @param ldap 
  * @param meilisearch 
  * @param securityScanner 
  */
@@ -38,6 +39,9 @@ data class HealthChecks (
 
     @SerialName(value = "storage")
     val storage: CheckStatus,
+
+    @SerialName(value = "ldap")
+    val ldap: CheckStatus? = null,
 
     @SerialName(value = "meilisearch")
     val meilisearch: CheckStatus? = null,

@@ -24,14 +24,14 @@ import kotlinx.serialization.Contextual
 /**
  * 
  *
- * @param items 
+ * @param members 
  */
 @Serializable
 
 data class VirtualMembersListResponse (
 
-    @SerialName(value = "items")
-    val items: kotlin.collections.List<VirtualMemberResponse>
+    @SerialName(value = "members")
+    val members: kotlin.collections.List<VirtualMemberResponse>
 
 ) {
 

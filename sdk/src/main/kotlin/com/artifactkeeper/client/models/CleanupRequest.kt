@@ -26,6 +26,7 @@ import kotlinx.serialization.Contextual
  * @param cleanupAuditLogs 
  * @param cleanupOldBackups 
  * @param cleanupStalePeers 
+ * @param cleanupStaleUploads 
  */
 @Serializable
 
@@ -38,7 +39,10 @@ data class CleanupRequest (
     val cleanupOldBackups: kotlin.Boolean? = null,
 
     @SerialName(value = "cleanup_stale_peers")
-    val cleanupStalePeers: kotlin.Boolean? = null
+    val cleanupStalePeers: kotlin.Boolean? = null,
+
+    @SerialName(value = "cleanup_stale_uploads")
+    val cleanupStaleUploads: kotlin.Boolean? = null
 
 ) {
 

@@ -30,7 +30,10 @@ import kotlinx.serialization.Contextual
  * @param isEnabled 
  * @param maxSeverity 
  * @param name 
+ * @param requireSignature 
  * @param updatedAt 
+ * @param maxArtifactAgeDays 
+ * @param minStagingHours 
  * @param repositoryId 
  */
 @Serializable
@@ -58,8 +61,17 @@ data class PolicyResponse (
     @SerialName(value = "name")
     val name: kotlin.String,
 
+    @SerialName(value = "require_signature")
+    val requireSignature: kotlin.Boolean,
+
     @Contextual @SerialName(value = "updated_at")
     val updatedAt: java.time.OffsetDateTime,
+
+    @SerialName(value = "max_artifact_age_days")
+    val maxArtifactAgeDays: kotlin.Int? = null,
+
+    @SerialName(value = "min_staging_hours")
+    val minStagingHours: kotlin.Int? = null,
 
     @Contextual @SerialName(value = "repository_id")
     val repositoryId: java.util.UUID? = null
