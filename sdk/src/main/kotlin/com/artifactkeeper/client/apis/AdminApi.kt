@@ -17,6 +17,8 @@ import com.artifactkeeper.client.models.ReindexResponse
 import com.artifactkeeper.client.models.RemoteInstanceResponse
 import com.artifactkeeper.client.models.RestoreRequest
 import com.artifactkeeper.client.models.RestoreResponse
+import com.artifactkeeper.client.models.StorageGcRequest
+import com.artifactkeeper.client.models.StorageGcResult
 import com.artifactkeeper.client.models.SystemSettings
 import com.artifactkeeper.client.models.SystemStats
 
@@ -177,6 +179,19 @@ interface AdminApi {
     suspend fun listInstances(): Response<kotlin.collections.List<RemoteInstanceResponse>>
 
     /**
+     * GET api/v1/admin/storage-backends
+     * List available storage backends.
+     * Returns the names of all configured and available storage backends. Requires admin privileges.
+     * Responses:
+     *  - 200: Available storage backends
+     *  - 403: Admin privileges required
+     *
+     * @return [kotlin.collections.List<kotlin.String>]
+     */
+    @GET("api/v1/admin/storage-backends")
+    suspend fun listStorageBackends(): Response<kotlin.collections.List<kotlin.String>>
+
+    /**
      * DELETE api/v1/instances/{id}/proxy/{path}
      * Proxy a DELETE request to a remote instance
      * 
@@ -265,6 +280,19 @@ interface AdminApi {
     suspend fun runCleanup(@Body cleanupRequest: CleanupRequest): Response<CleanupResponse>
 
     /**
+     * POST api/v1/admin/storage-gc
+     * POST /api/v1/admin/storage-gc
+     * 
+     * Responses:
+     *  - 200: GC result
+     *
+     * @param storageGcRequest 
+     * @return [StorageGcResult]
+     */
+    @POST("api/v1/admin/storage-gc")
+    suspend fun runStorageGc(@Body storageGcRequest: StorageGcRequest): Response<StorageGcResult>
+
+    /**
      * POST api/v1/admin/reindex
      * Trigger a full Meilisearch reindex of all artifacts and repositories.
      * Requires admin privileges and Meilisearch to be configured.
@@ -277,6 +305,19 @@ interface AdminApi {
      */
     @POST("api/v1/admin/reindex")
     suspend fun triggerReindex(): Response<ReindexResponse>
+
+    /**
+     * POST api/v1/admin/search/reindex
+     * Trigger a full reindex of all artifacts and repositories in Meilisearch.
+     * The reindex runs asynchronously in the background. The endpoint returns immediately with a confirmation that the task was started.
+     * Responses:
+     *  - 200: Reindex started in background
+     *  - 500: Meilisearch is not configured
+     *
+     * @return [ReindexResponse]
+     */
+    @POST("api/v1/admin/search/reindex")
+    suspend fun triggerSearchReindex(): Response<ReindexResponse>
 
     /**
      * POST api/v1/admin/settings

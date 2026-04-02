@@ -15,7 +15,7 @@
 
 package com.artifactkeeper.client.models
 
-import com.artifactkeeper.client.models.UserResponse
+import com.artifactkeeper.client.models.AdminUserResponse
 
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.SerialName
@@ -32,7 +32,7 @@ import kotlinx.serialization.Contextual
 data class CreateUserResponse (
 
     @SerialName(value = "user")
-    val user: UserResponse,
+    val user: AdminUserResponse,
 
     @SerialName(value = "generated_password")
     val generatedPassword: kotlin.String? = null

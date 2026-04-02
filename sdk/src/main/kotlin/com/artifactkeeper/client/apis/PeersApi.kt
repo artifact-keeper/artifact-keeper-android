@@ -12,8 +12,10 @@ import com.artifactkeeper.client.models.AssignRepoRequest
 import com.artifactkeeper.client.models.ChunkAvailabilityResponse
 import com.artifactkeeper.client.models.ChunkManifestResponse
 import com.artifactkeeper.client.models.CompleteChunkBody
+import com.artifactkeeper.client.models.CreateSyncPolicyPayload
 import com.artifactkeeper.client.models.DiscoverablePeerResponse
 import com.artifactkeeper.client.models.ErrorResponse
+import com.artifactkeeper.client.models.EvaluationResultResponse
 import com.artifactkeeper.client.models.FailBody
 import com.artifactkeeper.client.models.HeartbeatRequest
 import com.artifactkeeper.client.models.IdentityResponse
@@ -22,12 +24,18 @@ import com.artifactkeeper.client.models.NetworkProfileBody
 import com.artifactkeeper.client.models.PeerInstanceListResponse
 import com.artifactkeeper.client.models.PeerInstanceResponse
 import com.artifactkeeper.client.models.PeerResponse
+import com.artifactkeeper.client.models.PreviewPolicyPayload
+import com.artifactkeeper.client.models.PreviewResultResponse
 import com.artifactkeeper.client.models.ProbeBody
 import com.artifactkeeper.client.models.RegisterPeerRequest
 import com.artifactkeeper.client.models.ScoredPeerResponse
+import com.artifactkeeper.client.models.SyncPolicyListResponse
+import com.artifactkeeper.client.models.SyncPolicyResponse
 import com.artifactkeeper.client.models.SyncTaskResponse
+import com.artifactkeeper.client.models.TogglePolicyPayload
 import com.artifactkeeper.client.models.TransferSessionResponse
 import com.artifactkeeper.client.models.UpdateChunkAvailabilityBody
+import com.artifactkeeper.client.models.UpdateSyncPolicyPayload
 
 interface PeersApi {
     /**
@@ -91,6 +99,37 @@ interface PeersApi {
     suspend fun completeSession(@Path("id") id: java.util.UUID, @Path("session_id") sessionId: java.util.UUID): Response<Unit>
 
     /**
+     * POST api/v1/sync-policies
+     * Create a new sync policy
+     * 
+     * Responses:
+     *  - 200: Sync policy created
+     *  - 400: Validation error
+     *  - 409: Policy name already exists
+     *  - 500: Internal server error
+     *
+     * @param createSyncPolicyPayload 
+     * @return [SyncPolicyResponse]
+     */
+    @POST("api/v1/sync-policies")
+    suspend fun createSyncPolicy(@Body createSyncPolicyPayload: CreateSyncPolicyPayload): Response<SyncPolicyResponse>
+
+    /**
+     * DELETE api/v1/sync-policies/{id}
+     * Delete a sync policy
+     * 
+     * Responses:
+     *  - 204: Sync policy deleted
+     *  - 404: Sync policy not found
+     *  - 500: Internal server error
+     *
+     * @param id Sync policy ID
+     * @return [Unit]
+     */
+    @DELETE("api/v1/sync-policies/{id}")
+    suspend fun deleteSyncPolicy(@Path("id") id: java.util.UUID): Response<Unit>
+
+    /**
      * GET api/v1/peers/{id}/connections/discover
      * GET /api/v1/peers/:id/connections/discover
      * 
@@ -102,6 +141,19 @@ interface PeersApi {
      */
     @GET("api/v1/peers/{id}/connections/discover")
     suspend fun discoverPeers(@Path("id") id: java.util.UUID): Response<kotlin.collections.List<DiscoverablePeerResponse>>
+
+    /**
+     * POST api/v1/sync-policies/evaluate
+     * Force re-evaluate all sync policies
+     * 
+     * Responses:
+     *  - 200: Evaluation completed
+     *  - 500: Internal server error
+     *
+     * @return [EvaluationResultResponse]
+     */
+    @POST("api/v1/sync-policies/evaluate")
+    suspend fun evaluatePolicies(): Response<EvaluationResultResponse>
 
     /**
      * POST api/v1/peers/{id}/transfer/{session_id}/chunk/{chunk_index}/fail
@@ -249,6 +301,21 @@ interface PeersApi {
     suspend fun getSession(@Path("id") id: java.util.UUID, @Path("session_id") sessionId: java.util.UUID): Response<TransferSessionResponse>
 
     /**
+     * GET api/v1/sync-policies/{id}
+     * Get a sync policy by ID
+     * 
+     * Responses:
+     *  - 200: Sync policy details
+     *  - 404: Sync policy not found
+     *  - 500: Internal server error
+     *
+     * @param id Sync policy ID
+     * @return [SyncPolicyResponse]
+     */
+    @GET("api/v1/sync-policies/{id}")
+    suspend fun getSyncPolicy(@Path("id") id: java.util.UUID): Response<SyncPolicyResponse>
+
+    /**
      * GET api/v1/peers/{id}/sync/tasks
      * Get pending sync tasks for peer instance
      * 
@@ -330,6 +397,19 @@ interface PeersApi {
     suspend fun listPeers(@Query("status") status: kotlin.String? = null, @Query("region") region: kotlin.String? = null, @Query("page") page: kotlin.Int? = null, @Query("per_page") perPage: kotlin.Int? = null): Response<PeerInstanceListResponse>
 
     /**
+     * GET api/v1/sync-policies
+     * List all sync policies
+     * 
+     * Responses:
+     *  - 200: List of sync policies
+     *  - 500: Internal server error
+     *
+     * @return [SyncPolicyListResponse]
+     */
+    @GET("api/v1/sync-policies")
+    suspend fun listSyncPolicies(): Response<SyncPolicyListResponse>
+
+    /**
      * POST api/v1/peers/{id}/connections/{target_id}/unreachable
      * POST /api/v1/peers/:id/connections/:target_id/unreachable
      * 
@@ -342,6 +422,20 @@ interface PeersApi {
      */
     @POST("api/v1/peers/{id}/connections/{target_id}/unreachable")
     suspend fun markUnreachable(@Path("id") id: java.util.UUID, @Path("target_id") targetId: java.util.UUID): Response<Unit>
+
+    /**
+     * POST api/v1/sync-policies/preview
+     * Preview what a policy would match (dry-run)
+     * 
+     * Responses:
+     *  - 200: Preview result
+     *  - 500: Internal server error
+     *
+     * @param previewPolicyPayload 
+     * @return [PreviewResultResponse]
+     */
+    @POST("api/v1/sync-policies/preview")
+    suspend fun previewSyncPolicy(@Body previewPolicyPayload: PreviewPolicyPayload): Response<PreviewResultResponse>
 
     /**
      * POST api/v1/peers/{id}/connections/probe
@@ -385,6 +479,22 @@ interface PeersApi {
      */
     @POST("api/v1/peers/{id}/transfer/{session_id}/chunk/{chunk_index}/retry")
     suspend fun retryChunk(@Path("id") id: java.util.UUID, @Path("session_id") sessionId: java.util.UUID, @Path("chunk_index") chunkIndex: kotlin.Int): Response<Unit>
+
+    /**
+     * POST api/v1/sync-policies/{id}/toggle
+     * Toggle a sync policy (enable/disable)
+     * 
+     * Responses:
+     *  - 200: Sync policy toggled
+     *  - 404: Sync policy not found
+     *  - 500: Internal server error
+     *
+     * @param id Sync policy ID
+     * @param togglePolicyPayload 
+     * @return [SyncPolicyResponse]
+     */
+    @POST("api/v1/sync-policies/{id}/toggle")
+    suspend fun togglePolicy(@Path("id") id: java.util.UUID, @Body togglePolicyPayload: TogglePolicyPayload): Response<SyncPolicyResponse>
 
     /**
      * POST api/v1/peers/{id}/sync
@@ -460,5 +570,22 @@ interface PeersApi {
      */
     @PUT("api/v1/peers/{id}/network-profile")
     suspend fun updateNetworkProfile(@Path("id") id: java.util.UUID, @Body networkProfileBody: NetworkProfileBody): Response<Unit>
+
+    /**
+     * PUT api/v1/sync-policies/{id}
+     * Update a sync policy
+     * 
+     * Responses:
+     *  - 200: Sync policy updated
+     *  - 404: Sync policy not found
+     *  - 409: Policy name already exists
+     *  - 500: Internal server error
+     *
+     * @param id Sync policy ID
+     * @param updateSyncPolicyPayload 
+     * @return [SyncPolicyResponse]
+     */
+    @PUT("api/v1/sync-policies/{id}")
+    suspend fun updateSyncPolicy(@Path("id") id: java.util.UUID, @Body updateSyncPolicyPayload: UpdateSyncPolicyPayload): Response<SyncPolicyResponse>
 
 }

@@ -32,8 +32,11 @@ import kotlinx.serialization.Contextual
  * @param repoType 
  * @param storageUsedBytes 
  * @param updatedAt 
+ * @param upstreamAuthConfigured 
  * @param description 
  * @param quotaBytes 
+ * @param upstreamAuthType 
+ * @param upstreamUrl 
  */
 @Serializable
 
@@ -66,11 +69,20 @@ data class RepositoryResponse (
     @Contextual @SerialName(value = "updated_at")
     val updatedAt: java.time.OffsetDateTime,
 
+    @SerialName(value = "upstream_auth_configured")
+    val upstreamAuthConfigured: kotlin.Boolean,
+
     @SerialName(value = "description")
     val description: kotlin.String? = null,
 
     @SerialName(value = "quota_bytes")
-    val quotaBytes: kotlin.Long? = null
+    val quotaBytes: kotlin.Long? = null,
+
+    @SerialName(value = "upstream_auth_type")
+    val upstreamAuthType: kotlin.String? = null,
+
+    @SerialName(value = "upstream_url")
+    val upstreamUrl: kotlin.String? = null
 
 ) {
 

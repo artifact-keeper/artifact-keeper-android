@@ -10,13 +10,16 @@ import kotlinx.serialization.Serializable
 import com.artifactkeeper.client.models.AddVirtualMemberRequest
 import com.artifactkeeper.client.models.ArtifactListResponse
 import com.artifactkeeper.client.models.ArtifactResponse
+import com.artifactkeeper.client.models.CacheTtlResponse
 import com.artifactkeeper.client.models.CreateRepositoryRequest
 import com.artifactkeeper.client.models.ErrorResponse
 import com.artifactkeeper.client.models.RepositoryListResponse
 import com.artifactkeeper.client.models.RepositoryResponse
+import com.artifactkeeper.client.models.SetCacheTtlRequest
 import com.artifactkeeper.client.models.TreeResponse
 import com.artifactkeeper.client.models.UpdateRepositoryRequest
 import com.artifactkeeper.client.models.UpdateVirtualMembersRequest
+import com.artifactkeeper.client.models.UpstreamAuthRequest
 import com.artifactkeeper.client.models.VirtualMemberResponse
 import com.artifactkeeper.client.models.VirtualMembersListResponse
 
@@ -98,6 +101,37 @@ interface RepositoriesApi {
      */
     @GET("api/v1/repositories/{key}/download/{path}")
     suspend fun downloadArtifact(@Path("key") key: kotlin.String, @Path("path") path: kotlin.String): Response<Unit>
+
+    /**
+     * GET api/v1/repositories/{key}/cache-ttl
+     * Get the proxy cache TTL for a repository
+     * 
+     * Responses:
+     *  - 200: Current cache TTL
+     *  - 404: Repository not found
+     *
+     * @param key Repository key
+     * @return [CacheTtlResponse]
+     */
+    @GET("api/v1/repositories/{key}/cache-ttl")
+    suspend fun getCacheTtl(@Path("key") key: kotlin.String): Response<CacheTtlResponse>
+
+    /**
+     * GET api/v1/tree/content
+     * 
+     * 
+     * Responses:
+     *  - 200: Artifact file content
+     *  - 400: Validation error
+     *  - 404: Artifact not found
+     *
+     * @param repositoryKey Repository key containing the artifact
+     * @param path Full artifact path within the repository
+     * @param maxBytes Optional maximum number of bytes to return (truncates the response) (optional)
+     * @return [Unit]
+     */
+    @GET("api/v1/tree/content")
+    suspend fun getContent(@Query("repository_key") repositoryKey: kotlin.String, @Query("path") path: kotlin.String, @Query("max_bytes") maxBytes: kotlin.Long? = null): Response<Unit>
 
     /**
      * GET api/v1/repositories/{key}
@@ -213,6 +247,57 @@ interface RepositoriesApi {
     suspend fun removeVirtualMember(@Path("key") key: kotlin.String, @Path("member_key") memberKey: kotlin.String): Response<Unit>
 
     /**
+     * PUT api/v1/repositories/{key}/cache-ttl
+     * Set the proxy cache TTL for a repository
+     * 
+     * Responses:
+     *  - 200: Cache TTL updated
+     *  - 400: Invalid TTL value
+     *  - 401: Authentication required
+     *  - 404: Repository not found
+     *
+     * @param key Repository key
+     * @param setCacheTtlRequest 
+     * @return [CacheTtlResponse]
+     */
+    @PUT("api/v1/repositories/{key}/cache-ttl")
+    suspend fun setCacheTtl(@Path("key") key: kotlin.String, @Body setCacheTtlRequest: SetCacheTtlRequest): Response<CacheTtlResponse>
+
+    /**
+     * PUT api/v1/repositories/{key}/upstream-auth
+     * Set or remove upstream auth for a remote repository
+     * 
+     * Responses:
+     *  - 200: Upstream auth updated
+     *  - 400: Invalid auth type or missing fields
+     *  - 401: Authentication required
+     *  - 404: Repository not found
+     *
+     * @param key Repository key
+     * @param upstreamAuthRequest 
+     * @return [Unit]
+     */
+    @PUT("api/v1/repositories/{key}/upstream-auth")
+    suspend fun setUpstreamAuth(@Path("key") key: kotlin.String, @Body upstreamAuthRequest: UpstreamAuthRequest): Response<Unit>
+
+    /**
+     * POST api/v1/repositories/{key}/test-upstream
+     * Test connectivity to the upstream URL of a remote repository
+     * 
+     * Responses:
+     *  - 200: Upstream reachable
+     *  - 400: Repository is not remote or has no upstream URL
+     *  - 401: Authentication required
+     *  - 404: Repository not found
+     *  - 502: Upstream unreachable
+     *
+     * @param key Repository key
+     * @return [Unit]
+     */
+    @POST("api/v1/repositories/{key}/test-upstream")
+    suspend fun testUpstream(@Path("key") key: kotlin.String): Response<Unit>
+
+    /**
      * PATCH api/v1/repositories/{key}
      * Update repository
      * 
@@ -220,6 +305,7 @@ interface RepositoriesApi {
      *  - 200: Repository updated
      *  - 401: Authentication required
      *  - 404: Repository not found
+     *  - 409: Repository key already exists
      *
      * @param key Repository key
      * @param updateRepositoryRequest 

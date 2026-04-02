@@ -31,6 +31,7 @@ import kotlinx.serialization.Contextual
  * @param policyType 
  * @param priority 
  * @param updatedAt 
+ * @param cronSchedule 
  * @param description 
  * @param lastRunAt 
  * @param lastRunItemsRemoved 
@@ -63,6 +64,9 @@ data class LifecyclePolicy (
 
     @Contextual @SerialName(value = "updated_at")
     val updatedAt: java.time.OffsetDateTime,
+
+    @SerialName(value = "cron_schedule")
+    val cronSchedule: kotlin.String? = null,
 
     @SerialName(value = "description")
     val description: kotlin.String? = null,

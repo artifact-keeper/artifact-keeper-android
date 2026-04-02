@@ -23,24 +23,29 @@ import kotlinx.serialization.Contextual
 /**
  * 
  *
- * @param key
- * @param description
- * @param isPublic
- * @param name
- * @param quotaBytes
+ * @param description 
+ * @param indexUpstreamUrl Update the Cargo index upstream URL (stored in `repository_config`). When provided, upserts the `index_upstream_url` key for this repository.
+ * @param isPublic 
+ * @param key 
+ * @param name 
+ * @param quotaBytes 
  */
 @Serializable
 
 data class UpdateRepositoryRequest (
 
-    @SerialName(value = "key")
-    val key: kotlin.String? = null,
-
     @SerialName(value = "description")
     val description: kotlin.String? = null,
 
+    /* Update the Cargo index upstream URL (stored in `repository_config`). When provided, upserts the `index_upstream_url` key for this repository. */
+    @SerialName(value = "index_upstream_url")
+    val indexUpstreamUrl: kotlin.String? = null,
+
     @SerialName(value = "is_public")
     val isPublic: kotlin.Boolean? = null,
+
+    @SerialName(value = "key")
+    val key: kotlin.String? = null,
 
     @SerialName(value = "name")
     val name: kotlin.String? = null,

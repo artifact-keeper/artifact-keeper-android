@@ -28,6 +28,9 @@ import kotlinx.serialization.Contextual
  * @param isEnabled 
  * @param maxSeverity 
  * @param name 
+ * @param maxArtifactAgeDays 
+ * @param minStagingHours 
+ * @param requireSignature 
  */
 @Serializable
 
@@ -46,7 +49,16 @@ data class UpdatePolicyRequest (
     val maxSeverity: kotlin.String,
 
     @SerialName(value = "name")
-    val name: kotlin.String
+    val name: kotlin.String,
+
+    @SerialName(value = "max_artifact_age_days")
+    val maxArtifactAgeDays: kotlin.Int? = null,
+
+    @SerialName(value = "min_staging_hours")
+    val minStagingHours: kotlin.Int? = null,
+
+    @SerialName(value = "require_signature")
+    val requireSignature: kotlin.Boolean? = null
 
 ) {
 

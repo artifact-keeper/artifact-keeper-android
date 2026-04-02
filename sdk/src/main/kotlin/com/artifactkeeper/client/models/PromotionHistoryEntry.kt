@@ -28,11 +28,13 @@ import kotlinx.serialization.Contextual
  * @param createdAt 
  * @param id 
  * @param sourceRepoKey 
+ * @param status 
  * @param targetRepoKey 
  * @param notes 
  * @param policyResult 
  * @param promotedBy 
  * @param promotedByUsername 
+ * @param rejectionReason 
  */
 @Serializable
 
@@ -53,6 +55,9 @@ data class PromotionHistoryEntry (
     @SerialName(value = "source_repo_key")
     val sourceRepoKey: kotlin.String,
 
+    @SerialName(value = "status")
+    val status: kotlin.String,
+
     @SerialName(value = "target_repo_key")
     val targetRepoKey: kotlin.String,
 
@@ -66,7 +71,10 @@ data class PromotionHistoryEntry (
     val promotedBy: java.util.UUID? = null,
 
     @SerialName(value = "promoted_by_username")
-    val promotedByUsername: kotlin.String? = null
+    val promotedByUsername: kotlin.String? = null,
+
+    @SerialName(value = "rejection_reason")
+    val rejectionReason: kotlin.String? = null
 
 ) {
 

@@ -15,6 +15,7 @@
 
 package com.artifactkeeper.client.models
 
+import com.artifactkeeper.client.models.DbPoolStats
 import com.artifactkeeper.client.models.HealthChecks
 
 import kotlinx.serialization.Serializable
@@ -28,6 +29,9 @@ import kotlinx.serialization.Contextual
  * @param demoMode 
  * @param status 
  * @param version 
+ * @param commit 
+ * @param dbPool 
+ * @param dirty 
  */
 @Serializable
 
@@ -43,7 +47,16 @@ data class HealthResponse (
     val status: kotlin.String,
 
     @SerialName(value = "version")
-    val version: kotlin.String
+    val version: kotlin.String,
+
+    @SerialName(value = "commit")
+    val commit: kotlin.String? = null,
+
+    @SerialName(value = "db_pool")
+    val dbPool: DbPoolStats? = null,
+
+    @SerialName(value = "dirty")
+    val dirty: kotlin.Boolean? = null
 
 ) {
 

@@ -7,6 +7,7 @@ import okhttp3.RequestBody
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
+import com.artifactkeeper.client.models.AdminUserResponse
 import com.artifactkeeper.client.models.ApiTokenCreatedResponse
 import com.artifactkeeper.client.models.ApiTokenListResponse
 import com.artifactkeeper.client.models.AssignRoleRequest
@@ -18,7 +19,6 @@ import com.artifactkeeper.client.models.ResetPasswordResponse
 import com.artifactkeeper.client.models.RoleListResponse
 import com.artifactkeeper.client.models.UpdateUserRequest
 import com.artifactkeeper.client.models.UserListResponse
-import com.artifactkeeper.client.models.UserResponse
 
 interface UsersApi {
     /**
@@ -107,10 +107,10 @@ interface UsersApi {
      *  - 404: User not found
      *
      * @param id User ID
-     * @return [UserResponse]
+     * @return [AdminUserResponse]
      */
     @GET("api/v1/users/{id}")
-    suspend fun getUser(@Path("id") id: java.util.UUID): Response<UserResponse>
+    suspend fun getUser(@Path("id") id: java.util.UUID): Response<AdminUserResponse>
 
     /**
      * GET api/v1/users/{id}/roles
@@ -212,9 +212,9 @@ interface UsersApi {
      *
      * @param id User ID
      * @param updateUserRequest 
-     * @return [UserResponse]
+     * @return [AdminUserResponse]
      */
     @PATCH("api/v1/users/{id}")
-    suspend fun updateUser(@Path("id") id: java.util.UUID, @Body updateUserRequest: UpdateUserRequest): Response<UserResponse>
+    suspend fun updateUser(@Path("id") id: java.util.UUID, @Body updateUserRequest: UpdateUserRequest): Response<AdminUserResponse>
 
 }

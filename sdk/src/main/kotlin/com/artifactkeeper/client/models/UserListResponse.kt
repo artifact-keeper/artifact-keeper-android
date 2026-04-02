@@ -15,8 +15,8 @@
 
 package com.artifactkeeper.client.models
 
+import com.artifactkeeper.client.models.AdminUserResponse
 import com.artifactkeeper.client.models.Pagination
-import com.artifactkeeper.client.models.UserResponse
 
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.SerialName
@@ -33,7 +33,7 @@ import kotlinx.serialization.Contextual
 data class UserListResponse (
 
     @SerialName(value = "items")
-    val items: kotlin.collections.List<UserResponse>,
+    val items: kotlin.collections.List<AdminUserResponse>,
 
     @SerialName(value = "pagination")
     val pagination: Pagination
