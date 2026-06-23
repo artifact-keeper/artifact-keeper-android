@@ -68,6 +68,7 @@ import com.artifactkeeper.android.ui.screens.security.PoliciesScreen
 import com.artifactkeeper.android.ui.screens.security.RepoSecurityScreen
 import com.artifactkeeper.android.ui.screens.security.ScanDetailScreen
 import com.artifactkeeper.android.ui.screens.security.ScansScreen
+import com.artifactkeeper.android.ui.screens.security.SigningKeysScreen
 import com.artifactkeeper.android.ui.screens.security.SecurityScreen
 import com.artifactkeeper.android.ui.screens.settings.SettingsScreen
 import com.artifactkeeper.android.ui.screens.auth.ChangePasswordScreen
@@ -596,7 +597,7 @@ private fun IntegrationSection(isCompact: Boolean, accountActions: @Composable (
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun SecuritySection(isCompact: Boolean, accountActions: @Composable () -> Unit) {
-    val subTabs = listOf("Dashboard", "Scans", "Dep-Track", "Policies", "Licenses")
+    val subTabs = listOf("Dashboard", "Scans", "Dep-Track", "Policies", "Licenses", "Signing")
     var selectedTab by remember { mutableIntStateOf(0) }
     var selectedScanId by remember { mutableStateOf<String?>(null) }
     var selectedDtProject by remember { mutableStateOf<Pair<String, String>?>(null) }
@@ -639,6 +640,7 @@ private fun SecuritySection(isCompact: Boolean, accountActions: @Composable () -
                 )
                 3 -> PoliciesScreen()
                 4 -> LicensePoliciesScreen()
+                5 -> SigningKeysScreen()
             }
         }
     }
