@@ -24,7 +24,9 @@ import com.artifactkeeper.android.ui.theme.Critical
 import com.artifactkeeper.android.ui.theme.High
 import com.artifactkeeper.android.ui.theme.Low
 import com.artifactkeeper.android.ui.theme.Medium
+import com.artifactkeeper.client.models.DtComponentFull
 import com.artifactkeeper.client.models.DtFinding
+import com.artifactkeeper.client.models.DtPolicyFull
 import com.artifactkeeper.client.models.DtPolicyViolation
 import com.artifactkeeper.client.models.DtProject
 import com.artifactkeeper.client.models.DtProjectMetrics
@@ -42,8 +44,12 @@ fun DependencyTrackScreen(
     viewModel: DependencyTrackViewModel = hiltViewModel(),
 ) {
     val state by viewModel.uiState.collectAsState()
+    val policiesState by viewModel.policiesState.collectAsState()
 
-    LaunchedEffect(Unit) { viewModel.loadProjects() }
+    LaunchedEffect(Unit) {
+        viewModel.loadProjects()
+        viewModel.loadPolicies()
+    }
 
     when {
         state.isLoading -> {
@@ -81,11 +87,61 @@ fun DependencyTrackScreen(
                 contentPadding = PaddingValues(16.dp),
                 verticalArrangement = Arrangement.spacedBy(12.dp),
             ) {
+                if (policiesState.policies.isNotEmpty()) {
+                    item { DtPoliciesCard(policiesState.policies) }
+                }
+                item {
+                    Text(
+                        text = "Projects (${state.projects.size})",
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.SemiBold,
+                    )
+                }
                 items(state.projects, key = { it.uuid }) { project ->
                     DtProjectCard(
                         project = project,
                         onClick = { onProjectClick(project.uuid, project.name) },
                     )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun DtPoliciesCard(policies: List<DtPolicyFull>) {
+    Card(modifier = Modifier.fillMaxWidth()) {
+        Column(modifier = Modifier.padding(16.dp)) {
+            Text(
+                text = "Policies (${policies.size})",
+                style = MaterialTheme.typography.titleSmall,
+                fontWeight = FontWeight.Bold,
+            )
+            Spacer(modifier = Modifier.height(8.dp))
+            policies.forEach { policy ->
+                Row(
+                    modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Text(
+                        text = policy.name,
+                        style = MaterialTheme.typography.bodyMedium,
+                        modifier = Modifier.weight(1f),
+                    )
+                    Box(
+                        modifier = Modifier
+                            .clip(RoundedCornerShape(12.dp))
+                            .background(ViolationColor.copy(alpha = 0.15f))
+                            .padding(horizontal = 10.dp, vertical = 4.dp),
+                    ) {
+                        Text(
+                            text = policy.violationState.replaceFirstChar { it.uppercase() },
+                            style = MaterialTheme.typography.labelSmall,
+                            fontWeight = FontWeight.SemiBold,
+                            color = ViolationColor,
+                        )
+                    }
                 }
             }
         }
@@ -194,7 +250,7 @@ fun DtProjectDetailScreen(
                     verticalArrangement = Arrangement.spacedBy(12.dp),
                 ) {
                     state.metrics?.let { metrics ->
-                        item { DtMetricsCard(metrics) }
+                        item { DtMetricsCard(metrics, state.metricsHistory) }
                     }
 
                     if (state.violations.isNotEmpty()) {
@@ -228,7 +284,44 @@ fun DtProjectDetailScreen(
                         }
                     } else {
                         items(state.findings, key = { it.vulnerability.uuid }) { finding ->
-                            DtFindingCard(finding)
+                            DtFindingCard(
+                                finding = finding,
+                                isUpdating = state.isUpdating,
+                                onSuppress = {
+                                    viewModel.updateFindingAnalysis(
+                                        projectUuid = projectUuid,
+                                        componentUuid = finding.component.uuid,
+                                        vulnerabilityUuid = finding.vulnerability.uuid,
+                                        state = "NOT_AFFECTED",
+                                        suppressed = true,
+                                        justification = null,
+                                    )
+                                },
+                                onUnsuppress = {
+                                    viewModel.updateFindingAnalysis(
+                                        projectUuid = projectUuid,
+                                        componentUuid = finding.component.uuid,
+                                        vulnerabilityUuid = finding.vulnerability.uuid,
+                                        state = "EXPLOITABLE",
+                                        suppressed = false,
+                                        justification = null,
+                                    )
+                                },
+                            )
+                        }
+                    }
+
+                    if (state.components.isNotEmpty()) {
+                        item {
+                            Text(
+                                text = "Components (${state.components.size})",
+                                style = MaterialTheme.typography.titleMedium,
+                                fontWeight = FontWeight.SemiBold,
+                                modifier = Modifier.padding(top = 4.dp),
+                            )
+                        }
+                        items(state.components, key = { it.uuid }) { component ->
+                            DtComponentCard(component)
                         }
                     }
                 }
@@ -238,7 +331,7 @@ fun DtProjectDetailScreen(
 }
 
 @Composable
-private fun DtMetricsCard(metrics: DtProjectMetrics) {
+private fun DtMetricsCard(metrics: DtProjectMetrics, history: List<DtProjectMetrics> = emptyList()) {
     Card(modifier = Modifier.fillMaxWidth()) {
         Column(modifier = Modifier.padding(16.dp)) {
             Text(
@@ -270,6 +363,26 @@ private fun DtMetricsCard(metrics: DtProjectMetrics) {
                     text = "Audited $audited / $total findings",
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
+
+            // Findings trend over the recorded history window.
+            if (history.size >= 2) {
+                val first = history.first().findingsTotal ?: 0L
+                val last = history.last().findingsTotal ?: 0L
+                val delta = last - first
+                val trendColor = when {
+                    delta > 0 -> Critical
+                    delta < 0 -> Low
+                    else -> MaterialTheme.colorScheme.onSurfaceVariant
+                }
+                val sign = if (delta > 0) "+" else ""
+                Spacer(modifier = Modifier.height(8.dp))
+                Text(
+                    text = "Trend over ${history.size} snapshots: $sign$delta findings",
+                    style = MaterialTheme.typography.bodySmall,
+                    fontWeight = FontWeight.Medium,
+                    color = trendColor,
                 )
             }
         }
@@ -318,9 +431,15 @@ private fun DtViolationCard(violation: DtPolicyViolation) {
 }
 
 @Composable
-private fun DtFindingCard(finding: DtFinding) {
+private fun DtFindingCard(
+    finding: DtFinding,
+    isUpdating: Boolean = false,
+    onSuppress: () -> Unit = {},
+    onUnsuppress: () -> Unit = {},
+) {
     val vuln = finding.vulnerability
     val sevColor = dtSeverityColor(vuln.severity)
+    val isSuppressed = finding.analysis?.isSuppressed == true
 
     Card(modifier = Modifier.fillMaxWidth()) {
         Column(modifier = Modifier.padding(16.dp)) {
@@ -391,6 +510,55 @@ private fun DtFindingCard(finding: DtFinding) {
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     maxLines = 3,
                     overflow = TextOverflow.Ellipsis,
+                )
+            }
+
+            Spacer(modifier = Modifier.height(8.dp))
+            Row(horizontalArrangement = Arrangement.End, modifier = Modifier.fillMaxWidth()) {
+                if (isSuppressed) {
+                    TextButton(onClick = onUnsuppress, enabled = !isUpdating) {
+                        Text("Reactivate")
+                    }
+                } else {
+                    TextButton(onClick = onSuppress, enabled = !isUpdating) {
+                        Text("Mark not affected")
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun DtComponentCard(component: DtComponentFull) {
+    Card(modifier = Modifier.fillMaxWidth()) {
+        Row(
+            modifier = Modifier.fillMaxWidth().padding(12.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = buildString {
+                        component.group?.takeIf { it.isNotBlank() }?.let { append("$it:") }
+                        append(component.name)
+                    },
+                    style = MaterialTheme.typography.bodyMedium,
+                    fontWeight = FontWeight.Medium,
+                )
+                component.version?.takeIf { it.isNotBlank() }?.let { ver ->
+                    Text(
+                        text = ver,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
+            }
+            component.resolvedLicense?.let { license ->
+                Text(
+                    text = license.licenseId ?: license.name,
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
             }
         }
