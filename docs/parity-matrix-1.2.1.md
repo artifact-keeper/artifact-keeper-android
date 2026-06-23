@@ -9,7 +9,7 @@ SDK module: vendored `:sdk` regenerated from v1.2.1 (openapi-generator 7.21.0, k
 - **exists**: an app screen or ViewModel calls this operation through the SDK (or, for staging, a local interface).
 - **stale**: the app calls a path/operation that no longer matches the 1.2.1 spec and needs migrating. The three staging promotion calls fall here; they move to `api/v1/promotion` in the Staging wave (see #82). Note: a path-only swap is not enough, the request and response bodies were reshaped in 1.2.1.
 - **missing**: in scope for mobile but not yet wired up in the app.
-- **N/A-on-mobile**: deliberately out of scope for the mobile client. Under the tightened standard this is ONLY raw identity-provider authoring (SSO/OIDC/LDAP/SAML create/update/delete/toggle under `api/v1/admin/sso`) and lifecycle policy authoring (write operations under `api/v1/admin/lifecycle`). Everything else, including SSO login/exchange flows, read/monitor admin, permissions, service accounts, plugins, email subscriptions, migration write operations, and chunked upload, is in scope.
+- **N/A-on-mobile**: deliberately out of scope for the mobile client. The standard is narrow: ONLY raw identity-provider config (SSO/OIDC/LDAP/SAML create/update/delete/toggle/test under `api/v1/admin/sso`) and lifecycle policy authoring (create/update/delete under `api/v1/admin/lifecycle`). Everything else is in scope, including user and role management, group and permission management, settings reads, SSO login/exchange flows, lifecycle execute/preview, service accounts, plugins, email subscriptions, migration write operations, and chunked upload.
 
 ## Per-section summary
 
@@ -20,9 +20,9 @@ SDK module: vendored `:sdk` regenerated from v1.2.1 (openapi-generator 7.21.0, k
 | Integration | 12 | 0 | 60 | 0 | 72 |
 | Security | 15 | 0 | 57 | 0 | 72 |
 | Operations | 2 | 0 | 21 | 0 | 23 |
-| Administration | 8 | 0 | 89 | 19 | 116 |
+| Administration | 8 | 0 | 92 | 16 | 116 |
 | Cross-cutting | 8 | 0 | 4 | 0 | 12 |
-| **All** | **59** | **3** | **309** | **19** | **390** |
+| **All** | **59** | **3** | **312** | **16** | **390** |
 
 ## Artifacts
 
@@ -352,12 +352,12 @@ SDK module: vendored `:sdk` regenerated from v1.2.1 (openapi-generator 7.21.0, k
 | groups | `POST /api/v1/groups/{id}/members` | `add_members` | missing | Administration |  |  |
 | lifecycle | `GET /api/v1/admin/lifecycle` | `list_lifecycle_policies` | missing | Administration |  |  |
 | lifecycle | `POST /api/v1/admin/lifecycle` | `create_lifecycle_policy` | N/A-on-mobile | Administration |  | lifecycle policy authoring; desktop admin |
-| lifecycle | `POST /api/v1/admin/lifecycle/execute-all` | `execute_all_policies` | N/A-on-mobile | Administration |  | lifecycle policy authoring; desktop admin |
+| lifecycle | `POST /api/v1/admin/lifecycle/execute-all` | `execute_all_policies` | missing | Administration |  |  |
 | lifecycle | `DELETE /api/v1/admin/lifecycle/{id}` | `delete_lifecycle_policy` | N/A-on-mobile | Administration |  | lifecycle policy authoring; desktop admin |
 | lifecycle | `GET /api/v1/admin/lifecycle/{id}` | `get_lifecycle_policy` | missing | Administration |  |  |
 | lifecycle | `PATCH /api/v1/admin/lifecycle/{id}` | `update_lifecycle_policy` | N/A-on-mobile | Administration |  | lifecycle policy authoring; desktop admin |
-| lifecycle | `POST /api/v1/admin/lifecycle/{id}/execute` | `execute_policy` | N/A-on-mobile | Administration |  | lifecycle policy authoring; desktop admin |
-| lifecycle | `POST /api/v1/admin/lifecycle/{id}/preview` | `preview_policy` | N/A-on-mobile | Administration |  | lifecycle policy authoring; desktop admin |
+| lifecycle | `POST /api/v1/admin/lifecycle/{id}/execute` | `execute_policy` | missing | Administration |  |  |
+| lifecycle | `POST /api/v1/admin/lifecycle/{id}/preview` | `preview_policy` | missing | Administration |  |  |
 | permissions | `GET /api/v1/permissions` | `list_permissions` | missing | Administration |  |  |
 | permissions | `POST /api/v1/permissions` | `create_permission` | missing | Administration |  |  |
 | permissions | `DELETE /api/v1/permissions/{id}` | `delete_permission` | missing | Administration |  |  |
