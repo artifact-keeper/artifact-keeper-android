@@ -4,7 +4,6 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.artifactkeeper.android.data.api.ApiClient
 import com.artifactkeeper.android.data.api.unwrap
-import com.artifactkeeper.client.models.AcknowledgeRequest
 import com.artifactkeeper.client.models.CveHistoryEntry
 import com.artifactkeeper.client.models.UpdateCveStatusRequest
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -104,31 +103,6 @@ class CveTrackingViewModel @Inject constructor(
                 _cveDetailState.update {
                     it.copy(error = e.message ?: "Failed to update CVE status", isUpdating = false)
                 }
-            }
-        }
-    }
-
-    fun acknowledgeFinding(findingId: UUID, reason: String) {
-        viewModelScope.launch {
-            try {
-                apiClient.securityApi.acknowledgeFinding(
-                    findingId,
-                    AcknowledgeRequest(reason = reason),
-                ).unwrap()
-                _uiState.update { it.copy(message = "Finding acknowledged") }
-            } catch (e: Exception) {
-                _uiState.update { it.copy(error = e.message ?: "Failed to acknowledge finding") }
-            }
-        }
-    }
-
-    fun revokeAcknowledgment(findingId: UUID) {
-        viewModelScope.launch {
-            try {
-                apiClient.securityApi.revokeAcknowledgment(findingId).unwrap()
-                _uiState.update { it.copy(message = "Acknowledgment revoked") }
-            } catch (e: Exception) {
-                _uiState.update { it.copy(error = e.message ?: "Failed to revoke acknowledgment") }
             }
         }
     }

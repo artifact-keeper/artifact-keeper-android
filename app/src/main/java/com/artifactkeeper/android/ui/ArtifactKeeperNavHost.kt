@@ -47,6 +47,7 @@ import com.artifactkeeper.android.ui.screens.builds.BuildDetailScreen
 import com.artifactkeeper.android.ui.screens.builds.BuildsScreen
 import com.artifactkeeper.android.ui.screens.integration.PeersScreen
 import com.artifactkeeper.android.ui.screens.integration.ReplicationScreen
+import com.artifactkeeper.android.ui.screens.integration.WebhookDetailScreen
 import com.artifactkeeper.android.ui.screens.integration.WebhooksScreen
 import com.artifactkeeper.android.ui.screens.operations.AnalyticsScreen
 import com.artifactkeeper.android.ui.screens.operations.MonitoringScreen
@@ -580,18 +581,42 @@ private fun SectionWithTabs(
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun IntegrationSection(isCompact: Boolean, accountActions: @Composable () -> Unit) {
-    SectionWithTabs(
-        title = "Integration",
-        subTabs = listOf("Peers", "Replication", "Webhooks"),
-        isCompact = isCompact,
-        accountActions = accountActions,
-    ) { selectedTab ->
-        when (selectedTab) {
-            0 -> PeersScreen()
-            1 -> ReplicationScreen()
-            2 -> WebhooksScreen()
+    val subTabs = listOf("Peers", "Replication", "Webhooks")
+    var selectedTab by remember { mutableIntStateOf(0) }
+    var selectedWebhookId by remember { mutableStateOf<String?>(null) }
+
+    Column(modifier = Modifier.fillMaxSize()) {
+        if (selectedWebhookId != null) {
+            WebhookDetailScreen(
+                webhookId = selectedWebhookId!!,
+                onBack = { selectedWebhookId = null },
+            )
+        } else {
+            TopAppBar(
+                title = { Text("Integration") },
+                navigationIcon = { AppLogo() },
+                actions = { accountActions() },
+            )
+            ScrollableTabRow(
+                selectedTabIndex = selectedTab,
+                edgePadding = if (isCompact) 4.dp else 16.dp,
+            ) {
+                subTabs.forEachIndexed { index, title ->
+                    Tab(
+                        selected = selectedTab == index,
+                        onClick = { selectedTab = index },
+                        text = { Text(title, maxLines = 1) },
+                    )
+                }
+            }
+            when (selectedTab) {
+                0 -> PeersScreen()
+                1 -> ReplicationScreen()
+                2 -> WebhooksScreen(onWebhookClick = { selectedWebhookId = it })
+            }
         }
     }
 }

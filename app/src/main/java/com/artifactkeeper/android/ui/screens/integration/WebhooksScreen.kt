@@ -3,6 +3,7 @@
 package com.artifactkeeper.android.ui.screens.integration
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -39,7 +40,7 @@ private val ALL_EVENTS = listOf(
 )
 
 @Composable
-fun WebhooksScreen() {
+fun WebhooksScreen(onWebhookClick: (String) -> Unit = {}) {
     var webhooks by remember { mutableStateOf<List<Webhook>>(emptyList()) }
     var isLoading by remember { mutableStateOf(true) }
     var isRefreshing by remember { mutableStateOf(false) }
@@ -125,6 +126,7 @@ fun WebhooksScreen() {
                         items(webhooks, key = { it.id }) { webhook ->
                             WebhookCard(
                                 webhook = webhook,
+                                onClick = { onWebhookClick(webhook.id.toString()) },
                                 onToggle = { enabled ->
                                     coroutineScope.launch {
                                         try {
@@ -253,11 +255,12 @@ fun WebhooksScreen() {
 @Composable
 private fun WebhookCard(
     webhook: Webhook,
+    onClick: () -> Unit,
     onToggle: (Boolean) -> Unit,
     onTest: () -> Unit,
     onDelete: () -> Unit,
 ) {
-    Card(modifier = Modifier.fillMaxWidth()) {
+    Card(modifier = Modifier.fillMaxWidth().clickable(onClick = onClick)) {
         Column(modifier = Modifier.padding(16.dp)) {
             Row(
                 modifier = Modifier.fillMaxWidth(),

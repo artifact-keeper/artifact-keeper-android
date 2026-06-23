@@ -7,7 +7,6 @@ import com.artifactkeeper.android.ui.screens.security.CveTrackingViewModel
 import com.artifactkeeper.client.apis.SbomApi
 import com.artifactkeeper.client.apis.SecurityApi
 import com.artifactkeeper.client.models.CveHistoryEntry
-import com.artifactkeeper.client.models.FindingResponse
 import com.artifactkeeper.client.models.UpdateCveStatusRequest
 import io.mockk.coEvery
 import io.mockk.coVerify
@@ -71,16 +70,6 @@ class CveTrackingViewModelTest {
         updatedAt = now,
         cvssScore = score,
         severity = severity,
-    )
-
-    private fun finding() = FindingResponse(
-        artifactId = artifactId,
-        createdAt = now,
-        id = UUID.randomUUID(),
-        isAcknowledged = false,
-        scanResultId = UUID.randomUUID(),
-        severity = "high",
-        title = "Some vuln",
     )
 
     // =========================================================================
@@ -194,35 +183,6 @@ class CveTrackingViewModelTest {
 
         assertNotNull(vm.cveDetailState.value.error)
         assertFalse(vm.cveDetailState.value.isUpdating)
-    }
-
-    // =========================================================================
-    // acknowledgeFinding / revokeAcknowledgment
-    // =========================================================================
-
-    @Test
-    fun `acknowledgeFinding calls api with reason`() = runTest {
-        val findingId = UUID.randomUUID()
-        coEvery { mockSecurityApi.acknowledgeFinding(findingId, any()) } returns
-            Response.success(finding())
-
-        val vm = CveTrackingViewModel(mockApiClient)
-        vm.acknowledgeFinding(findingId, "accepted risk")
-
-        coVerify { mockSecurityApi.acknowledgeFinding(findingId, any()) }
-        assertNull(vm.uiState.value.error)
-    }
-
-    @Test
-    fun `revokeAcknowledgment calls api`() = runTest {
-        val findingId = UUID.randomUUID()
-        coEvery { mockSecurityApi.revokeAcknowledgment(findingId) } returns
-            Response.success(finding())
-
-        val vm = CveTrackingViewModel(mockApiClient)
-        vm.revokeAcknowledgment(findingId)
-
-        coVerify { mockSecurityApi.revokeAcknowledgment(findingId) }
     }
 
     @Test
