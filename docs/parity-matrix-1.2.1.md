@@ -7,22 +7,22 @@ SDK module: vendored `:sdk` regenerated from v1.2.1 (openapi-generator 7.21.0, k
 ## Status legend
 
 - **exists**: an app screen or ViewModel calls this operation through the SDK (or, for staging, a local interface).
-- **stale**: the app calls a path/operation that no longer matches the 1.2.1 spec and needs repointing.
+- **stale**: the app calls a path/operation that no longer matches the 1.2.1 spec and needs migrating. The three staging promotion calls fall here; they move to `api/v1/promotion` in the Staging wave (see #82). Note: a path-only swap is not enough, the request and response bodies were reshaped in 1.2.1.
 - **missing**: in scope for mobile but not yet wired up in the app.
-- **N/A-on-mobile**: deliberately out of scope for the mobile client (reason in Notes). Covers raw identity-provider authoring (SSO/OIDC/LDAP/SAML create/update/delete), lifecycle policy authoring, service-account credential authoring, bulk migration/import-export, plugin install/config authoring, permission-grant authoring, raw chunked uploads, and notification-subscription authoring. Read and monitor admin operations stay in scope.
+- **N/A-on-mobile**: deliberately out of scope for the mobile client. Under the tightened standard this is ONLY raw identity-provider authoring (SSO/OIDC/LDAP/SAML create/update/delete/toggle under `api/v1/admin/sso`) and lifecycle policy authoring (write operations under `api/v1/admin/lifecycle`). Everything else, including SSO login/exchange flows, read/monitor admin, permissions, service accounts, plugins, email subscriptions, migration write operations, and chunked upload, is in scope.
 
 ## Per-section summary
 
 | Section | exists | stale | missing | N/A-on-mobile | Total |
 |---------|-------:|------:|--------:|--------------:|------:|
-| Artifacts | 14 | 0 | 43 | 5 | 62 |
+| Artifacts | 14 | 0 | 48 | 0 | 62 |
 | Staging | 0 | 3 | 30 | 0 | 33 |
-| Integration | 12 | 0 | 50 | 10 | 72 |
+| Integration | 12 | 0 | 60 | 0 | 72 |
 | Security | 15 | 0 | 57 | 0 | 72 |
 | Operations | 2 | 0 | 21 | 0 | 23 |
-| Administration | 8 | 0 | 63 | 45 | 116 |
+| Administration | 8 | 0 | 89 | 19 | 116 |
 | Cross-cutting | 8 | 0 | 4 | 0 | 12 |
-| **All** | **59** | **3** | **268** | **60** | **390** |
+| **All** | **59** | **3** | **309** | **19** | **390** |
 
 ## Artifacts
 
@@ -85,11 +85,11 @@ SDK module: vendored `:sdk` regenerated from v1.2.1 (openapi-generator 7.21.0, k
 | search | `GET /api/v1/search/recent` | `recent` | missing | Artifacts |  |  |
 | search | `GET /api/v1/search/suggest` | `suggest` | missing | Artifacts |  |  |
 | search | `GET /api/v1/search/trending` | `trending` | missing | Artifacts |  |  |
-| uploads | `POST /api/v1/uploads` | `create_session` | N/A-on-mobile | Artifacts |  | raw chunked binary upload; not a mobile flow |
-| uploads | `DELETE /api/v1/uploads/{session_id}` | `cancel` | N/A-on-mobile | Artifacts |  | raw chunked binary upload; not a mobile flow |
-| uploads | `GET /api/v1/uploads/{session_id}` | `get_session_status` | N/A-on-mobile | Artifacts |  | raw chunked binary upload; not a mobile flow |
-| uploads | `PATCH /api/v1/uploads/{session_id}` | `upload_chunk` | N/A-on-mobile | Artifacts |  | raw chunked binary upload; not a mobile flow |
-| uploads | `PUT /api/v1/uploads/{session_id}/complete` | `complete` | N/A-on-mobile | Artifacts |  | raw chunked binary upload; not a mobile flow |
+| uploads | `POST /api/v1/uploads` | `create_session` | missing | Artifacts |  |  |
+| uploads | `DELETE /api/v1/uploads/{session_id}` | `cancel` | missing | Artifacts |  |  |
+| uploads | `GET /api/v1/uploads/{session_id}` | `get_session_status` | missing | Artifacts |  |  |
+| uploads | `PATCH /api/v1/uploads/{session_id}` | `upload_chunk` | missing | Artifacts |  |  |
+| uploads | `PUT /api/v1/uploads/{session_id}/complete` | `complete` | missing | Artifacts |  |  |
 
 ## Staging
 
@@ -119,10 +119,10 @@ SDK module: vendored `:sdk` regenerated from v1.2.1 (openapi-generator 7.21.0, k
 | promotion | `GET /api/v1/promotion-rules/{id}` | `get_rule` | missing | Staging |  |  |
 | promotion | `PUT /api/v1/promotion-rules/{id}` | `update_rule` | missing | Staging |  |  |
 | promotion | `POST /api/v1/promotion-rules/{id}/evaluate` | `evaluate_rule` | missing | Staging |  |  |
-| promotion | `POST /api/v1/promotion/repositories/{key}/artifacts/{artifact_id}/promote` | `promote_artifact` | stale | Staging | `ui/screens/staging/StagingViewModel.kt` | app calls local StagingApi at /api/v1/staging/* which is absent from 1.2.1 spec; repoint to /api/v1/promotion/* |
+| promotion | `POST /api/v1/promotion/repositories/{key}/artifacts/{artifact_id}/promote` | `promote_artifact` | stale | Staging | `ui/screens/staging/StagingViewModel.kt` | app calls local StagingApi at api/v1/staging which is absent from 1.2.1; migrate to api/v1/promotion (Staging wave, see #82) |
 | promotion | `POST /api/v1/promotion/repositories/{key}/artifacts/{artifact_id}/reject` | `reject_artifact` | missing | Staging |  |  |
-| promotion | `POST /api/v1/promotion/repositories/{key}/promote` | `promote_artifacts_bulk` | stale | Staging | `ui/screens/staging/StagingViewModel.kt` | app calls local StagingApi at /api/v1/staging/* which is absent from 1.2.1 spec; repoint to /api/v1/promotion/* |
-| promotion | `GET /api/v1/promotion/repositories/{key}/promotion-history` | `promotion_history` | stale | Staging | `ui/screens/staging/StagingViewModel.kt` | app calls local StagingApi at /api/v1/staging/* which is absent from 1.2.1 spec; repoint to /api/v1/promotion/* |
+| promotion | `POST /api/v1/promotion/repositories/{key}/promote` | `promote_artifacts_bulk` | stale | Staging | `ui/screens/staging/StagingViewModel.kt` | app calls local StagingApi at api/v1/staging which is absent from 1.2.1; migrate to api/v1/promotion (Staging wave, see #82) |
+| promotion | `GET /api/v1/promotion/repositories/{key}/promotion-history` | `promotion_history` | stale | Staging | `ui/screens/staging/StagingViewModel.kt` | app calls local StagingApi at api/v1/staging which is absent from 1.2.1; migrate to api/v1/promotion (Staging wave, see #82) |
 | promotion | `GET /api/v1/promotion/repositories/{key}/release-target` | `get_release_target` | missing | Staging |  |  |
 | promotion | `PUT /api/v1/promotion/repositories/{key}/release-target` | `set_release_target` | missing | Staging |  |  |
 | quarantine | `GET /api/v1/quarantine/{artifact_id}` | `get_quarantine_status` | missing | Staging |  |  |
@@ -134,23 +134,23 @@ SDK module: vendored `:sdk` regenerated from v1.2.1 (openapi-generator 7.21.0, k
 | Tag | Method+Path | operationId | Status | Section | Target file | Notes |
 |-----|-------------|-------------|--------|---------|-------------|-------|
 | migration | `GET /api/v1/migrations` | `list_migrations` | missing | Integration |  |  |
-| migration | `POST /api/v1/migrations` | `create_migration` | N/A-on-mobile | Integration |  | bulk migration/import-export; desktop/CLI op |
+| migration | `POST /api/v1/migrations` | `create_migration` | missing | Integration |  |  |
 | migration | `GET /api/v1/migrations/connections` | `list_connections` | missing | Integration |  |  |
-| migration | `POST /api/v1/migrations/connections` | `create_connection` | N/A-on-mobile | Integration |  | bulk migration/import-export; desktop/CLI op |
-| migration | `DELETE /api/v1/migrations/connections/{id}` | `delete_connection` | N/A-on-mobile | Integration |  | bulk migration/import-export; desktop/CLI op |
+| migration | `POST /api/v1/migrations/connections` | `create_connection` | missing | Integration |  |  |
+| migration | `DELETE /api/v1/migrations/connections/{id}` | `delete_connection` | missing | Integration |  |  |
 | migration | `GET /api/v1/migrations/connections/{id}` | `get_connection` | missing | Integration |  |  |
 | migration | `GET /api/v1/migrations/connections/{id}/repositories` | `list_source_repositories` | missing | Integration |  |  |
-| migration | `POST /api/v1/migrations/connections/{id}/test` | `test_connection` | N/A-on-mobile | Integration |  | bulk migration/import-export; desktop/CLI op |
-| migration | `DELETE /api/v1/migrations/{id}` | `delete_migration` | N/A-on-mobile | Integration |  | bulk migration/import-export; desktop/CLI op |
+| migration | `POST /api/v1/migrations/connections/{id}/test` | `test_connection` | missing | Integration |  |  |
+| migration | `DELETE /api/v1/migrations/{id}` | `delete_migration` | missing | Integration |  |  |
 | migration | `GET /api/v1/migrations/{id}` | `get_migration` | missing | Integration |  |  |
-| migration | `POST /api/v1/migrations/{id}/assess` | `run_assessment` | N/A-on-mobile | Integration |  | bulk migration/import-export; desktop/CLI op |
+| migration | `POST /api/v1/migrations/{id}/assess` | `run_assessment` | missing | Integration |  |  |
 | migration | `GET /api/v1/migrations/{id}/assessment` | `get_assessment` | missing | Integration |  |  |
-| migration | `POST /api/v1/migrations/{id}/cancel` | `cancel_migration` | N/A-on-mobile | Integration |  | bulk migration/import-export; desktop/CLI op |
+| migration | `POST /api/v1/migrations/{id}/cancel` | `cancel_migration` | missing | Integration |  |  |
 | migration | `GET /api/v1/migrations/{id}/items` | `list_migration_items` | missing | Integration |  |  |
-| migration | `POST /api/v1/migrations/{id}/pause` | `pause_migration` | N/A-on-mobile | Integration |  | bulk migration/import-export; desktop/CLI op |
+| migration | `POST /api/v1/migrations/{id}/pause` | `pause_migration` | missing | Integration |  |  |
 | migration | `GET /api/v1/migrations/{id}/report` | `get_migration_report` | missing | Integration |  |  |
-| migration | `POST /api/v1/migrations/{id}/resume` | `resume_migration` | N/A-on-mobile | Integration |  | bulk migration/import-export; desktop/CLI op |
-| migration | `POST /api/v1/migrations/{id}/start` | `start_migration` | N/A-on-mobile | Integration |  | bulk migration/import-export; desktop/CLI op |
+| migration | `POST /api/v1/migrations/{id}/resume` | `resume_migration` | missing | Integration |  |  |
+| migration | `POST /api/v1/migrations/{id}/start` | `start_migration` | missing | Integration |  |  |
 | migration | `GET /api/v1/migrations/{id}/stream` | `stream_migration_progress` | missing | Integration |  |  |
 | peer-instance-labels | `GET /api/v1/peers/{id}/labels` | `list_labels` | missing | Integration |  |  |
 | peer-instance-labels | `PUT /api/v1/peers/{id}/labels` | `set_labels` | missing | Integration |  |  |
@@ -341,8 +341,8 @@ SDK module: vendored `:sdk` regenerated from v1.2.1 (openapi-generator 7.21.0, k
 | admin | `POST /api/v1/instances/{id}/proxy/{path}` | `proxy_post` | missing | Administration |  |  |
 | admin | `PUT /api/v1/instances/{id}/proxy/{path}` | `proxy_put` | missing | Administration |  |  |
 | email_subscriptions | `GET /api/v1/repositories/{key}/email-subscriptions` | `list_subscriptions` | missing | Administration |  |  |
-| email_subscriptions | `POST /api/v1/repositories/{key}/email-subscriptions` | `create_subscription` | N/A-on-mobile | Administration |  | notification subscription authoring; low-value on mobile |
-| email_subscriptions | `DELETE /api/v1/repositories/{key}/email-subscriptions/{subscription_id}` | `delete_subscription` | N/A-on-mobile | Administration |  | notification subscription authoring; low-value on mobile |
+| email_subscriptions | `POST /api/v1/repositories/{key}/email-subscriptions` | `create_subscription` | missing | Administration |  |  |
+| email_subscriptions | `DELETE /api/v1/repositories/{key}/email-subscriptions/{subscription_id}` | `delete_subscription` | missing | Administration |  |  |
 | groups | `GET /api/v1/groups` | `list_groups` | exists | Administration | `app/src/main/java/com/artifactkeeper/android/ui/screens/admin/GroupsScreen.kt` |  |
 | groups | `POST /api/v1/groups` | `create_group` | exists | Administration | `app/src/main/java/com/artifactkeeper/android/ui/screens/admin/GroupsScreen.kt` |  |
 | groups | `DELETE /api/v1/groups/{id}` | `delete_group` | missing | Administration |  |  |
@@ -359,37 +359,37 @@ SDK module: vendored `:sdk` regenerated from v1.2.1 (openapi-generator 7.21.0, k
 | lifecycle | `POST /api/v1/admin/lifecycle/{id}/execute` | `execute_policy` | N/A-on-mobile | Administration |  | lifecycle policy authoring; desktop admin |
 | lifecycle | `POST /api/v1/admin/lifecycle/{id}/preview` | `preview_policy` | N/A-on-mobile | Administration |  | lifecycle policy authoring; desktop admin |
 | permissions | `GET /api/v1/permissions` | `list_permissions` | missing | Administration |  |  |
-| permissions | `POST /api/v1/permissions` | `create_permission` | N/A-on-mobile | Administration |  | permission grant authoring; desktop admin |
-| permissions | `DELETE /api/v1/permissions/{id}` | `delete_permission` | N/A-on-mobile | Administration |  | permission grant authoring; desktop admin |
+| permissions | `POST /api/v1/permissions` | `create_permission` | missing | Administration |  |  |
+| permissions | `DELETE /api/v1/permissions/{id}` | `delete_permission` | missing | Administration |  |  |
 | permissions | `GET /api/v1/permissions/{id}` | `get_permission` | missing | Administration |  |  |
-| permissions | `PUT /api/v1/permissions/{id}` | `update_permission` | N/A-on-mobile | Administration |  | permission grant authoring; desktop admin |
+| permissions | `PUT /api/v1/permissions/{id}` | `update_permission` | missing | Administration |  |  |
 | plugins | `GET /api/v1/formats` | `list_format_handlers` | missing | Administration |  |  |
 | plugins | `GET /api/v1/formats/{format_key}` | `get_format_handler` | missing | Administration |  |  |
-| plugins | `POST /api/v1/formats/{format_key}/disable` | `disable_format_handler` | N/A-on-mobile | Administration |  | plugin install/config authoring; desktop admin |
-| plugins | `POST /api/v1/formats/{format_key}/enable` | `enable_format_handler` | N/A-on-mobile | Administration |  | plugin install/config authoring; desktop admin |
-| plugins | `POST /api/v1/formats/{format_key}/test` | `test_format_handler` | N/A-on-mobile | Administration |  | plugin install/config authoring; desktop admin |
+| plugins | `POST /api/v1/formats/{format_key}/disable` | `disable_format_handler` | missing | Administration |  |  |
+| plugins | `POST /api/v1/formats/{format_key}/enable` | `enable_format_handler` | missing | Administration |  |  |
+| plugins | `POST /api/v1/formats/{format_key}/test` | `test_format_handler` | missing | Administration |  |  |
 | plugins | `GET /api/v1/plugins` | `list_plugins` | missing | Administration |  |  |
-| plugins | `POST /api/v1/plugins` | `install_plugin` | N/A-on-mobile | Administration |  | plugin install/config authoring; desktop admin |
-| plugins | `POST /api/v1/plugins/install/git` | `install_from_git` | N/A-on-mobile | Administration |  | plugin install/config authoring; desktop admin |
-| plugins | `POST /api/v1/plugins/install/local` | `install_from_local` | N/A-on-mobile | Administration |  | plugin install/config authoring; desktop admin |
-| plugins | `POST /api/v1/plugins/install/zip` | `install_from_zip` | N/A-on-mobile | Administration |  | plugin install/config authoring; desktop admin |
-| plugins | `DELETE /api/v1/plugins/{id}` | `uninstall_plugin` | N/A-on-mobile | Administration |  | plugin install/config authoring; desktop admin |
+| plugins | `POST /api/v1/plugins` | `install_plugin` | missing | Administration |  |  |
+| plugins | `POST /api/v1/plugins/install/git` | `install_from_git` | missing | Administration |  |  |
+| plugins | `POST /api/v1/plugins/install/local` | `install_from_local` | missing | Administration |  |  |
+| plugins | `POST /api/v1/plugins/install/zip` | `install_from_zip` | missing | Administration |  |  |
+| plugins | `DELETE /api/v1/plugins/{id}` | `uninstall_plugin` | missing | Administration |  |  |
 | plugins | `GET /api/v1/plugins/{id}` | `get_plugin` | missing | Administration |  |  |
 | plugins | `GET /api/v1/plugins/{id}/config` | `get_plugin_config` | missing | Administration |  |  |
-| plugins | `POST /api/v1/plugins/{id}/config` | `update_plugin_config` | N/A-on-mobile | Administration |  | plugin install/config authoring; desktop admin |
-| plugins | `POST /api/v1/plugins/{id}/disable` | `disable_plugin` | N/A-on-mobile | Administration |  | plugin install/config authoring; desktop admin |
-| plugins | `POST /api/v1/plugins/{id}/enable` | `enable_plugin` | N/A-on-mobile | Administration |  | plugin install/config authoring; desktop admin |
+| plugins | `POST /api/v1/plugins/{id}/config` | `update_plugin_config` | missing | Administration |  |  |
+| plugins | `POST /api/v1/plugins/{id}/disable` | `disable_plugin` | missing | Administration |  |  |
+| plugins | `POST /api/v1/plugins/{id}/enable` | `enable_plugin` | missing | Administration |  |  |
 | plugins | `GET /api/v1/plugins/{id}/events` | `get_plugin_events` | missing | Administration |  |  |
-| plugins | `POST /api/v1/plugins/{id}/reload` | `reload_plugin` | N/A-on-mobile | Administration |  | plugin install/config authoring; desktop admin |
+| plugins | `POST /api/v1/plugins/{id}/reload` | `reload_plugin` | missing | Administration |  |  |
 | service_accounts | `GET /api/v1/service-accounts` | `list_service_accounts` | missing | Administration |  |  |
-| service_accounts | `POST /api/v1/service-accounts` | `create_service_account` | N/A-on-mobile | Administration |  | service account credential authoring; desktop admin |
-| service_accounts | `POST /api/v1/service-accounts/repo-selector/preview` | `preview_repo_selector` | N/A-on-mobile | Administration |  | service account credential authoring; desktop admin |
-| service_accounts | `DELETE /api/v1/service-accounts/{id}` | `delete_service_account` | N/A-on-mobile | Administration |  | service account credential authoring; desktop admin |
+| service_accounts | `POST /api/v1/service-accounts` | `create_service_account` | missing | Administration |  |  |
+| service_accounts | `POST /api/v1/service-accounts/repo-selector/preview` | `preview_repo_selector` | missing | Administration |  |  |
+| service_accounts | `DELETE /api/v1/service-accounts/{id}` | `delete_service_account` | missing | Administration |  |  |
 | service_accounts | `GET /api/v1/service-accounts/{id}` | `get_service_account` | missing | Administration |  |  |
-| service_accounts | `PATCH /api/v1/service-accounts/{id}` | `update_service_account` | N/A-on-mobile | Administration |  | service account credential authoring; desktop admin |
+| service_accounts | `PATCH /api/v1/service-accounts/{id}` | `update_service_account` | missing | Administration |  |  |
 | service_accounts | `GET /api/v1/service-accounts/{id}/tokens` | `list_tokens` | missing | Administration |  |  |
-| service_accounts | `POST /api/v1/service-accounts/{id}/tokens` | `create_token` | N/A-on-mobile | Administration |  | service account credential authoring; desktop admin |
-| service_accounts | `DELETE /api/v1/service-accounts/{id}/tokens/{token_id}` | `revoke_token` | N/A-on-mobile | Administration |  | service account credential authoring; desktop admin |
+| service_accounts | `POST /api/v1/service-accounts/{id}/tokens` | `create_token` | missing | Administration |  |  |
+| service_accounts | `DELETE /api/v1/service-accounts/{id}/tokens/{token_id}` | `revoke_token` | missing | Administration |  |  |
 | sso | `GET /api/v1/admin/sso/ldap` | `list_ldap` | missing | Administration |  |  |
 | sso | `POST /api/v1/admin/sso/ldap` | `create_ldap` | N/A-on-mobile | Administration |  | raw SSO/OIDC/LDAP/SAML provider authoring; desktop admin |
 | sso | `DELETE /api/v1/admin/sso/ldap/{id}` | `delete_ldap` | N/A-on-mobile | Administration |  | raw SSO/OIDC/LDAP/SAML provider authoring; desktop admin |
@@ -410,12 +410,12 @@ SDK module: vendored `:sdk` regenerated from v1.2.1 (openapi-generator 7.21.0, k
 | sso | `GET /api/v1/admin/sso/saml/{id}` | `get_saml` | missing | Administration |  |  |
 | sso | `PUT /api/v1/admin/sso/saml/{id}` | `update_saml` | N/A-on-mobile | Administration |  | raw SSO/OIDC/LDAP/SAML provider authoring; desktop admin |
 | sso | `PATCH /api/v1/admin/sso/saml/{id}/toggle` | `toggle_saml` | N/A-on-mobile | Administration |  | raw SSO/OIDC/LDAP/SAML provider authoring; desktop admin |
-| sso | `POST /api/v1/auth/sso/exchange` | `exchange_code` | N/A-on-mobile | Administration |  | raw SSO/OIDC/LDAP/SAML provider authoring; desktop admin |
-| sso | `POST /api/v1/auth/sso/ldap/{id}/login` | `ldap_login` | N/A-on-mobile | Administration |  | raw SSO/OIDC/LDAP/SAML provider authoring; desktop admin |
+| sso | `POST /api/v1/auth/sso/exchange` | `exchange_code` | missing | Administration |  |  |
+| sso | `POST /api/v1/auth/sso/ldap/{id}/login` | `ldap_login` | missing | Administration |  |  |
 | sso | `GET /api/v1/auth/sso/oidc/{id}/callback` | `oidc_callback` | missing | Administration |  |  |
 | sso | `GET /api/v1/auth/sso/oidc/{id}/login` | `oidc_login` | missing | Administration |  |  |
 | sso | `GET /api/v1/auth/sso/providers` | `list_providers` | missing | Administration |  |  |
-| sso | `POST /api/v1/auth/sso/saml/{id}/acs` | `saml_acs` | N/A-on-mobile | Administration |  | raw SSO/OIDC/LDAP/SAML provider authoring; desktop admin |
+| sso | `POST /api/v1/auth/sso/saml/{id}/acs` | `saml_acs` | missing | Administration |  |  |
 | sso | `GET /api/v1/auth/sso/saml/{id}/login` | `saml_login` | missing | Administration |  |  |
 | users | `GET /api/v1/users` | `list_users` | exists | Administration | `app/src/main/java/com/artifactkeeper/android/ui/screens/admin/UsersScreen.kt` |  |
 | users | `POST /api/v1/users` | `create_user` | exists | Administration | `app/src/main/java/com/artifactkeeper/android/ui/screens/admin/UsersScreen.kt` |  |
