@@ -18,11 +18,11 @@ SDK module: vendored `:sdk` regenerated from v1.2.1 (openapi-generator 7.21.0, k
 | Artifacts | 14 | 0 | 48 | 0 | 62 |
 | Staging | 0 | 3 | 30 | 0 | 33 |
 | Integration | 12 | 0 | 60 | 0 | 72 |
-| Security | 15 | 0 | 57 | 0 | 72 |
+| Security | 18 | 0 | 54 | 0 | 72 |
 | Operations | 2 | 0 | 21 | 0 | 23 |
 | Administration | 8 | 0 | 92 | 16 | 116 |
 | Cross-cutting | 8 | 0 | 4 | 0 | 12 |
-| **All** | **59** | **3** | **312** | **16** | **390** |
+| **All** | **62** | **3** | **309** | **16** | **390** |
 
 ## Artifacts
 
@@ -227,7 +227,7 @@ SDK module: vendored `:sdk` regenerated from v1.2.1 (openapi-generator 7.21.0, k
 | quality | `POST /api/v1/quality/issues/{id}/suppress` | `suppress_issue` | missing | Security |  |  |
 | sbom | `GET /api/v1/sbom` | `list_sboms` | exists | Security | `app/src/main/java/com/artifactkeeper/android/ui/screens/security/SbomScreen.kt` |  |
 | sbom | `POST /api/v1/sbom` | `generate_sbom` | exists | Security | `app/src/main/java/com/artifactkeeper/android/ui/screens/security/SbomScreen.kt` |  |
-| sbom | `GET /api/v1/sbom/by-artifact/{artifact_id}` | `get_sbom_by_artifact` | missing | Security |  |  |
+| sbom | `GET /api/v1/sbom/by-artifact/{artifact_id}` | `get_sbom_by_artifact` | exists | Security | `app/src/main/java/com/artifactkeeper/android/ui/screens/security/ArtifactSecurityScreen.kt` |  |
 | sbom | `POST /api/v1/sbom/check-compliance` | `check_license_compliance` | missing | Security |  |  |
 | sbom | `GET /api/v1/sbom/cve/history/by-artifact/{artifact_id}` | `get_cve_history_by_artifact` | exists | Security | `app/src/main/java/com/artifactkeeper/android/ui/screens/security/SbomScreen.kt` |  |
 | sbom | `GET /api/v1/sbom/cve/history/by-cve/{cve_id}` | `get_cve_history_by_cve` | missing | Security |  |  |
@@ -257,7 +257,7 @@ SDK module: vendored `:sdk` regenerated from v1.2.1 (openapi-generator 7.21.0, k
 | security | `GET /api/v1/repositories/{key}/security` | `get_repo_security` | missing | Security |  |  |
 | security | `PUT /api/v1/repositories/{key}/security` | `update_repo_security` | missing | Security |  |  |
 | security | `GET /api/v1/repositories/{key}/security/scans` | `list_repo_scans` | missing | Security |  |  |
-| security | `GET /api/v1/security/artifacts/{artifact_id}/scans` | `list_artifact_scans` | missing | Security |  |  |
+| security | `GET /api/v1/security/artifacts/{artifact_id}/scans` | `list_artifact_scans` | exists | Security | `app/src/main/java/com/artifactkeeper/android/ui/screens/security/ArtifactSecurityScreen.kt` |  |
 | security | `GET /api/v1/security/configs` | `list_scan_configs` | missing | Security |  |  |
 | security | `GET /api/v1/security/dashboard` | `get_dashboard` | missing | Security |  |  |
 | security | `DELETE /api/v1/security/findings/{id}/acknowledge` | `revoke_acknowledgment` | missing | Security |  |  |
@@ -269,8 +269,8 @@ SDK module: vendored `:sdk` regenerated from v1.2.1 (openapi-generator 7.21.0, k
 | security | `PUT /api/v1/security/policies/{id}` | `update_policy` | exists | Security | `app/src/main/java/com/artifactkeeper/android/ui/screens/security/PoliciesScreen.kt` |  |
 | security | `POST /api/v1/security/scan` | `trigger_scan` | exists | Security | `app/src/main/java/com/artifactkeeper/android/ui/screens/security/ScansScreen.kt` |  |
 | security | `GET /api/v1/security/scans` | `list_scans` | exists | Security | `app/src/main/java/com/artifactkeeper/android/ui/screens/security/ScansScreen.kt` |  |
-| security | `GET /api/v1/security/scans/{id}` | `get_scan` | missing | Security |  |  |
-| security | `GET /api/v1/security/scans/{id}/findings` | `list_findings` | exists | Security | `app/src/main/java/com/artifactkeeper/android/ui/screens/security/ScanFindingsScreen.kt` |  |
+| security | `GET /api/v1/security/scans/{id}` | `get_scan` | exists | Security | `app/src/main/java/com/artifactkeeper/android/ui/screens/security/ScanDetailScreen.kt` |  |
+| security | `GET /api/v1/security/scans/{id}/findings` | `list_findings` | exists | Security | `app/src/main/java/com/artifactkeeper/android/ui/screens/security/ScanDetailScreen.kt` |  |
 | security | `GET /api/v1/security/scores` | `get_all_scores` | missing | Security |  |  |
 | signing | `GET /api/v1/signing/keys` | `list_keys` | missing | Security |  |  |
 | signing | `POST /api/v1/signing/keys` | `create_key` | missing | Security |  |  |
