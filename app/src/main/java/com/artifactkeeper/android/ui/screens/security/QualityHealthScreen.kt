@@ -1,6 +1,7 @@
 package com.artifactkeeper.android.ui.screens.security
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -42,6 +43,8 @@ fun QualityHealthScreen(
     viewModel: QualityViewModel = hiltViewModel(),
 ) {
     val state by viewModel.healthState.collectAsState()
+    val repoHealthState by viewModel.repoHealthState.collectAsState()
+    var showRepoHealth by remember { mutableStateOf(false) }
 
     LaunchedEffect(Unit) { viewModel.loadHealth() }
 
@@ -83,7 +86,13 @@ fun QualityHealthScreen(
                             )
                         }
                         items(dashboard.repositories, key = { it.repositoryId }) { repo ->
-                            RepoHealthCard(repo)
+                            RepoHealthCard(
+                                repo = repo,
+                                onClick = {
+                                    viewModel.loadRepoHealth(repo.repositoryKey)
+                                    showRepoHealth = true
+                                },
+                            )
                         }
                     }
                 }
@@ -104,6 +113,70 @@ fun QualityHealthScreen(
             }
         }
     }
+
+    if (showRepoHealth) {
+        RepoHealthDetailDialog(
+            isLoading = repoHealthState.isLoading,
+            health = repoHealthState.health,
+            error = repoHealthState.error,
+            onDismiss = { showRepoHealth = false },
+        )
+    }
+}
+
+@Composable
+private fun RepoHealthDetailDialog(
+    isLoading: Boolean,
+    health: RepoHealthResponse?,
+    error: String?,
+    onDismiss: () -> Unit,
+) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(health?.repositoryKey ?: "Repository health") },
+        text = {
+            when {
+                isLoading -> {
+                    Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
+                        CircularProgressIndicator()
+                    }
+                }
+                error != null -> Text(text = error, color = MaterialTheme.colorScheme.error)
+                health != null -> {
+                    Column {
+                        Text(
+                            text = "Grade ${health.healthGrade} (${health.healthScore}/100)",
+                            style = MaterialTheme.typography.bodyMedium,
+                            fontWeight = FontWeight.Medium,
+                        )
+                        Text(
+                            text = "${health.artifactsPassing} passing, ${health.artifactsFailing} failing of ${health.artifactsEvaluated}",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                        val subs = buildList {
+                            health.avgQualityScore?.let { add("Quality $it") }
+                            health.avgSecurityScore?.let { add("Security $it") }
+                            health.avgLicenseScore?.let { add("License $it") }
+                            health.avgMetadataScore?.let { add("Metadata $it") }
+                        }
+                        if (subs.isNotEmpty()) {
+                            Spacer(modifier = Modifier.height(4.dp))
+                            Text(
+                                text = subs.joinToString("  -  "),
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            )
+                        }
+                    }
+                }
+                else -> Text("No data")
+            }
+        },
+        confirmButton = {
+            TextButton(onClick = onDismiss) { Text("Close") }
+        },
+    )
 }
 
 @Composable
@@ -168,9 +241,9 @@ private fun GradePill(label: String, count: Long, color: Color) {
 }
 
 @Composable
-private fun RepoHealthCard(repo: RepoHealthResponse) {
+private fun RepoHealthCard(repo: RepoHealthResponse, onClick: () -> Unit) {
     val color = gradeColor(repo.healthGrade)
-    Card(modifier = Modifier.fillMaxWidth()) {
+    Card(modifier = Modifier.fillMaxWidth().clickable(onClick = onClick)) {
         Row(
             modifier = Modifier.fillMaxWidth().padding(16.dp),
             horizontalArrangement = Arrangement.SpaceBetween,

@@ -8,6 +8,7 @@ import com.artifactkeeper.client.models.DashboardResponse
 import com.artifactkeeper.client.models.ScanConfigResponse
 import com.artifactkeeper.client.models.ScanResponse
 import com.artifactkeeper.client.models.ScoreResponse
+import com.artifactkeeper.client.models.SigningConfigResponse
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -24,6 +25,8 @@ data class RepoSecurityUiState(
     val config: ScanConfigResponse? = null,
     val score: ScoreResponse? = null,
     val scans: List<ScanResponse> = emptyList(),
+    val signingConfig: SigningConfigResponse? = null,
+    val repoPublicKey: String? = null,
     val isLoading: Boolean = false,
     val isRefreshing: Boolean = false,
     val error: String? = null,
@@ -70,11 +73,31 @@ class RepoSecurityViewModel @Inject constructor(
                     // No scans available for this repository.
                 }
 
+                // Signing config and repo public key are optional reads keyed by
+                // the repository's UUID (available from the config or score).
+                val repoUuid = security.config?.repositoryId ?: security.score?.repositoryId
+                var signingConfig: SigningConfigResponse? = null
+                var repoPublicKey: String? = null
+                if (repoUuid != null) {
+                    try {
+                        signingConfig = apiClient.signingApi.getRepoSigningConfig(repoUuid).unwrap()
+                        repoPublicKey = try {
+                            apiClient.signingApi.getRepoPublicKey(repoUuid).unwrap()
+                        } catch (_: Exception) {
+                            null
+                        }
+                    } catch (_: Exception) {
+                        // No signing config bound to this repository.
+                    }
+                }
+
                 _uiState.update {
                     it.copy(
                         config = security.config,
                         score = security.score,
                         scans = scans,
+                        signingConfig = signingConfig,
+                        repoPublicKey = repoPublicKey,
                         isLoading = false,
                         isRefreshing = false,
                     )

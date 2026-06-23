@@ -27,6 +27,16 @@ data class SigningUiState(
     val message: String? = null,
 )
 
+/**
+ * State for a single signing key's detail, including its public key PEM.
+ */
+data class KeyDetailUiState(
+    val key: SigningKeyPublic? = null,
+    val publicKeyPem: String? = null,
+    val isLoading: Boolean = false,
+    val error: String? = null,
+)
+
 @HiltViewModel
 class SigningViewModel @Inject constructor(
     private val apiClient: ApiClient,
@@ -34,6 +44,33 @@ class SigningViewModel @Inject constructor(
 
     private val _uiState = MutableStateFlow(SigningUiState())
     val uiState: StateFlow<SigningUiState> = _uiState.asStateFlow()
+
+    private val _keyDetailState = MutableStateFlow(KeyDetailUiState())
+    val keyDetailState: StateFlow<KeyDetailUiState> = _keyDetailState.asStateFlow()
+
+    /**
+     * Load a single key's metadata and its public key PEM for the detail view.
+     */
+    fun loadKeyDetail(keyId: UUID) {
+        viewModelScope.launch {
+            _keyDetailState.update { it.copy(isLoading = true, error = null) }
+            try {
+                val key = apiClient.signingApi.getKey(keyId).unwrap()
+                val pem = try {
+                    apiClient.signingApi.getPublicKey(keyId).unwrap()
+                } catch (_: Exception) {
+                    key.publicKeyPem
+                }
+                _keyDetailState.update {
+                    it.copy(key = key, publicKeyPem = pem, isLoading = false)
+                }
+            } catch (e: Exception) {
+                _keyDetailState.update {
+                    it.copy(error = e.message ?: "Failed to load key detail", isLoading = false)
+                }
+            }
+        }
+    }
 
     fun loadKeys(refresh: Boolean = false) {
         viewModelScope.launch {

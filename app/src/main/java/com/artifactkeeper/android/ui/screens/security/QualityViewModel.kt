@@ -6,10 +6,13 @@ import com.artifactkeeper.android.data.api.ApiClient
 import com.artifactkeeper.android.data.api.unwrap
 import com.artifactkeeper.client.models.ArtifactHealthResponse
 import com.artifactkeeper.client.models.CheckResponse
+import com.artifactkeeper.client.models.GateEvaluationResponse
 import com.artifactkeeper.client.models.GateResponse
 import com.artifactkeeper.client.models.HealthDashboardResponse
 import com.artifactkeeper.client.models.IssueResponse
+import com.artifactkeeper.client.models.RepoHealthResponse
 import com.artifactkeeper.client.models.SuppressIssueRequest
+import com.artifactkeeper.client.models.TriggerChecksRequest
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -39,8 +42,20 @@ data class QualityArtifactUiState(
     val health: ArtifactHealthResponse? = null,
     val checks: List<CheckResponse> = emptyList(),
     val issues: List<IssueResponse> = emptyList(),
+    val selectedCheck: CheckResponse? = null,
+    val gateEvaluation: GateEvaluationResponse? = null,
     val isLoading: Boolean = false,
     val isMutating: Boolean = false,
+    val error: String? = null,
+    val message: String? = null,
+)
+
+/**
+ * State for a single repository's health detail.
+ */
+data class RepoHealthDetailUiState(
+    val health: RepoHealthResponse? = null,
+    val isLoading: Boolean = false,
     val error: String? = null,
 )
 
@@ -54,6 +69,9 @@ class QualityViewModel @Inject constructor(
 
     private val _artifactState = MutableStateFlow(QualityArtifactUiState())
     val artifactState: StateFlow<QualityArtifactUiState> = _artifactState.asStateFlow()
+
+    private val _repoHealthState = MutableStateFlow(RepoHealthDetailUiState())
+    val repoHealthState: StateFlow<RepoHealthDetailUiState> = _repoHealthState.asStateFlow()
 
     /**
      * Load the portfolio health dashboard and the quality gates. Gates are
@@ -156,6 +174,80 @@ class QualityViewModel @Inject constructor(
             } catch (e: Exception) {
                 _artifactState.update {
                     it.copy(error = e.message ?: "Failed to unsuppress issue", isMutating = false)
+                }
+            }
+        }
+    }
+
+    /** Load the full detail for a single check. */
+    fun loadCheckDetail(checkId: UUID) {
+        viewModelScope.launch {
+            try {
+                val check = apiClient.qualityApi.getCheck(checkId).unwrap()
+                _artifactState.update { it.copy(selectedCheck = check) }
+            } catch (e: Exception) {
+                _artifactState.update { it.copy(error = e.message ?: "Failed to load check") }
+            }
+        }
+    }
+
+    fun clearSelectedCheck() {
+        _artifactState.update { it.copy(selectedCheck = null) }
+    }
+
+    /** Queue quality checks for an artifact, then reload its quality view. */
+    fun triggerChecks(artifactId: UUID) {
+        viewModelScope.launch {
+            _artifactState.update { it.copy(isMutating = true, error = null, message = null) }
+            try {
+                val result = apiClient.qualityApi.triggerChecks(
+                    TriggerChecksRequest(artifactId = artifactId),
+                ).unwrap()
+                _artifactState.update {
+                    it.copy(isMutating = false, message = "${result.message} (${result.artifactsQueued} queued)")
+                }
+                loadArtifactQuality(artifactId)
+            } catch (e: Exception) {
+                _artifactState.update {
+                    it.copy(error = e.message ?: "Failed to trigger checks", isMutating = false)
+                }
+            }
+        }
+    }
+
+    /** Evaluate the quality gates against an artifact and surface the result. */
+    fun evaluateGate(artifactId: UUID) {
+        viewModelScope.launch {
+            _artifactState.update { it.copy(isMutating = true, error = null) }
+            try {
+                val evaluation = apiClient.qualityApi.evaluateGate(artifactId).unwrap()
+                _artifactState.update { it.copy(gateEvaluation = evaluation, isMutating = false) }
+            } catch (e: Exception) {
+                _artifactState.update {
+                    it.copy(error = e.message ?: "Failed to evaluate gate", isMutating = false)
+                }
+            }
+        }
+    }
+
+    fun clearGateEvaluation() {
+        _artifactState.update { it.copy(gateEvaluation = null) }
+    }
+
+    fun clearArtifactMessage() {
+        _artifactState.update { it.copy(message = null, error = null) }
+    }
+
+    /** Load a single repository's health detail. */
+    fun loadRepoHealth(key: String) {
+        viewModelScope.launch {
+            _repoHealthState.update { it.copy(isLoading = true, error = null) }
+            try {
+                val health = apiClient.qualityApi.getRepoHealth(key).unwrap()
+                _repoHealthState.update { it.copy(health = health, isLoading = false) }
+            } catch (e: Exception) {
+                _repoHealthState.update {
+                    it.copy(error = e.message ?: "Failed to load repository health", isLoading = false)
                 }
             }
         }
