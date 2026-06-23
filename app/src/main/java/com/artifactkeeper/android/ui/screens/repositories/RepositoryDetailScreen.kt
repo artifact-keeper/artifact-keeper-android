@@ -14,6 +14,7 @@ import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material.icons.filled.Download
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Groups
+import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Shield
 import androidx.compose.material.icons.filled.Upload
@@ -46,6 +47,7 @@ import okhttp3.RequestBody.Companion.toRequestBody
 fun RepositoryDetailScreen(
     repoKey: String,
     onBack: () -> Unit,
+    onArtifactClick: (id: String) -> Unit = { },
     onArtifactSecurityClick: (id: String, name: String) -> Unit = { _, _ -> },
     onNavigateToMembers: ((repoKey: String, repoName: String, repoFormat: String) -> Unit)? = null,
 ) {
@@ -327,6 +329,7 @@ fun RepositoryDetailScreen(
                             ArtifactCard(
                                 artifact = artifact,
                                 repoKey = repoKey,
+                                onDetailsClick = { onArtifactClick(artifact.id.toString()) },
                                 onSecurityClick = { onArtifactSecurityClick(artifact.id.toString(), artifact.name) },
                             )
                         }
@@ -403,7 +406,12 @@ private fun RepoDetailHeader(repo: Repository) {
 }
 
 @Composable
-private fun ArtifactCard(artifact: Artifact, repoKey: String, onSecurityClick: () -> Unit) {
+private fun ArtifactCard(
+    artifact: Artifact,
+    repoKey: String,
+    onDetailsClick: () -> Unit,
+    onSecurityClick: () -> Unit,
+) {
     val context = LocalContext.current
 
     Card(
@@ -433,6 +441,17 @@ private fun ArtifactCard(artifact: Artifact, repoKey: String, onSecurityClick: (
                     AssistChip(
                         onClick = {},
                         label = { Text("v${artifact.version}", style = MaterialTheme.typography.labelSmall) },
+                    )
+                }
+                IconButton(
+                    onClick = onDetailsClick,
+                    modifier = Modifier.size(36.dp),
+                ) {
+                    Icon(
+                        Icons.Default.Info,
+                        contentDescription = "Artifact details",
+                        modifier = Modifier.size(20.dp),
+                        tint = MaterialTheme.colorScheme.primary,
                     )
                 }
                 IconButton(

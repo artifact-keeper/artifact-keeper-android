@@ -3,6 +3,8 @@ package com.artifactkeeper.android.data.api
 import com.artifactkeeper.android.BuildConfig
 import com.artifactkeeper.client.apis.AdminApi
 import com.artifactkeeper.client.apis.AnalyticsApi
+import com.artifactkeeper.client.apis.ArtifactLabelsApi
+import com.artifactkeeper.client.apis.ArtifactsApi
 import com.artifactkeeper.client.apis.AuthApi
 import com.artifactkeeper.client.apis.BuildsApi
 import com.artifactkeeper.client.apis.GroupsApi
@@ -47,6 +49,8 @@ object ApiClient {
 
     // --- Typed API services ---
     lateinit var authApi: AuthApi private set
+    lateinit var artifactsApi: ArtifactsApi private set
+    lateinit var artifactLabelsApi: ArtifactLabelsApi private set
     lateinit var reposApi: RepositoriesApi private set
     lateinit var packagesApi: PackagesApi private set
     lateinit var buildsApi: BuildsApi private set
@@ -109,6 +113,8 @@ object ApiClient {
         sdkClient = client
 
         authApi = client.createService(AuthApi::class.java)
+        artifactsApi = client.createService(ArtifactsApi::class.java)
+        artifactLabelsApi = client.createService(ArtifactLabelsApi::class.java)
         reposApi = client.createService(RepositoriesApi::class.java)
         packagesApi = client.createService(PackagesApi::class.java)
         buildsApi = client.createService(BuildsApi::class.java)
