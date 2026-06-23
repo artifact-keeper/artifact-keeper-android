@@ -45,6 +45,7 @@ import com.artifactkeeper.android.ui.screens.artifacts.ArtifactDetailScreen
 import com.artifactkeeper.android.ui.screens.artifacts.RepositoryBrowseScreen
 import com.artifactkeeper.android.ui.screens.builds.BuildDetailScreen
 import com.artifactkeeper.android.ui.screens.builds.BuildsScreen
+import com.artifactkeeper.android.ui.screens.integration.PeerDetailScreen
 import com.artifactkeeper.android.ui.screens.integration.PeersScreen
 import com.artifactkeeper.android.ui.screens.integration.ReplicationScreen
 import com.artifactkeeper.android.ui.screens.integration.PluginDetailScreen
@@ -590,6 +591,7 @@ private fun IntegrationSection(isCompact: Boolean, accountActions: @Composable (
     var selectedTab by remember { mutableIntStateOf(0) }
     var selectedWebhookId by remember { mutableStateOf<String?>(null) }
     var selectedPluginId by remember { mutableStateOf<String?>(null) }
+    var selectedPeerId by remember { mutableStateOf<String?>(null) }
 
     Column(modifier = Modifier.fillMaxSize()) {
         if (selectedWebhookId != null) {
@@ -601,6 +603,11 @@ private fun IntegrationSection(isCompact: Boolean, accountActions: @Composable (
             PluginDetailScreen(
                 pluginId = selectedPluginId!!,
                 onBack = { selectedPluginId = null },
+            )
+        } else if (selectedPeerId != null) {
+            PeerDetailScreen(
+                peerId = selectedPeerId!!,
+                onBack = { selectedPeerId = null },
             )
         } else {
             TopAppBar(
@@ -621,7 +628,7 @@ private fun IntegrationSection(isCompact: Boolean, accountActions: @Composable (
                 }
             }
             when (selectedTab) {
-                0 -> PeersScreen()
+                0 -> PeersScreen(onPeerClick = { selectedPeerId = it })
                 1 -> ReplicationScreen()
                 2 -> WebhooksScreen(onWebhookClick = { selectedWebhookId = it })
                 3 -> PluginsScreen(onPluginClick = { selectedPluginId = it })

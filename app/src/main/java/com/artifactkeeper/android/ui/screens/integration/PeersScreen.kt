@@ -3,6 +3,7 @@
 package com.artifactkeeper.android.ui.screens.integration
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -34,7 +35,7 @@ private val StatusOffline = Color(0xFFF5222D)
 private val StatusSyncing = Color(0xFFFA8C16)
 
 @Composable
-fun PeersScreen() {
+fun PeersScreen(onPeerClick: (String) -> Unit = {}) {
     var peers by remember { mutableStateOf<List<PeerInstance>>(emptyList()) }
     var isLoading by remember { mutableStateOf(true) }
     var isRefreshing by remember { mutableStateOf(false) }
@@ -119,6 +120,7 @@ fun PeersScreen() {
                         items(peers, key = { it.id }) { peer ->
                             PeerCard(
                                 peer = peer,
+                                onClick = { onPeerClick(peer.id.toString()) },
                                 onDelete = { peerToDelete = peer },
                             )
                         }
@@ -215,14 +217,14 @@ fun PeersScreen() {
 }
 
 @Composable
-private fun PeerCard(peer: PeerInstance, onDelete: () -> Unit) {
+private fun PeerCard(peer: PeerInstance, onClick: () -> Unit, onDelete: () -> Unit) {
     val statusColor = when (peer.status.lowercase()) {
         "online" -> StatusOnline
         "syncing" -> StatusSyncing
         else -> StatusOffline
     }
 
-    Card(modifier = Modifier.fillMaxWidth()) {
+    Card(modifier = Modifier.fillMaxWidth().clickable(onClick = onClick)) {
         Column(modifier = Modifier.padding(16.dp)) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
