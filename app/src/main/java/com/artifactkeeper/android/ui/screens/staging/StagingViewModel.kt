@@ -121,8 +121,9 @@ class StagingViewModel @Inject constructor(
         viewModelScope.launch {
             _uiState.update { it.copy(isLoadingHistory = true, historyError = null) }
             try {
-                val response = ApiClient.stagingApi.getPromotionHistory(repoKey).unwrap()
-                _uiState.update { it.copy(promotionHistory = response.items, isLoadingHistory = false) }
+                val response = ApiClient.promotionApi.promotionHistory(repoKey).unwrap()
+                val history = response.items.map { PromotionMapper.toLocalHistoryEntry(it) }
+                _uiState.update { it.copy(promotionHistory = history, isLoadingHistory = false) }
             } catch (e: Exception) {
                 _uiState.update {
                     it.copy(
@@ -190,7 +191,12 @@ class StagingViewModel @Inject constructor(
                     force = force,
                     comment = comment,
                 )
-                val response = ApiClient.stagingApi.promoteArtifact(repoKey, artifactId, request).unwrap()
+                val sdkResponse = ApiClient.promotionApi.promoteArtifact(
+                    key = repoKey,
+                    artifactId = java.util.UUID.fromString(artifactId),
+                    promoteArtifactRequest = PromotionMapper.toSdkPromoteRequest(request),
+                ).unwrap()
+                val response = PromotionMapper.toLocalPromotionResponse(sdkResponse, artifactId)
                 _uiState.update {
                     it.copy(
                         isPromoting = false,
@@ -233,7 +239,11 @@ class StagingViewModel @Inject constructor(
                     force = force,
                     comment = comment,
                 )
-                val response = ApiClient.stagingApi.promoteBulk(repoKey, request).unwrap()
+                val sdkResponse = ApiClient.promotionApi.promoteArtifactsBulk(
+                    key = repoKey,
+                    bulkPromoteRequest = PromotionMapper.toSdkBulkRequest(request),
+                ).unwrap()
+                val response = PromotionMapper.toLocalBulkResponse(sdkResponse)
                 _uiState.update {
                     it.copy(
                         isPromoting = false,
