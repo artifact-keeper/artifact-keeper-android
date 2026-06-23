@@ -16,6 +16,7 @@ import com.artifactkeeper.client.apis.PromotionApi
 import com.artifactkeeper.client.apis.QualityApi
 import com.artifactkeeper.client.apis.RepositoriesApi
 import com.artifactkeeper.client.apis.SbomApi
+import com.artifactkeeper.client.apis.SearchApi
 import com.artifactkeeper.client.apis.SecurityApi
 import com.artifactkeeper.client.apis.SigningApi
 import com.artifactkeeper.client.apis.SsoApi
@@ -67,6 +68,7 @@ object ApiClient {
     lateinit var healthApi: HealthApi private set
     lateinit var sbomApi: SbomApi private set
     lateinit var signingApi: SigningApi private set
+    lateinit var searchApi: SearchApi private set
     lateinit var ssoApi: SsoApi private set
     lateinit var promotionApi: PromotionApi private set
     lateinit var qualityApi: QualityApi private set
@@ -133,6 +135,7 @@ object ApiClient {
         healthApi = client.createService(HealthApi::class.java)
         sbomApi = client.createService(SbomApi::class.java)
         signingApi = client.createService(SigningApi::class.java)
+        searchApi = client.createService(SearchApi::class.java)
         ssoApi = client.createService(SsoApi::class.java)
         promotionApi = client.createService(PromotionApi::class.java)
         qualityApi = client.createService(QualityApi::class.java)
