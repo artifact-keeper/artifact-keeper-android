@@ -56,10 +56,10 @@ import com.artifactkeeper.android.ui.screens.repositories.RepositoriesScreen
 import com.artifactkeeper.android.ui.screens.repositories.RepositoryDetailScreen
 import com.artifactkeeper.android.ui.screens.repositories.VirtualMembersScreen
 import com.artifactkeeper.android.ui.screens.search.SearchScreen
+import com.artifactkeeper.android.ui.screens.security.ArtifactSecurityScreen
 import com.artifactkeeper.android.ui.screens.security.LicensePoliciesScreen
 import com.artifactkeeper.android.ui.screens.security.PoliciesScreen
-import com.artifactkeeper.android.ui.screens.security.SbomScreen
-import com.artifactkeeper.android.ui.screens.security.ScanFindingsScreen
+import com.artifactkeeper.android.ui.screens.security.ScanDetailScreen
 import com.artifactkeeper.android.ui.screens.security.ScansScreen
 import com.artifactkeeper.android.ui.screens.security.SecurityScreen
 import com.artifactkeeper.android.ui.screens.settings.SettingsScreen
@@ -595,7 +595,7 @@ private fun SecuritySection(isCompact: Boolean, accountActions: @Composable () -
 
     Column(modifier = Modifier.fillMaxSize()) {
         if (selectedScanId != null) {
-            ScanFindingsScreen(
+            ScanDetailScreen(
                 scanId = selectedScanId!!,
                 onBack = { selectedScanId = null },
             )
@@ -709,10 +709,16 @@ private fun NavGraphBuilder.detailRoutes(navController: NavHostController) {
     }
     composable("artifacts/{id}/security?name={name}") { backStackEntry ->
         val id = backStackEntry.arguments?.getString("id") ?: return@composable
-        val name = backStackEntry.arguments?.getString("name") ?: "Artifact"
-        SbomScreen(
+        ArtifactSecurityScreen(
             artifactId = id,
-            artifactName = name,
+            onScanClick = { scanId -> navController.navigate("artifacts/$id/security/scans/$scanId") },
+            onBack = { navController.popBackStack() },
+        )
+    }
+    composable("artifacts/{id}/security/scans/{scanId}") { backStackEntry ->
+        val scanId = backStackEntry.arguments?.getString("scanId") ?: return@composable
+        ScanDetailScreen(
+            scanId = scanId,
             onBack = { navController.popBackStack() },
         )
     }
