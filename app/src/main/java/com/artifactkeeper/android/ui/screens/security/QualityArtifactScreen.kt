@@ -1,6 +1,7 @@
 package com.artifactkeeper.android.ui.screens.security
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -38,12 +39,23 @@ fun QualityArtifactScreen(
     val state by viewModel.artifactState.collectAsState()
     val parsedId = remember(artifactId) { runCatching { UUID.fromString(artifactId) }.getOrNull() }
     var issueToSuppress by remember { mutableStateOf<IssueResponse?>(null) }
+    val snackbarHostState = remember { SnackbarHostState() }
 
     LaunchedEffect(parsedId) {
         parsedId?.let { viewModel.loadArtifactQuality(it) }
     }
 
-    Column(modifier = Modifier.fillMaxSize()) {
+    // Surface trigger/evaluate results without blanking the screen.
+    LaunchedEffect(state.message, state.error, state.health) {
+        val text = state.message ?: state.error?.takeIf { state.health != null }
+        if (text != null) {
+            snackbarHostState.showSnackbar(text)
+            viewModel.clearArtifactMessage()
+        }
+    }
+
+    Scaffold(snackbarHost = { SnackbarHost(snackbarHostState) }) { padding ->
+    Column(modifier = Modifier.fillMaxSize().padding(padding)) {
         TopAppBar(
             title = { Text("Artifact Quality") },
             navigationIcon = {
@@ -53,6 +65,16 @@ fun QualityArtifactScreen(
                         contentDescription = "Back",
                     )
                 }
+            },
+            actions = {
+                TextButton(
+                    onClick = { parsedId?.let { viewModel.triggerChecks(it) } },
+                    enabled = parsedId != null && !state.isMutating,
+                ) { Text("Run checks") }
+                TextButton(
+                    onClick = { parsedId?.let { viewModel.evaluateGate(it) } },
+                    enabled = parsedId != null && !state.isMutating,
+                ) { Text("Evaluate") }
             },
         )
 
@@ -70,7 +92,7 @@ fun QualityArtifactScreen(
                     CircularProgressIndicator()
                 }
             }
-            state.error != null -> {
+            state.error != null && state.health == null -> {
                 Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
                         Text(
@@ -92,6 +114,24 @@ fun QualityArtifactScreen(
                 ) {
                     state.health?.let { health ->
                         item { ArtifactHealthCard(health) }
+                    }
+
+                    state.gateEvaluation?.let { eval ->
+                        item { GateEvaluationCard(eval, onDismiss = { viewModel.clearGateEvaluation() }) }
+                    }
+
+                    if (state.checks.isNotEmpty()) {
+                        item {
+                            Text(
+                                text = "Checks (${state.checks.size})",
+                                style = MaterialTheme.typography.titleMedium,
+                                fontWeight = FontWeight.SemiBold,
+                                modifier = Modifier.padding(top = 4.dp),
+                            )
+                        }
+                        items(state.checks, key = { it.id }) { check ->
+                            QualityCheckCard(check, onClick = { viewModel.loadCheckDetail(check.id) })
+                        }
                     }
 
                     item {
@@ -124,6 +164,7 @@ fun QualityArtifactScreen(
             }
         }
     }
+    }
 
     issueToSuppress?.let { issue ->
         SuppressIssueDialog(
@@ -136,6 +177,126 @@ fun QualityArtifactScreen(
             onDismiss = { issueToSuppress = null },
         )
     }
+
+    state.selectedCheck?.let { check ->
+        CheckDetailDialog(check = check, onDismiss = { viewModel.clearSelectedCheck() })
+    }
+}
+
+@Composable
+private fun GateEvaluationCard(eval: com.artifactkeeper.client.models.GateEvaluationResponse, onDismiss: () -> Unit) {
+    val color = if (eval.passed) gradeColor("A") else gradeColor("F")
+    Card(modifier = Modifier.fillMaxWidth()) {
+        Column(modifier = Modifier.padding(16.dp)) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Text(
+                    text = "Gate: ${eval.gateName}",
+                    style = MaterialTheme.typography.titleSmall,
+                    fontWeight = FontWeight.Bold,
+                    modifier = Modifier.weight(1f),
+                )
+                Box(
+                    modifier = Modifier
+                        .clip(RoundedCornerShape(12.dp))
+                        .background(color.copy(alpha = 0.15f))
+                        .padding(horizontal = 10.dp, vertical = 4.dp),
+                ) {
+                    Text(
+                        text = if (eval.passed) "Passed" else "Failed",
+                        style = MaterialTheme.typography.labelSmall,
+                        fontWeight = FontWeight.SemiBold,
+                        color = color,
+                    )
+                }
+            }
+            Spacer(modifier = Modifier.height(4.dp))
+            Text(
+                text = "Action: ${eval.action.replaceFirstChar { it.uppercase() }}  -  Health ${eval.healthGrade} (${eval.healthScore})",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+            eval.violations.forEach { v ->
+                Spacer(modifier = Modifier.height(4.dp))
+                Text(
+                    text = "${v.rule}: ${v.message} (expected ${v.expected}, actual ${v.actual})",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.error,
+                )
+            }
+            Spacer(modifier = Modifier.height(4.dp))
+            TextButton(onClick = onDismiss) { Text("Dismiss") }
+        }
+    }
+}
+
+@Composable
+private fun QualityCheckCard(check: com.artifactkeeper.client.models.CheckResponse, onClick: () -> Unit) {
+    Card(modifier = Modifier.fillMaxWidth().clickable(onClick = onClick)) {
+        Row(
+            modifier = Modifier.fillMaxWidth().padding(16.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = check.checkType.replaceFirstChar { it.uppercase() },
+                    style = MaterialTheme.typography.titleSmall,
+                )
+                Text(
+                    text = "${check.issuesCount} issue${if (check.issuesCount != 1) "s" else ""}  -  ${check.status}",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
+            check.score?.let { s ->
+                Text(
+                    text = "$s",
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold,
+                    color = when {
+                        s >= 80 -> gradeColor("A")
+                        s >= 60 -> gradeColor("C")
+                        else -> gradeColor("F")
+                    },
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun CheckDetailDialog(check: com.artifactkeeper.client.models.CheckResponse, onDismiss: () -> Unit) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(check.checkType.replaceFirstChar { it.uppercase() } + " check") },
+        text = {
+            Column {
+                Text(
+                    text = "Status: ${check.status}",
+                    style = MaterialTheme.typography.bodyMedium,
+                )
+                check.score?.let {
+                    Text("Score: $it", style = MaterialTheme.typography.bodyMedium)
+                }
+                Text(
+                    text = "Issues: ${check.issuesCount} (C ${check.criticalCount} / H ${check.highCount} / M ${check.mediumCount} / L ${check.lowCount})",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+                check.errorMessage?.takeIf { it.isNotBlank() }?.let { err ->
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Text(text = err, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.error)
+                }
+            }
+        },
+        confirmButton = {
+            TextButton(onClick = onDismiss) { Text("Close") }
+        },
+    )
 }
 
 @Composable

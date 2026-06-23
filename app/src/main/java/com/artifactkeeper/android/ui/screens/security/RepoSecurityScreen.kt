@@ -13,7 +13,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.artifactkeeper.android.ui.theme.Critical
@@ -24,6 +26,7 @@ import com.artifactkeeper.client.models.DashboardResponse
 import com.artifactkeeper.client.models.ScanConfigResponse
 import com.artifactkeeper.client.models.ScanResponse
 import com.artifactkeeper.client.models.ScoreResponse
+import com.artifactkeeper.client.models.SigningConfigResponse
 
 private val GradeA = Color(0xFF52C41A)
 private val GradeB = Color(0xFF36CFC9)
@@ -120,6 +123,9 @@ fun RepoSecurityScreen(
                     }
                     state.config?.let { config ->
                         item { ScanConfigCard(config) }
+                    }
+                    state.signingConfig?.let { signing ->
+                        item { SigningConfigCard(signing, state.repoPublicKey) }
                     }
                     if (state.score == null && state.config == null) {
                         item {
@@ -306,6 +312,37 @@ private fun ScanConfigCard(config: ScanConfigResponse) {
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
+        }
+    }
+}
+
+@Composable
+private fun SigningConfigCard(config: SigningConfigResponse, publicKeyPem: String?) {
+    Card(modifier = Modifier.fillMaxWidth()) {
+        Column(modifier = Modifier.padding(16.dp)) {
+            Text(
+                text = "Signing",
+                style = MaterialTheme.typography.titleSmall,
+                fontWeight = FontWeight.Bold,
+            )
+            Spacer(modifier = Modifier.height(8.dp))
+            ConfigRow("Require signatures", config.requireSignatures)
+            ConfigRow("Sign packages", config.signPackages)
+            ConfigRow("Sign metadata", config.signMetadata)
+            publicKeyPem?.takeIf { it.isNotBlank() }?.let { pem ->
+                Spacer(modifier = Modifier.height(8.dp))
+                Text(
+                    text = "Repository public key",
+                    style = MaterialTheme.typography.labelMedium,
+                )
+                Text(
+                    text = pem,
+                    style = MaterialTheme.typography.bodySmall.copy(fontFamily = FontFamily.Monospace),
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    maxLines = 6,
+                    overflow = TextOverflow.Ellipsis,
+                )
+            }
         }
     }
 }

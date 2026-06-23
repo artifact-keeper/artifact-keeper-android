@@ -4,7 +4,9 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Key
@@ -14,6 +16,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -37,9 +40,11 @@ fun SigningKeysScreen(
     viewModel: SigningViewModel = hiltViewModel(),
 ) {
     val state by viewModel.uiState.collectAsState()
+    val keyDetailState by viewModel.keyDetailState.collectAsState()
     var showCreateDialog by remember { mutableStateOf(false) }
     var keyToRevoke by remember { mutableStateOf<SigningKeyPublic?>(null) }
     var keyToDelete by remember { mutableStateOf<SigningKeyPublic?>(null) }
+    var showKeyDetail by remember { mutableStateOf(false) }
     val snackbarHostState = remember { SnackbarHostState() }
 
     LaunchedEffect(Unit) { viewModel.loadKeys() }
@@ -100,6 +105,10 @@ fun SigningKeysScreen(
                             SigningKeyCard(
                                 key = key,
                                 isMutating = state.isMutating,
+                                onView = {
+                                    viewModel.loadKeyDetail(key.id)
+                                    showKeyDetail = true
+                                },
                                 onRotate = { viewModel.rotateKey(key.id) },
                                 onRevoke = { keyToRevoke = key },
                                 onDelete = { keyToDelete = key },
@@ -147,12 +156,24 @@ fun SigningKeysScreen(
             onDismiss = { keyToDelete = null },
         )
     }
+
+    if (showKeyDetail) {
+        KeyDetailDialog(
+            isLoading = keyDetailState.isLoading,
+            keyName = keyDetailState.key?.name,
+            fingerprint = keyDetailState.key?.fingerprint,
+            publicKeyPem = keyDetailState.publicKeyPem,
+            error = keyDetailState.error,
+            onDismiss = { showKeyDetail = false },
+        )
+    }
 }
 
 @Composable
 private fun SigningKeyCard(
     key: SigningKeyPublic,
     isMutating: Boolean,
+    onView: () -> Unit,
     onRotate: () -> Unit,
     onRevoke: () -> Unit,
     onDelete: () -> Unit,
@@ -203,6 +224,7 @@ private fun SigningKeyCard(
 
             Spacer(modifier = Modifier.height(8.dp))
             Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                TextButton(onClick = onView) { Text("View") }
                 TextButton(onClick = onRotate, enabled = !isMutating) { Text("Rotate") }
                 if (key.isActive) {
                     TextButton(onClick = onRevoke, enabled = !isMutating) { Text("Revoke") }
@@ -302,6 +324,65 @@ private fun ConfirmDialog(
         },
         dismissButton = {
             TextButton(onClick = onDismiss) { Text("Cancel") }
+        },
+    )
+}
+
+@Composable
+private fun KeyDetailDialog(
+    isLoading: Boolean,
+    keyName: String?,
+    fingerprint: String?,
+    publicKeyPem: String?,
+    error: String?,
+    onDismiss: () -> Unit,
+) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(keyName ?: "Signing key") },
+        text = {
+            when {
+                isLoading -> {
+                    Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
+                        CircularProgressIndicator()
+                    }
+                }
+                error != null -> {
+                    Text(text = error, color = MaterialTheme.colorScheme.error)
+                }
+                else -> {
+                    Column {
+                        fingerprint?.takeIf { it.isNotBlank() }?.let { fp ->
+                            Text(
+                                text = "Fingerprint",
+                                style = MaterialTheme.typography.labelMedium,
+                            )
+                            Text(
+                                text = fp,
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            )
+                            Spacer(modifier = Modifier.height(8.dp))
+                        }
+                        Text(
+                            text = "Public key",
+                            style = MaterialTheme.typography.labelMedium,
+                        )
+                        Text(
+                            text = publicKeyPem ?: "Unavailable",
+                            style = MaterialTheme.typography.bodySmall.copy(fontFamily = FontFamily.Monospace),
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .heightIn(max = 240.dp)
+                                .verticalScroll(rememberScrollState()),
+                        )
+                    }
+                }
+            }
+        },
+        confirmButton = {
+            TextButton(onClick = onDismiss) { Text("Close") }
         },
     )
 }
