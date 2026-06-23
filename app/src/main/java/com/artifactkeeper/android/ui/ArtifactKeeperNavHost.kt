@@ -67,6 +67,8 @@ import com.artifactkeeper.android.ui.screens.security.LicensePoliciesScreen
 import com.artifactkeeper.android.ui.screens.security.PoliciesScreen
 import com.artifactkeeper.android.ui.screens.security.RepoSecurityScreen
 import com.artifactkeeper.android.ui.screens.security.ScanDetailScreen
+import com.artifactkeeper.android.ui.screens.security.QualityArtifactScreen
+import com.artifactkeeper.android.ui.screens.security.QualityHealthScreen
 import com.artifactkeeper.android.ui.screens.security.ScansScreen
 import com.artifactkeeper.android.ui.screens.security.SigningKeysScreen
 import com.artifactkeeper.android.ui.screens.security.SecurityScreen
@@ -597,7 +599,7 @@ private fun IntegrationSection(isCompact: Boolean, accountActions: @Composable (
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun SecuritySection(isCompact: Boolean, accountActions: @Composable () -> Unit) {
-    val subTabs = listOf("Dashboard", "Scans", "Dep-Track", "Policies", "Licenses", "Signing")
+    val subTabs = listOf("Dashboard", "Scans", "Dep-Track", "Policies", "Licenses", "Signing", "Quality")
     var selectedTab by remember { mutableIntStateOf(0) }
     var selectedScanId by remember { mutableStateOf<String?>(null) }
     var selectedDtProject by remember { mutableStateOf<Pair<String, String>?>(null) }
@@ -641,6 +643,7 @@ private fun SecuritySection(isCompact: Boolean, accountActions: @Composable () -
                 3 -> PoliciesScreen()
                 4 -> LicensePoliciesScreen()
                 5 -> SigningKeysScreen()
+                6 -> QualityHealthScreen()
             }
         }
     }
@@ -760,6 +763,14 @@ private fun NavGraphBuilder.detailRoutes(navController: NavHostController) {
             artifactId = id,
             onScanClick = { scanId -> navController.navigate("artifacts/$id/security/scans/$scanId") },
             onViewCves = { navController.navigate("artifacts/$id/cves") },
+            onViewQuality = { navController.navigate("artifacts/$id/quality") },
+            onBack = { navController.popBackStack() },
+        )
+    }
+    composable("artifacts/{id}/quality") { backStackEntry ->
+        val id = backStackEntry.arguments?.getString("id") ?: return@composable
+        QualityArtifactScreen(
+            artifactId = id,
             onBack = { navController.popBackStack() },
         )
     }
