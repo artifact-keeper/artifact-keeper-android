@@ -58,6 +58,8 @@ import com.artifactkeeper.android.ui.screens.repositories.RepositoryDetailScreen
 import com.artifactkeeper.android.ui.screens.repositories.VirtualMembersScreen
 import com.artifactkeeper.android.ui.screens.search.SearchScreen
 import com.artifactkeeper.android.ui.screens.security.ArtifactSecurityScreen
+import com.artifactkeeper.android.ui.screens.security.CveDetailScreen
+import com.artifactkeeper.android.ui.screens.security.CveTrackingScreen
 import com.artifactkeeper.android.ui.screens.security.DependencyTrackScreen
 import com.artifactkeeper.android.ui.screens.security.DtProjectDetailScreen
 import com.artifactkeeper.android.ui.screens.security.LicensePoliciesScreen
@@ -733,6 +735,7 @@ private fun NavGraphBuilder.detailRoutes(navController: NavHostController) {
         ArtifactSecurityScreen(
             artifactId = id,
             onScanClick = { scanId -> navController.navigate("artifacts/$id/security/scans/$scanId") },
+            onViewCves = { navController.navigate("artifacts/$id/cves") },
             onBack = { navController.popBackStack() },
         )
     }
@@ -740,6 +743,25 @@ private fun NavGraphBuilder.detailRoutes(navController: NavHostController) {
         val scanId = backStackEntry.arguments?.getString("scanId") ?: return@composable
         ScanDetailScreen(
             scanId = scanId,
+            onBack = { navController.popBackStack() },
+        )
+    }
+    composable("artifacts/{id}/cves") { backStackEntry ->
+        val id = backStackEntry.arguments?.getString("id") ?: return@composable
+        CveTrackingScreen(
+            artifactId = id,
+            onCveClick = { artifactId, cveId ->
+                navController.navigate("artifacts/$artifactId/cves/$cveId")
+            },
+            onBack = { navController.popBackStack() },
+        )
+    }
+    composable("artifacts/{id}/cves/{cveId}") { backStackEntry ->
+        val id = backStackEntry.arguments?.getString("id") ?: return@composable
+        val cveId = backStackEntry.arguments?.getString("cveId") ?: return@composable
+        CveDetailScreen(
+            artifactId = id,
+            cveId = cveId,
             onBack = { navController.popBackStack() },
         )
     }

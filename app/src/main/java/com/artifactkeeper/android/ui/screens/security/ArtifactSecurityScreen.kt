@@ -50,6 +50,7 @@ fun ArtifactSecurityScreen(
     artifactId: String,
     onScanClick: (String) -> Unit,
     onBack: () -> Unit,
+    onViewCves: () -> Unit = {},
     viewModel: ArtifactSecurityViewModel = hiltViewModel(),
 ) {
     val state by viewModel.uiState.collectAsState()
@@ -68,6 +69,11 @@ fun ArtifactSecurityScreen(
                         imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                         contentDescription = "Back",
                     )
+                }
+            },
+            actions = {
+                TextButton(onClick = onViewCves) {
+                    Text("CVEs")
                 }
             },
         )
