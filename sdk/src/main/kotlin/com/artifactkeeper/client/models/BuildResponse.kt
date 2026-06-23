@@ -8,9 +8,17 @@
 
 @file:Suppress(
     "ArrayInDataClass",
+    "DuplicatedCode",
     "EnumEntryName",
     "RemoveRedundantQualifierName",
-    "UnusedImport"
+    "RemoveRedundantCallsOfConversionMethods",
+    "REDUNDANT_CALL_OF_CONVERSION_METHOD",
+    "RedundantUnitReturnType",
+    "RemoveEmptyClassBody",
+    "UnnecessaryVariable",
+    "UnusedImport",
+    "UnnecessaryVariable",
+    "unused"
 )
 
 package com.artifactkeeper.client.models
@@ -77,7 +85,7 @@ data class BuildResponse (
     val finishedAt: java.time.OffsetDateTime? = null,
 
     @Contextual @SerialName(value = "metadata")
-    val metadata: kotlinx.serialization.json.JsonElement? = null,
+    val metadata: kotlin.Any? = null,
 
     @SerialName(value = "modules")
     val modules: kotlin.collections.List<BuildModule>? = null,

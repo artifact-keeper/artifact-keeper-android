@@ -8,9 +8,17 @@
 
 @file:Suppress(
     "ArrayInDataClass",
+    "DuplicatedCode",
     "EnumEntryName",
     "RemoveRedundantQualifierName",
-    "UnusedImport"
+    "RemoveRedundantCallsOfConversionMethods",
+    "REDUNDANT_CALL_OF_CONVERSION_METHOD",
+    "RedundantUnitReturnType",
+    "RemoveEmptyClassBody",
+    "UnnecessaryVariable",
+    "UnusedImport",
+    "UnnecessaryVariable",
+    "unused"
 )
 
 package com.artifactkeeper.client.models
@@ -23,30 +31,60 @@ import kotlinx.serialization.Contextual
 /**
  * 
  *
- * @param key
- * @param description
- * @param isPublic
- * @param name
- * @param quotaBytes
+ * @param allowAnonymousAccess Alias for `is_public`. When set to true, anonymous users can download artifacts without authentication. Useful for remote (pull-through cache) repositories that proxy public upstream registries. Write operations (upload, delete) still require authentication regardless of this setting. If both `is_public` and `allow_anonymous_access` are provided, `allow_anonymous_access` takes precedence.
+ * @param description 
+ * @param indexUpstreamUrl Update the Cargo index upstream URL (stored in `repository_config`). When provided, upserts the `index_upstream_url` key for this repository.
+ * @param isPublic 
+ * @param key 
+ * @param name 
+ * @param promotionOnly When provided, enables/disables the `promotion_only` policy for this repository (admin-only). When omitted, the flag is left unchanged.
+ * @param quarantineDurationMinutes Quarantine hold duration in minutes for this repository. Stored in `repository_config` under `quarantine_duration_minutes`.
+ * @param quarantineEnabled Enable or disable quarantine period for this repository. When enabled, newly uploaded artifacts are held until scanned. Stored in `repository_config` under `quarantine_enabled`.
+ * @param quotaBytes 
+ * @param releaseRepositoryKey Link this staging repository to a release (local) repository. Promotions from this staging repo will default to the linked release repo, and promotions to any other repo will be rejected. Pass an empty string to remove the link. Stored in `repository_config` under `release_repository_id`.
  */
 @Serializable
 
 data class UpdateRepositoryRequest (
 
-    @SerialName(value = "key")
-    val key: kotlin.String? = null,
+    /* Alias for `is_public`. When set to true, anonymous users can download artifacts without authentication. Useful for remote (pull-through cache) repositories that proxy public upstream registries. Write operations (upload, delete) still require authentication regardless of this setting. If both `is_public` and `allow_anonymous_access` are provided, `allow_anonymous_access` takes precedence. */
+    @SerialName(value = "allow_anonymous_access")
+    val allowAnonymousAccess: kotlin.Boolean? = null,
 
     @SerialName(value = "description")
     val description: kotlin.String? = null,
 
+    /* Update the Cargo index upstream URL (stored in `repository_config`). When provided, upserts the `index_upstream_url` key for this repository. */
+    @SerialName(value = "index_upstream_url")
+    val indexUpstreamUrl: kotlin.String? = null,
+
     @SerialName(value = "is_public")
     val isPublic: kotlin.Boolean? = null,
+
+    @SerialName(value = "key")
+    val key: kotlin.String? = null,
 
     @SerialName(value = "name")
     val name: kotlin.String? = null,
 
+    /* When provided, enables/disables the `promotion_only` policy for this repository (admin-only). When omitted, the flag is left unchanged. */
+    @SerialName(value = "promotion_only")
+    val promotionOnly: kotlin.Boolean? = null,
+
+    /* Quarantine hold duration in minutes for this repository. Stored in `repository_config` under `quarantine_duration_minutes`. */
+    @SerialName(value = "quarantine_duration_minutes")
+    val quarantineDurationMinutes: kotlin.Long? = null,
+
+    /* Enable or disable quarantine period for this repository. When enabled, newly uploaded artifacts are held until scanned. Stored in `repository_config` under `quarantine_enabled`. */
+    @SerialName(value = "quarantine_enabled")
+    val quarantineEnabled: kotlin.Boolean? = null,
+
     @SerialName(value = "quota_bytes")
-    val quotaBytes: kotlin.Long? = null
+    val quotaBytes: kotlin.Long? = null,
+
+    /* Link this staging repository to a release (local) repository. Promotions from this staging repo will default to the linked release repo, and promotions to any other repo will be rejected. Pass an empty string to remove the link. Stored in `repository_config` under `release_repository_id`. */
+    @SerialName(value = "release_repository_key")
+    val releaseRepositoryKey: kotlin.String? = null
 
 ) {
 

@@ -45,7 +45,7 @@ class VirtualMembersViewModel @Inject constructor(
                 val response = ApiClient.reposApi.listVirtualMembers(repoKey).unwrap()
                 _uiState.update {
                     it.copy(
-                        members = response.items.sortedBy { member -> member.priority },
+                        members = response.members.sortedBy { member -> member.priority },
                         isLoading = false,
                     )
                 }
@@ -133,7 +133,7 @@ class VirtualMembersViewModel @Inject constructor(
                 val response = ApiClient.reposApi.updateVirtualMembers(currentRepoKey, request).unwrap()
                 _uiState.update {
                     it.copy(
-                        members = response.items.sortedBy { member -> member.priority },
+                        members = response.members.sortedBy { member -> member.priority },
                         isSaving = false,
                         successMessage = "Order saved",
                     )

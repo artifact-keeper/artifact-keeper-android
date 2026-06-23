@@ -8,9 +8,17 @@
 
 @file:Suppress(
     "ArrayInDataClass",
+    "DuplicatedCode",
     "EnumEntryName",
     "RemoveRedundantQualifierName",
-    "UnusedImport"
+    "RemoveRedundantCallsOfConversionMethods",
+    "REDUNDANT_CALL_OF_CONVERSION_METHOD",
+    "RedundantUnitReturnType",
+    "RemoveEmptyClassBody",
+    "UnnecessaryVariable",
+    "UnusedImport",
+    "UnnecessaryVariable",
+    "unused"
 )
 
 package com.artifactkeeper.client.models
@@ -26,6 +34,7 @@ import kotlinx.serialization.Contextual
  * @param auditLogsDeleted 
  * @param backupsDeleted 
  * @param peersMarkedOffline 
+ * @param staleUploadsDeleted 
  */
 @Serializable
 
@@ -38,7 +47,10 @@ data class CleanupResponse (
     val backupsDeleted: kotlin.Long,
 
     @SerialName(value = "peers_marked_offline")
-    val peersMarkedOffline: kotlin.Long
+    val peersMarkedOffline: kotlin.Long,
+
+    @SerialName(value = "stale_uploads_deleted")
+    val staleUploadsDeleted: kotlin.Long
 
 ) {
 

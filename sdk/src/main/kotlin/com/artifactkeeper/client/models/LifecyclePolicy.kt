@@ -8,9 +8,17 @@
 
 @file:Suppress(
     "ArrayInDataClass",
+    "DuplicatedCode",
     "EnumEntryName",
     "RemoveRedundantQualifierName",
-    "UnusedImport"
+    "RemoveRedundantCallsOfConversionMethods",
+    "REDUNDANT_CALL_OF_CONVERSION_METHOD",
+    "RedundantUnitReturnType",
+    "RemoveEmptyClassBody",
+    "UnnecessaryVariable",
+    "UnusedImport",
+    "UnnecessaryVariable",
+    "unused"
 )
 
 package com.artifactkeeper.client.models
@@ -31,6 +39,7 @@ import kotlinx.serialization.Contextual
  * @param policyType 
  * @param priority 
  * @param updatedAt 
+ * @param cronSchedule 
  * @param description 
  * @param lastRunAt 
  * @param lastRunItemsRemoved 
@@ -41,7 +50,7 @@ import kotlinx.serialization.Contextual
 data class LifecyclePolicy (
 
     @Contextual @SerialName(value = "config")
-    val config: kotlinx.serialization.json.JsonElement,
+    val config: kotlin.Any,
 
     @Contextual @SerialName(value = "created_at")
     val createdAt: java.time.OffsetDateTime,
@@ -63,6 +72,9 @@ data class LifecyclePolicy (
 
     @Contextual @SerialName(value = "updated_at")
     val updatedAt: java.time.OffsetDateTime,
+
+    @SerialName(value = "cron_schedule")
+    val cronSchedule: kotlin.String? = null,
 
     @SerialName(value = "description")
     val description: kotlin.String? = null,

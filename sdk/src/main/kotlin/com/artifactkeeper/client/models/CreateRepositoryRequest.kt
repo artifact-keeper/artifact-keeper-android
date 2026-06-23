@@ -8,13 +8,22 @@
 
 @file:Suppress(
     "ArrayInDataClass",
+    "DuplicatedCode",
     "EnumEntryName",
     "RemoveRedundantQualifierName",
-    "UnusedImport"
+    "RemoveRedundantCallsOfConversionMethods",
+    "REDUNDANT_CALL_OF_CONVERSION_METHOD",
+    "RedundantUnitReturnType",
+    "RemoveEmptyClassBody",
+    "UnnecessaryVariable",
+    "UnusedImport",
+    "UnnecessaryVariable",
+    "unused"
 )
 
 package com.artifactkeeper.client.models
 
+import com.artifactkeeper.client.models.CreateVirtualMemberInput
 
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.SerialName
@@ -27,10 +36,19 @@ import kotlinx.serialization.Contextual
  * @param key 
  * @param name 
  * @param repoType 
+ * @param allowAnonymousAccess Alias for `is_public`. When set to true, anonymous users can download artifacts from this repository without authentication. Useful for remote (pull-through cache) repositories that proxy public upstream registries. If both `is_public` and `allow_anonymous_access` are provided, `allow_anonymous_access` takes precedence.
  * @param description 
+ * @param formatKey Custom format key for WASM plugin format handlers (e.g. \"rpm-custom\").
+ * @param indexUpstreamUrl Separate index host for Cargo registries that split index and download across two hosts (e.g. crates.io uses `https://index.crates.io` for the sparse index but `https://crates.io` for tarball downloads). Stored in `repository_config` under the key `index_upstream_url`.
  * @param isPublic 
+ * @param memberRepos Member repositories to add when creating a virtual repository. Each entry specifies a repository key and optional priority.
+ * @param promotionOnly When true, direct user uploads to this repository are rejected: artifacts must arrive via the promotion path. Admin-only to set. Defaults to false (no behavior change for existing repositories).
  * @param quotaBytes 
+ * @param storageBackend Override the default storage backend for this repository. When omitted, the server's configured default is used. Non-admin users may only use the default backend.
+ * @param upstreamAuthType Upstream auth type: \"basic\" or \"bearer\". Only valid for remote repos.
+ * @param upstreamPassword Password (basic) or token (bearer). Write-only, never returned in responses.
  * @param upstreamUrl 
+ * @param upstreamUsername Username for basic auth.
  */
 @Serializable
 
@@ -48,17 +66,53 @@ data class CreateRepositoryRequest (
     @SerialName(value = "repo_type")
     val repoType: kotlin.String,
 
+    /* Alias for `is_public`. When set to true, anonymous users can download artifacts from this repository without authentication. Useful for remote (pull-through cache) repositories that proxy public upstream registries. If both `is_public` and `allow_anonymous_access` are provided, `allow_anonymous_access` takes precedence. */
+    @SerialName(value = "allow_anonymous_access")
+    val allowAnonymousAccess: kotlin.Boolean? = null,
+
     @SerialName(value = "description")
     val description: kotlin.String? = null,
+
+    /* Custom format key for WASM plugin format handlers (e.g. \"rpm-custom\"). */
+    @SerialName(value = "format_key")
+    val formatKey: kotlin.String? = null,
+
+    /* Separate index host for Cargo registries that split index and download across two hosts (e.g. crates.io uses `https://index.crates.io` for the sparse index but `https://crates.io` for tarball downloads). Stored in `repository_config` under the key `index_upstream_url`. */
+    @SerialName(value = "index_upstream_url")
+    val indexUpstreamUrl: kotlin.String? = null,
 
     @SerialName(value = "is_public")
     val isPublic: kotlin.Boolean? = null,
 
+    /* Member repositories to add when creating a virtual repository. Each entry specifies a repository key and optional priority. */
+    @SerialName(value = "member_repos")
+    val memberRepos: kotlin.collections.List<CreateVirtualMemberInput>? = null,
+
+    /* When true, direct user uploads to this repository are rejected: artifacts must arrive via the promotion path. Admin-only to set. Defaults to false (no behavior change for existing repositories). */
+    @SerialName(value = "promotion_only")
+    val promotionOnly: kotlin.Boolean? = null,
+
     @SerialName(value = "quota_bytes")
     val quotaBytes: kotlin.Long? = null,
 
+    /* Override the default storage backend for this repository. When omitted, the server's configured default is used. Non-admin users may only use the default backend. */
+    @SerialName(value = "storage_backend")
+    val storageBackend: kotlin.String? = null,
+
+    /* Upstream auth type: \"basic\" or \"bearer\". Only valid for remote repos. */
+    @SerialName(value = "upstream_auth_type")
+    val upstreamAuthType: kotlin.String? = null,
+
+    /* Password (basic) or token (bearer). Write-only, never returned in responses. */
+    @SerialName(value = "upstream_password")
+    val upstreamPassword: kotlin.String? = null,
+
     @SerialName(value = "upstream_url")
-    val upstreamUrl: kotlin.String? = null
+    val upstreamUrl: kotlin.String? = null,
+
+    /* Username for basic auth. */
+    @SerialName(value = "upstream_username")
+    val upstreamUsername: kotlin.String? = null
 
 ) {
 

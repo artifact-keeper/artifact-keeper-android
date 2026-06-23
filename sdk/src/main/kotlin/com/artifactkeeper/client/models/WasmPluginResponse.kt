@@ -8,9 +8,17 @@
 
 @file:Suppress(
     "ArrayInDataClass",
+    "DuplicatedCode",
     "EnumEntryName",
     "RemoveRedundantQualifierName",
-    "UnusedImport"
+    "RemoveRedundantCallsOfConversionMethods",
+    "REDUNDANT_CALL_OF_CONVERSION_METHOD",
+    "RedundantUnitReturnType",
+    "RemoveEmptyClassBody",
+    "UnnecessaryVariable",
+    "UnusedImport",
+    "UnnecessaryVariable",
+    "unused"
 )
 
 package com.artifactkeeper.client.models
@@ -47,7 +55,7 @@ import kotlinx.serialization.Contextual
 data class WasmPluginResponse (
 
     @Contextual @SerialName(value = "capabilities")
-    val capabilities: kotlinx.serialization.json.JsonElement,
+    val capabilities: kotlin.Any,
 
     @SerialName(value = "display_name")
     val displayName: kotlin.String,
@@ -65,7 +73,7 @@ data class WasmPluginResponse (
     val pluginType: kotlin.String,
 
     @Contextual @SerialName(value = "resource_limits")
-    val resourceLimits: kotlinx.serialization.json.JsonElement,
+    val resourceLimits: kotlin.Any,
 
     @SerialName(value = "source_type")
     val sourceType: kotlin.String,

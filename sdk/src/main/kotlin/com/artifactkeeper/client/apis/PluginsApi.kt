@@ -125,10 +125,10 @@ interface PluginsApi {
      *
      * @param id Plugin ID
      * @param limit  (optional)
-     * @return [kotlin.collections.List<kotlinx.serialization.json.JsonElement>]
+     * @return [kotlin.collections.List<kotlin.Any>]
      */
     @GET("api/v1/plugins/{id}/events")
-    suspend fun getPluginEvents(@Path("id") id: java.util.UUID, @Query("limit") limit: kotlin.Long? = null): Response<kotlin.collections.List<kotlinx.serialization.json.JsonElement>>
+    suspend fun getPluginEvents(@Path("id") id: java.util.UUID, @Query("limit") limit: kotlin.Long? = null): Response<kotlin.collections.List<kotlin.Any>>
 
     /**
      * POST api/v1/plugins/install/git

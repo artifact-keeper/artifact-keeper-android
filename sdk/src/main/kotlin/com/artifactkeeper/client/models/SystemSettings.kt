@@ -8,9 +8,17 @@
 
 @file:Suppress(
     "ArrayInDataClass",
+    "DuplicatedCode",
     "EnumEntryName",
     "RemoveRedundantQualifierName",
-    "UnusedImport"
+    "RemoveRedundantCallsOfConversionMethods",
+    "REDUNDANT_CALL_OF_CONVERSION_METHOD",
+    "RedundantUnitReturnType",
+    "RemoveEmptyClassBody",
+    "UnnecessaryVariable",
+    "UnusedImport",
+    "UnnecessaryVariable",
+    "unused"
 )
 
 package com.artifactkeeper.client.models
@@ -29,6 +37,8 @@ import kotlinx.serialization.Contextual
  * @param edgeStaleThresholdMinutes 
  * @param maxUploadSizeBytes 
  * @param retentionDays 
+ * @param storageBackend 
+ * @param storagePath 
  */
 @Serializable
 
@@ -50,7 +60,13 @@ data class SystemSettings (
     val maxUploadSizeBytes: kotlin.Long,
 
     @SerialName(value = "retention_days")
-    val retentionDays: kotlin.Int
+    val retentionDays: kotlin.Int,
+
+    @SerialName(value = "storage_backend")
+    val storageBackend: kotlin.String,
+
+    @SerialName(value = "storage_path")
+    val storagePath: kotlin.String
 
 ) {
 

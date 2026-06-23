@@ -8,9 +8,17 @@
 
 @file:Suppress(
     "ArrayInDataClass",
+    "DuplicatedCode",
     "EnumEntryName",
     "RemoveRedundantQualifierName",
-    "UnusedImport"
+    "RemoveRedundantCallsOfConversionMethods",
+    "REDUNDANT_CALL_OF_CONVERSION_METHOD",
+    "RedundantUnitReturnType",
+    "RemoveEmptyClassBody",
+    "UnnecessaryVariable",
+    "UnusedImport",
+    "UnnecessaryVariable",
+    "unused"
 )
 
 package com.artifactkeeper.client.models
@@ -30,6 +38,8 @@ import kotlinx.serialization.Contextual
  * @param attributeMapping 
  * @param autoCreateUsers 
  * @param isEnabled 
+ * @param mapGroupsToGroups When `true`, OIDC group claim values are reflected as Artifact Keeper group memberships (auto-creating groups on first sight). Defaults to `false` to preserve legacy role-mapping behavior.
+ * @param pkceEnabled Enable PKCE (S256) on the authorization request. Defaults to `true`.
  * @param scopes 
  */
 @Serializable
@@ -49,13 +59,21 @@ data class CreateOidcConfigRequest (
     val name: kotlin.String,
 
     @Contextual @SerialName(value = "attribute_mapping")
-    val attributeMapping: kotlinx.serialization.json.JsonElement? = null,
+    val attributeMapping: kotlin.Any? = null,
 
     @SerialName(value = "auto_create_users")
     val autoCreateUsers: kotlin.Boolean? = null,
 
     @SerialName(value = "is_enabled")
     val isEnabled: kotlin.Boolean? = null,
+
+    /* When `true`, OIDC group claim values are reflected as Artifact Keeper group memberships (auto-creating groups on first sight). Defaults to `false` to preserve legacy role-mapping behavior. */
+    @SerialName(value = "map_groups_to_groups")
+    val mapGroupsToGroups: kotlin.Boolean? = null,
+
+    /* Enable PKCE (S256) on the authorization request. Defaults to `true`. */
+    @SerialName(value = "pkce_enabled")
+    val pkceEnabled: kotlin.Boolean? = null,
 
     @SerialName(value = "scopes")
     val scopes: kotlin.collections.List<kotlin.String>? = null

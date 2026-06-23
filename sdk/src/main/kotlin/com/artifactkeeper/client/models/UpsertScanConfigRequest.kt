@@ -8,9 +8,17 @@
 
 @file:Suppress(
     "ArrayInDataClass",
+    "DuplicatedCode",
     "EnumEntryName",
     "RemoveRedundantQualifierName",
-    "UnusedImport"
+    "RemoveRedundantCallsOfConversionMethods",
+    "REDUNDANT_CALL_OF_CONVERSION_METHOD",
+    "RedundantUnitReturnType",
+    "RemoveEmptyClassBody",
+    "UnnecessaryVariable",
+    "UnusedImport",
+    "UnnecessaryVariable",
+    "unused"
 )
 
 package com.artifactkeeper.client.models
@@ -21,7 +29,7 @@ import kotlinx.serialization.SerialName
 import kotlinx.serialization.Contextual
 
 /**
- * Request to create or update a scan configuration.
+ * Request to create or update a scan configuration.  Every field is optional so a `PUT /repositories/{key}/security` can carry any subset of mutable columns; fields the client omits keep their existing value (or fall back to the documented default when the row does not exist yet). The previous shape required all of `scan_enabled`, `scan_on_upload`, `scan_on_proxy`, `block_on_policy_violation`, `severity_threshold` on every call. That was the #1374 bug class on a second entity: a partial PUT (for example just `{scan_enabled: true}`) either bounced as a 422 or, worse, silently reset every other column to its default so a follow-up GET showed the untouched fields stale. The upsert is now a read-modify-write that merges the patch over the existing row, so multiple fields persist together and an omitted field is never clobbered. See #1374 / B11.
  *
  * @param blockOnPolicyViolation 
  * @param scanEnabled 
@@ -34,19 +42,19 @@ import kotlinx.serialization.Contextual
 data class UpsertScanConfigRequest (
 
     @SerialName(value = "block_on_policy_violation")
-    val blockOnPolicyViolation: kotlin.Boolean,
+    val blockOnPolicyViolation: kotlin.Boolean? = null,
 
     @SerialName(value = "scan_enabled")
-    val scanEnabled: kotlin.Boolean,
+    val scanEnabled: kotlin.Boolean? = null,
 
     @SerialName(value = "scan_on_proxy")
-    val scanOnProxy: kotlin.Boolean,
+    val scanOnProxy: kotlin.Boolean? = null,
 
     @SerialName(value = "scan_on_upload")
-    val scanOnUpload: kotlin.Boolean,
+    val scanOnUpload: kotlin.Boolean? = null,
 
     @SerialName(value = "severity_threshold")
-    val severityThreshold: kotlin.String
+    val severityThreshold: kotlin.String? = null
 
 ) {
 

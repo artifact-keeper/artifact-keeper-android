@@ -258,14 +258,18 @@ interface SsoApi {
      * Responses:
      *  - 307: Redirect to frontend with exchange code
      *  - 400: Invalid callback parameters
+     *  - 401: IdP error or invalid/expired SSO state
      *
      * @param id OIDC provider configuration ID
-     * @param code 
-     * @param state 
+     * @param code  (optional)
+     * @param state  (optional)
+     * @param error  (optional)
+     * @param errorDescription  (optional)
+     * @param errorUri  (optional)
      * @return [Unit]
      */
     @GET("api/v1/auth/sso/oidc/{id}/callback")
-    suspend fun oidcCallback(@Path("id") id: java.util.UUID, @Query("code") code: kotlin.String, @Query("state") state: kotlin.String): Response<Unit>
+    suspend fun oidcCallback(@Path("id") id: java.util.UUID, @Query("code") code: kotlin.String? = null, @Query("state") state: kotlin.String? = null, @Query("error") error: kotlin.String? = null, @Query("error_description") errorDescription: kotlin.String? = null, @Query("error_uri") errorUri: kotlin.String? = null): Response<Unit>
 
     /**
      * GET api/v1/auth/sso/oidc/{id}/login

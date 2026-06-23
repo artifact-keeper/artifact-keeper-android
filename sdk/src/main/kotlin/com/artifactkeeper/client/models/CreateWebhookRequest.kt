@@ -8,13 +8,22 @@
 
 @file:Suppress(
     "ArrayInDataClass",
+    "DuplicatedCode",
     "EnumEntryName",
     "RemoveRedundantQualifierName",
-    "UnusedImport"
+    "RemoveRedundantCallsOfConversionMethods",
+    "REDUNDANT_CALL_OF_CONVERSION_METHOD",
+    "RedundantUnitReturnType",
+    "RemoveEmptyClassBody",
+    "UnnecessaryVariable",
+    "UnusedImport",
+    "UnnecessaryVariable",
+    "unused"
 )
 
 package com.artifactkeeper.client.models
 
+import com.artifactkeeper.client.models.PayloadTemplate
 
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.SerialName
@@ -26,9 +35,11 @@ import kotlinx.serialization.Contextual
  * @param events 
  * @param name 
  * @param url 
+ * @param eventSchemaVersion Pinned event payload version. Defaults to \"2026-04-01\" when omitted. Must match a value in `SUPPORTED_EVENT_VERSIONS` or the request is rejected with HTTP 422.
  * @param headers 
+ * @param payloadTemplate Payload layout for the target platform (default: generic).
  * @param repositoryId 
- * @param secret 
+ * @param secret Optional caller-supplied secret. When omitted the server generates a fresh `whsec_*` secret. Either way the raw value is returned in the 201 response body exactly once and is unrecoverable thereafter.
  */
 @Serializable
 
@@ -43,12 +54,21 @@ data class CreateWebhookRequest (
     @SerialName(value = "url")
     val url: kotlin.String,
 
+    /* Pinned event payload version. Defaults to \"2026-04-01\" when omitted. Must match a value in `SUPPORTED_EVENT_VERSIONS` or the request is rejected with HTTP 422. */
+    @SerialName(value = "event_schema_version")
+    val eventSchemaVersion: kotlin.String? = null,
+
     @Contextual @SerialName(value = "headers")
-    val headers: kotlinx.serialization.json.JsonElement? = null,
+    val headers: kotlin.Any? = null,
+
+    /* Payload layout for the target platform (default: generic). */
+    @Contextual @SerialName(value = "payload_template")
+    val payloadTemplate: PayloadTemplate? = null,
 
     @Contextual @SerialName(value = "repository_id")
     val repositoryId: java.util.UUID? = null,
 
+    /* Optional caller-supplied secret. When omitted the server generates a fresh `whsec_*` secret. Either way the raw value is returned in the 201 response body exactly once and is unrecoverable thereafter. */
     @SerialName(value = "secret")
     val secret: kotlin.String? = null
 

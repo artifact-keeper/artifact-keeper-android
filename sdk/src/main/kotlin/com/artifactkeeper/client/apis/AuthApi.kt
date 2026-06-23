@@ -41,9 +41,10 @@ interface AuthApi {
     /**
      * POST api/v1/auth/ticket
      * Create a short-lived, single-use download/stream ticket for the current user. The ticket can be passed as a &#x60;?ticket&#x3D;&#x60; query parameter on endpoints that cannot use &#x60;Authorization&#x60; headers (e.g. &#x60;&lt;a&gt;&#x60; downloads, &#x60;EventSource&#x60; SSE).
-     * 
+     * Security note: the resulting ticket value will appear in webserver access logs, browser history, and &#x60;Referer&#x60; headers if it is embedded in a URL. The mitigation is single-use consumption plus a 30-second TTL plus 256-bit entropy. Clients should consume the ticket immediately and never share or log the URL that contains it.
      * Responses:
      *  - 200: Download ticket created
+     *  - 400: Invalid resource_path
      *  - 401: Not authenticated
      *
      * @param createTicketRequest 
@@ -115,10 +116,11 @@ interface AuthApi {
      * Responses:
      *  - 200: Logout successful, auth cookies cleared
      *
+     * @param refreshTokenRequest  (optional)
      * @return [Unit]
      */
     @POST("api/v1/auth/logout")
-    suspend fun logout(): Response<Unit>
+    suspend fun logout(@Body refreshTokenRequest: RefreshTokenRequest? = null): Response<Unit>
 
     /**
      * POST api/v1/auth/refresh

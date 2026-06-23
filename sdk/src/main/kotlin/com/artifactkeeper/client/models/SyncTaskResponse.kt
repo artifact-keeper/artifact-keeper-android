@@ -8,9 +8,17 @@
 
 @file:Suppress(
     "ArrayInDataClass",
+    "DuplicatedCode",
     "EnumEntryName",
     "RemoveRedundantQualifierName",
-    "UnusedImport"
+    "RemoveRedundantCallsOfConversionMethods",
+    "REDUNDANT_CALL_OF_CONVERSION_METHOD",
+    "RedundantUnitReturnType",
+    "RemoveEmptyClassBody",
+    "UnnecessaryVariable",
+    "UnusedImport",
+    "UnnecessaryVariable",
+    "unused"
 )
 
 package com.artifactkeeper.client.models
@@ -25,9 +33,12 @@ import kotlinx.serialization.Contextual
  *
  * @param artifactId 
  * @param artifactSize 
+ * @param createdAt When the task was enqueued. Lets clients tell a freshly-scheduled task apart from a stale queue entry (used by the replication-schedule check). Serialized as whole-second RFC3339 with a `Z` suffix (e.g. `2026-05-29T12:34:56Z`) so simple ISO8601 parsers can consume it.
  * @param id 
  * @param priority 
+ * @param status Task status (e.g. \"pending\"). Listing currently returns pending tasks.
  * @param storageKey 
+ * @param startedAt When the worker began transferring, if it has started. Same format as `created_at`.
  */
 @Serializable
 
@@ -39,14 +50,26 @@ data class SyncTaskResponse (
     @SerialName(value = "artifact_size")
     val artifactSize: kotlin.Long,
 
+    /* When the task was enqueued. Lets clients tell a freshly-scheduled task apart from a stale queue entry (used by the replication-schedule check). Serialized as whole-second RFC3339 with a `Z` suffix (e.g. `2026-05-29T12:34:56Z`) so simple ISO8601 parsers can consume it. */
+    @Contextual @SerialName(value = "created_at")
+    val createdAt: java.time.OffsetDateTime,
+
     @Contextual @SerialName(value = "id")
     val id: java.util.UUID,
 
     @SerialName(value = "priority")
     val priority: kotlin.Int,
 
+    /* Task status (e.g. \"pending\"). Listing currently returns pending tasks. */
+    @SerialName(value = "status")
+    val status: kotlin.String,
+
     @SerialName(value = "storage_key")
-    val storageKey: kotlin.String
+    val storageKey: kotlin.String,
+
+    /* When the worker began transferring, if it has started. Same format as `created_at`. */
+    @Contextual @SerialName(value = "started_at")
+    val startedAt: java.time.OffsetDateTime? = null
 
 ) {
 

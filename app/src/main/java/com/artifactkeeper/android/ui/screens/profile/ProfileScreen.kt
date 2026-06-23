@@ -282,7 +282,14 @@ fun ProfileScreen(
                                                     user.id,
                                                     request,
                                                 ).unwrap()
-                                                onUserUpdated(updatedUser)
+                                                onUserUpdated(
+                                                    user.copy(
+                                                        email = updatedUser.email,
+                                                        username = updatedUser.username,
+                                                        isAdmin = updatedUser.isAdmin,
+                                                        displayName = updatedUser.displayName,
+                                                    )
+                                                )
                                                 isEditingProfile = false
                                                 profileSuccess = true
                                                 editDisplayName = updatedUser.displayName ?: ""

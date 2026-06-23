@@ -8,9 +8,17 @@
 
 @file:Suppress(
     "ArrayInDataClass",
+    "DuplicatedCode",
     "EnumEntryName",
     "RemoveRedundantQualifierName",
-    "UnusedImport"
+    "RemoveRedundantCallsOfConversionMethods",
+    "REDUNDANT_CALL_OF_CONVERSION_METHOD",
+    "RedundantUnitReturnType",
+    "RemoveEmptyClassBody",
+    "UnnecessaryVariable",
+    "UnusedImport",
+    "UnnecessaryVariable",
+    "unused"
 )
 
 package com.artifactkeeper.client.models
@@ -36,7 +44,7 @@ import kotlinx.serialization.Contextual
 data class MigrationReportRow (
 
     @Contextual @SerialName(value = "errors")
-    val errors: kotlinx.serialization.json.JsonElement,
+    val errors: kotlin.Any,
 
     @Contextual @SerialName(value = "generated_at")
     val generatedAt: java.time.OffsetDateTime,
@@ -48,13 +56,13 @@ data class MigrationReportRow (
     val jobId: java.util.UUID,
 
     @Contextual @SerialName(value = "recommendations")
-    val recommendations: kotlinx.serialization.json.JsonElement,
+    val recommendations: kotlin.Any,
 
     @Contextual @SerialName(value = "summary")
-    val summary: kotlinx.serialization.json.JsonElement,
+    val summary: kotlin.Any,
 
     @Contextual @SerialName(value = "warnings")
-    val warnings: kotlinx.serialization.json.JsonElement
+    val warnings: kotlin.Any
 
 ) {
 

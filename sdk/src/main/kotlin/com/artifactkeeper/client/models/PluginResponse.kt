@@ -8,9 +8,17 @@
 
 @file:Suppress(
     "ArrayInDataClass",
+    "DuplicatedCode",
     "EnumEntryName",
     "RemoveRedundantQualifierName",
-    "UnusedImport"
+    "RemoveRedundantCallsOfConversionMethods",
+    "REDUNDANT_CALL_OF_CONVERSION_METHOD",
+    "RedundantUnitReturnType",
+    "RemoveEmptyClassBody",
+    "UnnecessaryVariable",
+    "UnusedImport",
+    "UnnecessaryVariable",
+    "unused"
 )
 
 package com.artifactkeeper.client.models
@@ -41,7 +49,7 @@ import kotlinx.serialization.Contextual
 data class PluginResponse (
 
     @Contextual @SerialName(value = "config_schema")
-    val configSchema: kotlinx.serialization.json.JsonElement,
+    val configSchema: kotlin.Any,
 
     @SerialName(value = "display_name")
     val displayName: kotlin.String,

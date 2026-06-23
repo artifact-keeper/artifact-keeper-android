@@ -8,9 +8,17 @@
 
 @file:Suppress(
     "ArrayInDataClass",
+    "DuplicatedCode",
     "EnumEntryName",
     "RemoveRedundantQualifierName",
-    "UnusedImport"
+    "RemoveRedundantCallsOfConversionMethods",
+    "REDUNDANT_CALL_OF_CONVERSION_METHOD",
+    "RedundantUnitReturnType",
+    "RemoveEmptyClassBody",
+    "UnnecessaryVariable",
+    "UnusedImport",
+    "UnnecessaryVariable",
+    "unused"
 )
 
 package com.artifactkeeper.client.models
@@ -21,24 +29,20 @@ import kotlinx.serialization.SerialName
 import kotlinx.serialization.Contextual
 
 /**
- * 
+ * Response returned when a reindex is triggered.
  *
- * @param artifactsIndexed 
  * @param message 
- * @param repositoriesIndexed 
+ * @param status 
  */
 @Serializable
 
 data class ReindexResponse (
 
-    @SerialName(value = "artifacts_indexed")
-    val artifactsIndexed: kotlin.Long,
-
     @SerialName(value = "message")
     val message: kotlin.String,
 
-    @SerialName(value = "repositories_indexed")
-    val repositoriesIndexed: kotlin.Long
+    @SerialName(value = "status")
+    val status: kotlin.String
 
 ) {
 

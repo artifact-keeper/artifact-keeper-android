@@ -8,9 +8,17 @@
 
 @file:Suppress(
     "ArrayInDataClass",
+    "DuplicatedCode",
     "EnumEntryName",
     "RemoveRedundantQualifierName",
-    "UnusedImport"
+    "RemoveRedundantCallsOfConversionMethods",
+    "REDUNDANT_CALL_OF_CONVERSION_METHOD",
+    "RedundantUnitReturnType",
+    "RemoveEmptyClassBody",
+    "UnnecessaryVariable",
+    "UnusedImport",
+    "UnnecessaryVariable",
+    "unused"
 )
 
 package com.artifactkeeper.client.models
@@ -31,7 +39,9 @@ import kotlinx.serialization.Contextual
  * @param id 
  * @param isEnabled 
  * @param issuerUrl 
+ * @param mapGroupsToGroups 
  * @param name 
+ * @param pkceEnabled 
  * @param scopes 
  * @param updatedAt 
  */
@@ -40,7 +50,7 @@ import kotlinx.serialization.Contextual
 data class OidcConfigResponse (
 
     @Contextual @SerialName(value = "attribute_mapping")
-    val attributeMapping: kotlinx.serialization.json.JsonElement,
+    val attributeMapping: kotlin.Any,
 
     @SerialName(value = "auto_create_users")
     val autoCreateUsers: kotlin.Boolean,
@@ -63,8 +73,14 @@ data class OidcConfigResponse (
     @SerialName(value = "issuer_url")
     val issuerUrl: kotlin.String,
 
+    @SerialName(value = "map_groups_to_groups")
+    val mapGroupsToGroups: kotlin.Boolean,
+
     @SerialName(value = "name")
     val name: kotlin.String,
+
+    @SerialName(value = "pkce_enabled")
+    val pkceEnabled: kotlin.Boolean,
 
     @SerialName(value = "scopes")
     val scopes: kotlin.collections.List<kotlin.String>,

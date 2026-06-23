@@ -20,6 +20,7 @@ import androidx.compose.ui.unit.dp
 import com.artifactkeeper.android.data.api.ApiClient
 import com.artifactkeeper.android.data.api.unwrap
 import com.artifactkeeper.android.data.models.AssignRepoRequest
+import kotlinx.serialization.json.JsonObject
 import com.artifactkeeper.android.data.models.PeerConnection
 import com.artifactkeeper.android.data.models.PeerInstance
 import com.artifactkeeper.android.data.models.Repository
@@ -469,6 +470,7 @@ private fun ReplicationSubscriptionsTab(
                                                 peerId,
                                                 AssignRepoRequest(
                                                     repositoryId = repo.id,
+                                                    replicationFilter = JsonObject(emptyMap()),
                                                     replicationMode = "pull",
                                                 )
                                             ).unwrap()

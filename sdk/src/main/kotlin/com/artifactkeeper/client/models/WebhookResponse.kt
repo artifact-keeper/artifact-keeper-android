@@ -8,13 +8,22 @@
 
 @file:Suppress(
     "ArrayInDataClass",
+    "DuplicatedCode",
     "EnumEntryName",
     "RemoveRedundantQualifierName",
-    "UnusedImport"
+    "RemoveRedundantCallsOfConversionMethods",
+    "REDUNDANT_CALL_OF_CONVERSION_METHOD",
+    "RedundantUnitReturnType",
+    "RemoveEmptyClassBody",
+    "UnnecessaryVariable",
+    "UnusedImport",
+    "UnnecessaryVariable",
+    "unused"
 )
 
 package com.artifactkeeper.client.models
 
+import com.artifactkeeper.client.models.PayloadTemplate
 
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.SerialName
@@ -24,14 +33,18 @@ import kotlinx.serialization.Contextual
  * 
  *
  * @param createdAt 
+ * @param eventSchemaVersion Pinned event payload version (e.g. \"2026-04-01\"). Determines the shape of the rendered payload and the value sent in the `X-ArtifactKeeper-Event-Version` header.
  * @param events 
  * @param id 
  * @param isEnabled 
  * @param name 
+ * @param payloadTemplate 
  * @param url 
  * @param headers 
  * @param lastTriggeredAt 
  * @param repositoryId 
+ * @param secretDigest Short non-reversible identifier for the current signing secret (`whsec_...abcd`), suitable for display in operator UIs. The raw secret is never returned by GET or LIST.
+ * @param secretRotationActive True while a previous secret is still accepted by the retry path during a rotation overlap window.
  */
 @Serializable
 
@@ -39,6 +52,10 @@ data class WebhookResponse (
 
     @Contextual @SerialName(value = "created_at")
     val createdAt: java.time.OffsetDateTime,
+
+    /* Pinned event payload version (e.g. \"2026-04-01\"). Determines the shape of the rendered payload and the value sent in the `X-ArtifactKeeper-Event-Version` header. */
+    @SerialName(value = "event_schema_version")
+    val eventSchemaVersion: kotlin.String,
 
     @SerialName(value = "events")
     val events: kotlin.collections.List<kotlin.String>,
@@ -52,17 +69,28 @@ data class WebhookResponse (
     @SerialName(value = "name")
     val name: kotlin.String,
 
+    @Contextual @SerialName(value = "payload_template")
+    val payloadTemplate: PayloadTemplate,
+
     @SerialName(value = "url")
     val url: kotlin.String,
 
     @Contextual @SerialName(value = "headers")
-    val headers: kotlinx.serialization.json.JsonElement? = null,
+    val headers: kotlin.Any? = null,
 
     @Contextual @SerialName(value = "last_triggered_at")
     val lastTriggeredAt: java.time.OffsetDateTime? = null,
 
     @Contextual @SerialName(value = "repository_id")
-    val repositoryId: java.util.UUID? = null
+    val repositoryId: java.util.UUID? = null,
+
+    /* Short non-reversible identifier for the current signing secret (`whsec_...abcd`), suitable for display in operator UIs. The raw secret is never returned by GET or LIST. */
+    @SerialName(value = "secret_digest")
+    val secretDigest: kotlin.String? = null,
+
+    /* True while a previous secret is still accepted by the retry path during a rotation overlap window. */
+    @SerialName(value = "secret_rotation_active")
+    val secretRotationActive: kotlin.Boolean? = null
 
 ) {
 

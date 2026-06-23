@@ -8,9 +8,17 @@
 
 @file:Suppress(
     "ArrayInDataClass",
+    "DuplicatedCode",
     "EnumEntryName",
     "RemoveRedundantQualifierName",
-    "UnusedImport"
+    "RemoveRedundantCallsOfConversionMethods",
+    "REDUNDANT_CALL_OF_CONVERSION_METHOD",
+    "RedundantUnitReturnType",
+    "RemoveEmptyClassBody",
+    "UnnecessaryVariable",
+    "UnusedImport",
+    "UnnecessaryVariable",
+    "unused"
 )
 
 package com.artifactkeeper.client.models
@@ -24,14 +32,14 @@ import kotlinx.serialization.Contextual
 /**
  * 
  *
- * @param items 
+ * @param members 
  */
 @Serializable
 
 data class VirtualMembersListResponse (
 
-    @SerialName(value = "items")
-    val items: kotlin.collections.List<VirtualMemberResponse>
+    @SerialName(value = "members")
+    val members: kotlin.collections.List<VirtualMemberResponse>
 
 ) {
 

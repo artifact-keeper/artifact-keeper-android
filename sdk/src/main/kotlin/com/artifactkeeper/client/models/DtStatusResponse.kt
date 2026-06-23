@@ -8,9 +8,17 @@
 
 @file:Suppress(
     "ArrayInDataClass",
+    "DuplicatedCode",
     "EnumEntryName",
     "RemoveRedundantQualifierName",
-    "UnusedImport"
+    "RemoveRedundantCallsOfConversionMethods",
+    "REDUNDANT_CALL_OF_CONVERSION_METHOD",
+    "RedundantUnitReturnType",
+    "RemoveEmptyClassBody",
+    "UnnecessaryVariable",
+    "UnusedImport",
+    "UnnecessaryVariable",
+    "unused"
 )
 
 package com.artifactkeeper.client.models
@@ -21,10 +29,12 @@ import kotlinx.serialization.SerialName
 import kotlinx.serialization.Contextual
 
 /**
- * 
+ * Dependency-Track integration status surfaced to the frontend.  `healthy` is the boolean the existing UI already binds to. The new `error_status` and `error_message` fields let the UI distinguish a genuine \"DT replied OK with no findings\" state from \"DT is down or misconfigured\" (issue #963). When `healthy = true` both error fields are None; when `healthy = false`:   - `error_status = Some(401)`: auth failure (check API key)   - `error_status = Some(5xx)`: upstream is broken   - `error_status = None`:     transport failure (DT pod unreachable)   - `error_message`:           operator-facing failure description
  *
  * @param enabled 
  * @param healthy 
+ * @param errorMessage Human-readable explanation when `healthy = false`. Safe to surface in the UI; does not leak credentials.
+ * @param errorStatus Upstream HTTP status if the health probe got a response, else None. Only populated when `healthy = false`.
  * @param url 
  */
 @Serializable
@@ -36,6 +46,14 @@ data class DtStatusResponse (
 
     @SerialName(value = "healthy")
     val healthy: kotlin.Boolean,
+
+    /* Human-readable explanation when `healthy = false`. Safe to surface in the UI; does not leak credentials. */
+    @SerialName(value = "error_message")
+    val errorMessage: kotlin.String? = null,
+
+    /* Upstream HTTP status if the health probe got a response, else None. Only populated when `healthy = false`. */
+    @SerialName(value = "error_status")
+    val errorStatus: kotlin.Int? = null,
 
     @SerialName(value = "url")
     val url: kotlin.String? = null

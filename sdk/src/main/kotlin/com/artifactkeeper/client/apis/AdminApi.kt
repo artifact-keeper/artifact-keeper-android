@@ -13,10 +13,17 @@ import com.artifactkeeper.client.models.CleanupRequest
 import com.artifactkeeper.client.models.CleanupResponse
 import com.artifactkeeper.client.models.CreateBackupRequest
 import com.artifactkeeper.client.models.CreateInstanceRequest
+import com.artifactkeeper.client.models.OciBlobFootprintReport
 import com.artifactkeeper.client.models.ReindexResponse
 import com.artifactkeeper.client.models.RemoteInstanceResponse
+import com.artifactkeeper.client.models.RescanForInventoryRequest
+import com.artifactkeeper.client.models.RescanForInventoryResponse
 import com.artifactkeeper.client.models.RestoreRequest
 import com.artifactkeeper.client.models.RestoreResponse
+import com.artifactkeeper.client.models.SmtpTestRequest
+import com.artifactkeeper.client.models.SmtpTestResponse
+import com.artifactkeeper.client.models.StorageGcRequest
+import com.artifactkeeper.client.models.StorageGcResult
 import com.artifactkeeper.client.models.SystemSettings
 import com.artifactkeeper.client.models.SystemStats
 
@@ -28,6 +35,7 @@ interface AdminApi {
      * Responses:
      *  - 200: Backup cancelled
      *  - 404: Backup not found
+     *  - 409: Backup is not in a cancellable state
      *  - 500: Internal server error
      *
      * @param id Backup ID
@@ -177,6 +185,32 @@ interface AdminApi {
     suspend fun listInstances(): Response<kotlin.collections.List<RemoteInstanceResponse>>
 
     /**
+     * GET api/v1/admin/storage-backends
+     * List available storage backends.
+     * Returns the names of all configured and available storage backends. Requires admin privileges.
+     * Responses:
+     *  - 200: Available storage backends
+     *  - 403: Admin privileges required
+     *
+     * @return [kotlin.collections.List<kotlin.String>]
+     */
+    @GET("api/v1/admin/storage-backends")
+    suspend fun listStorageBackends(): Response<kotlin.collections.List<kotlin.String>>
+
+    /**
+     * GET api/v1/admin/storage-gc/oci-blob-report
+     * GET /api/v1/admin/storage-gc/oci-blob-report
+     * Read-only report of the OCI blob (&#x60;oci_blobs&#x60;) storage footprint (issue #1408). Performs no deletion and takes no locks — it only runs aggregate &#x60;SELECT&#x60;s. Surfaces logical vs dedup-aware physical bytes so operators can see how much un-reclaimed blob storage exists before any garbage-collection sweep is enabled.
+     * Responses:
+     *  - 200: OCI blob footprint report
+     *
+     * @param graceHours Grace window in hours used to compute the &#x60;aged_*&#x60; figures. Defaults to 24h; non-positive or out-of-range values are clamped server-side. (optional)
+     * @return [OciBlobFootprintReport]
+     */
+    @GET("api/v1/admin/storage-gc/oci-blob-report")
+    suspend fun ociBlobReport(@Query("grace_hours") graceHours: kotlin.Long? = null): Response<OciBlobFootprintReport>
+
+    /**
      * DELETE api/v1/instances/{id}/proxy/{path}
      * Proxy a DELETE request to a remote instance
      * 
@@ -235,6 +269,21 @@ interface AdminApi {
     suspend fun proxyPut(@Path("id") id: java.util.UUID, @Path("path") path: kotlin.String, @Body body: kotlin.String): Response<Unit>
 
     /**
+     * POST api/v1/admin/rescan-for-inventory
+     * 
+     * 
+     * Responses:
+     *  - 200: Rescans enqueued
+     *  - 403: Admin privileges required
+     *  - 503: Scanner service not configured
+     *
+     * @param rescanForInventoryRequest Optional; empty body uses defaults
+     * @return [RescanForInventoryResponse]
+     */
+    @POST("api/v1/admin/rescan-for-inventory")
+    suspend fun rescanForInventory(@Body rescanForInventoryRequest: RescanForInventoryRequest): Response<RescanForInventoryResponse>
+
+    /**
      * POST api/v1/admin/backups/{id}/restore
      * Restore from backup
      * 
@@ -265,8 +314,37 @@ interface AdminApi {
     suspend fun runCleanup(@Body cleanupRequest: CleanupRequest): Response<CleanupResponse>
 
     /**
+     * POST api/v1/admin/storage-gc
+     * POST /api/v1/admin/storage-gc
+     * 
+     * Responses:
+     *  - 200: GC result
+     *
+     * @param storageGcRequest 
+     * @return [StorageGcResult]
+     */
+    @POST("api/v1/admin/storage-gc")
+    suspend fun runStorageGc(@Body storageGcRequest: StorageGcRequest): Response<StorageGcResult>
+
+    /**
+     * POST api/v1/admin/smtp/test
+     * Send a test email to verify SMTP configuration.
+     * Requires admin privileges. Sends a short test message to the provided recipient address and reports whether delivery succeeded.
+     * Responses:
+     *  - 200: Test email sent successfully
+     *  - 400: Invalid request (e.g. bad email address)
+     *  - 403: Admin privileges required
+     *  - 503: SMTP not configured
+     *
+     * @param smtpTestRequest 
+     * @return [SmtpTestResponse]
+     */
+    @POST("api/v1/admin/smtp/test")
+    suspend fun sendTestEmail(@Body smtpTestRequest: SmtpTestRequest): Response<SmtpTestResponse>
+
+    /**
      * POST api/v1/admin/reindex
-     * Trigger a full Meilisearch reindex of all artifacts and repositories.
+     * Trigger a full OpenSearch reindex of all artifacts and repositories.
      * Requires admin privileges and Meilisearch to be configured.
      * Responses:
      *  - 200: Reindex completed
@@ -277,6 +355,19 @@ interface AdminApi {
      */
     @POST("api/v1/admin/reindex")
     suspend fun triggerReindex(): Response<ReindexResponse>
+
+    /**
+     * POST api/v1/admin/search/reindex
+     * Trigger a full reindex of all artifacts and repositories in OpenSearch.
+     * The reindex runs asynchronously in the background. The endpoint returns immediately with a confirmation that the task was started.
+     * Responses:
+     *  - 200: Reindex started in background
+     *  - 500: Search engine is not configured
+     *
+     * @return [ReindexResponse]
+     */
+    @POST("api/v1/admin/search/reindex")
+    suspend fun triggerSearchReindex(): Response<ReindexResponse>
 
     /**
      * POST api/v1/admin/settings

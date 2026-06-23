@@ -8,9 +8,17 @@
 
 @file:Suppress(
     "ArrayInDataClass",
+    "DuplicatedCode",
     "EnumEntryName",
     "RemoveRedundantQualifierName",
-    "UnusedImport"
+    "RemoveRedundantCallsOfConversionMethods",
+    "REDUNDANT_CALL_OF_CONVERSION_METHOD",
+    "RedundantUnitReturnType",
+    "RemoveEmptyClassBody",
+    "UnnecessaryVariable",
+    "UnusedImport",
+    "UnnecessaryVariable",
+    "unused"
 )
 
 package com.artifactkeeper.client.models
@@ -25,6 +33,7 @@ import kotlinx.serialization.Contextual
  *
  * @param artifactsQueued 
  * @param message 
+ * @param scanResultIds Scan result IDs created (one per active scanner) when triggering an artifact-level scan. Empty for repository-level scans (where the per-artifact rows are created inside the spawned worker) and for artifact-level triggers when no scanners are configured.  Clients (and the release-gate test in artifact-keeper-test#58) should poll `GET /api/v1/security/scans/{id}` against these IDs rather than guessing the most-recent scan from `GET /artifacts/{id}/scans`.
  */
 @Serializable
 
@@ -34,7 +43,11 @@ data class TriggerScanResponse (
     val artifactsQueued: kotlin.Int,
 
     @SerialName(value = "message")
-    val message: kotlin.String
+    val message: kotlin.String,
+
+    /* Scan result IDs created (one per active scanner) when triggering an artifact-level scan. Empty for repository-level scans (where the per-artifact rows are created inside the spawned worker) and for artifact-level triggers when no scanners are configured.  Clients (and the release-gate test in artifact-keeper-test#58) should poll `GET /api/v1/security/scans/{id}` against these IDs rather than guessing the most-recent scan from `GET /artifacts/{id}/scans`. */
+    @SerialName(value = "scan_result_ids")
+    val scanResultIds: kotlin.collections.List<@Contextual java.util.UUID>? = null
 
 ) {
 

@@ -8,9 +8,17 @@
 
 @file:Suppress(
     "ArrayInDataClass",
+    "DuplicatedCode",
     "EnumEntryName",
     "RemoveRedundantQualifierName",
-    "UnusedImport"
+    "RemoveRedundantCallsOfConversionMethods",
+    "REDUNDANT_CALL_OF_CONVERSION_METHOD",
+    "RedundantUnitReturnType",
+    "RemoveEmptyClassBody",
+    "UnnecessaryVariable",
+    "UnusedImport",
+    "UnnecessaryVariable",
+    "unused"
 )
 
 package com.artifactkeeper.client.models
@@ -51,7 +59,7 @@ data class DeliveryResponse (
     val id: java.util.UUID,
 
     @Contextual @SerialName(value = "payload")
-    val payload: kotlinx.serialization.json.JsonElement,
+    val payload: kotlin.Any,
 
     @SerialName(value = "success")
     val success: kotlin.Boolean,

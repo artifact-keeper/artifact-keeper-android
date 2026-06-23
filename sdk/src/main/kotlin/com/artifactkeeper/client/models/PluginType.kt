@@ -8,9 +8,17 @@
 
 @file:Suppress(
     "ArrayInDataClass",
+    "DuplicatedCode",
     "EnumEntryName",
     "RemoveRedundantQualifierName",
-    "UnusedImport"
+    "RemoveRedundantCallsOfConversionMethods",
+    "REDUNDANT_CALL_OF_CONVERSION_METHOD",
+    "RedundantUnitReturnType",
+    "RemoveEmptyClassBody",
+    "UnnecessaryVariable",
+    "UnusedImport",
+    "UnnecessaryVariable",
+    "unused"
 )
 
 package com.artifactkeeper.client.models
@@ -19,31 +27,32 @@ package com.artifactkeeper.client.models
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
+
 /**
  * Plugin type
  *
- * Values: FORMAT_HANDLER,STORAGE_BACKEND,AUTHENTICATION,AUTHORIZATION,WEBHOOK,CUSTOM
+ * Values: format_handler,storage_backend,authentication,authorization,webhook,custom
  */
 @Serializable
 enum class PluginType(val value: kotlin.String) {
 
     @SerialName(value = "format_handler")
-    FORMAT_HANDLER("format_handler"),
+    format_handler("format_handler"),
 
     @SerialName(value = "storage_backend")
-    STORAGE_BACKEND("storage_backend"),
+    storage_backend("storage_backend"),
 
     @SerialName(value = "authentication")
-    AUTHENTICATION("authentication"),
+    authentication("authentication"),
 
     @SerialName(value = "authorization")
-    AUTHORIZATION("authorization"),
+    authorization("authorization"),
 
     @SerialName(value = "webhook")
-    WEBHOOK("webhook"),
+    webhook("webhook"),
 
     @SerialName(value = "custom")
-    CUSTOM("custom");
+    custom("custom");
 
     /**
      * Override [toString()] to avoid using the enum variable name as the value, and instead use
@@ -65,10 +74,11 @@ enum class PluginType(val value: kotlin.String) {
          */
         fun decode(data: kotlin.Any?): PluginType? = data?.let {
           val normalizedData = "$it".lowercase()
-          values().firstOrNull { value ->
+          entries.firstOrNull { value ->
             it == value || normalizedData == "$value".lowercase()
           }
         }
     }
 }
+
 

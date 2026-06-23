@@ -8,9 +8,17 @@
 
 @file:Suppress(
     "ArrayInDataClass",
+    "DuplicatedCode",
     "EnumEntryName",
     "RemoveRedundantQualifierName",
-    "UnusedImport"
+    "RemoveRedundantCallsOfConversionMethods",
+    "REDUNDANT_CALL_OF_CONVERSION_METHOD",
+    "RedundantUnitReturnType",
+    "RemoveEmptyClassBody",
+    "UnnecessaryVariable",
+    "UnusedImport",
+    "UnnecessaryVariable",
+    "unused"
 )
 
 package com.artifactkeeper.client.models
@@ -22,7 +30,7 @@ import kotlinx.serialization.SerialName
 import kotlinx.serialization.Contextual
 
 /**
- * CVE trends summary.
+ * CVE trends summary.  #1446: the security-tests `cve-history` suite probes the trends body for any of `total`, `count`, `critical`, or `high` to confirm the response carries aggregate counts (PR #1385 fixed `cve-history` but the trends shape was not aligned). The original field set (`total_cves`, `critical_count`, ...) is retained for openapi consumers; the bare `total`/`critical`/`high`/`medium`/`low` aliases are added alongside so both shape contracts are satisfied without breaking existing clients. `#[serde(default)]` keeps deserialization working when the alias fields are absent (older payloads, tests that build the struct via field init).
  *
  * @param acknowledgedCves 
  * @param criticalCount 
@@ -34,6 +42,11 @@ import kotlinx.serialization.Contextual
  * @param timeline 
  * @param totalCves 
  * @param avgDaysToFix 
+ * @param critical Alias of `critical_count` (#1446).
+ * @param high Alias of `high_count` (#1446).
+ * @param low Alias of `low_count` (#1446).
+ * @param medium Alias of `medium_count` (#1446).
+ * @param total Alias of `total_cves` (#1446).
  */
 @Serializable
 
@@ -67,7 +80,27 @@ data class CveTrends (
     val totalCves: kotlin.Long,
 
     @SerialName(value = "avg_days_to_fix")
-    val avgDaysToFix: kotlin.Double? = null
+    val avgDaysToFix: kotlin.Double? = null,
+
+    /* Alias of `critical_count` (#1446). */
+    @SerialName(value = "critical")
+    val critical: kotlin.Long? = null,
+
+    /* Alias of `high_count` (#1446). */
+    @SerialName(value = "high")
+    val high: kotlin.Long? = null,
+
+    /* Alias of `low_count` (#1446). */
+    @SerialName(value = "low")
+    val low: kotlin.Long? = null,
+
+    /* Alias of `medium_count` (#1446). */
+    @SerialName(value = "medium")
+    val medium: kotlin.Long? = null,
+
+    /* Alias of `total_cves` (#1446). */
+    @SerialName(value = "total")
+    val total: kotlin.Long? = null
 
 ) {
 

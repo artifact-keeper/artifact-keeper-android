@@ -8,9 +8,17 @@
 
 @file:Suppress(
     "ArrayInDataClass",
+    "DuplicatedCode",
     "EnumEntryName",
     "RemoveRedundantQualifierName",
-    "UnusedImport"
+    "RemoveRedundantCallsOfConversionMethods",
+    "REDUNDANT_CALL_OF_CONVERSION_METHOD",
+    "RedundantUnitReturnType",
+    "RemoveEmptyClassBody",
+    "UnnecessaryVariable",
+    "UnusedImport",
+    "UnnecessaryVariable",
+    "unused"
 )
 
 package com.artifactkeeper.client.models
@@ -30,7 +38,7 @@ import kotlinx.serialization.Contextual
 data class UpdatePluginConfigRequest (
 
     @Contextual @SerialName(value = "config")
-    val config: kotlinx.serialization.json.JsonElement
+    val config: kotlin.Any
 
 ) {
 

@@ -8,9 +8,17 @@
 
 @file:Suppress(
     "ArrayInDataClass",
+    "DuplicatedCode",
     "EnumEntryName",
     "RemoveRedundantQualifierName",
-    "UnusedImport"
+    "RemoveRedundantCallsOfConversionMethods",
+    "REDUNDANT_CALL_OF_CONVERSION_METHOD",
+    "RedundantUnitReturnType",
+    "RemoveEmptyClassBody",
+    "UnnecessaryVariable",
+    "UnusedImport",
+    "UnnecessaryVariable",
+    "unused"
 )
 
 package com.artifactkeeper.client.models
@@ -19,22 +27,23 @@ package com.artifactkeeper.client.models
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
+
 /**
  * Plugin status
  *
- * Values: ACTIVE,DISABLED,ERROR
+ * Values: active,disabled,error
  */
 @Serializable
 enum class PluginStatus(val value: kotlin.String) {
 
     @SerialName(value = "active")
-    ACTIVE("active"),
+    active("active"),
 
     @SerialName(value = "disabled")
-    DISABLED("disabled"),
+    disabled("disabled"),
 
     @SerialName(value = "error")
-    ERROR("error");
+    error("error");
 
     /**
      * Override [toString()] to avoid using the enum variable name as the value, and instead use
@@ -56,10 +65,11 @@ enum class PluginStatus(val value: kotlin.String) {
          */
         fun decode(data: kotlin.Any?): PluginStatus? = data?.let {
           val normalizedData = "$it".lowercase()
-          values().firstOrNull { value ->
+          entries.firstOrNull { value ->
             it == value || normalizedData == "$value".lowercase()
           }
         }
     }
 }
+
 

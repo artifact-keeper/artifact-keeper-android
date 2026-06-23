@@ -8,9 +8,17 @@
 
 @file:Suppress(
     "ArrayInDataClass",
+    "DuplicatedCode",
     "EnumEntryName",
     "RemoveRedundantQualifierName",
-    "UnusedImport"
+    "RemoveRedundantCallsOfConversionMethods",
+    "REDUNDANT_CALL_OF_CONVERSION_METHOD",
+    "RedundantUnitReturnType",
+    "RemoveEmptyClassBody",
+    "UnnecessaryVariable",
+    "UnusedImport",
+    "UnnecessaryVariable",
+    "unused"
 )
 
 package com.artifactkeeper.client.models
@@ -19,19 +27,20 @@ package com.artifactkeeper.client.models
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
+
 /**
  * Format handler type enum.  Indicates whether the handler is compiled-in (core) or loaded from WASM.
  *
- * Values: CORE,WASM
+ * Values: Core,Wasm
  */
 @Serializable
 enum class FormatHandlerType(val value: kotlin.String) {
 
     @SerialName(value = "Core")
-    CORE("Core"),
+    Core("Core"),
 
     @SerialName(value = "Wasm")
-    WASM("Wasm");
+    Wasm("Wasm");
 
     /**
      * Override [toString()] to avoid using the enum variable name as the value, and instead use
@@ -53,10 +62,11 @@ enum class FormatHandlerType(val value: kotlin.String) {
          */
         fun decode(data: kotlin.Any?): FormatHandlerType? = data?.let {
           val normalizedData = "$it".lowercase()
-          values().firstOrNull { value ->
+          entries.firstOrNull { value ->
             it == value || normalizedData == "$value".lowercase()
           }
         }
     }
 }
+
 
