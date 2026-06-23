@@ -13,6 +13,7 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material.icons.filled.Download
 import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.Folder
 import androidx.compose.material.icons.filled.Groups
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Search
@@ -48,6 +49,7 @@ fun RepositoryDetailScreen(
     repoKey: String,
     onBack: () -> Unit,
     onArtifactClick: (id: String) -> Unit = { },
+    onBrowseFiles: (repoKey: String) -> Unit = { },
     onArtifactSecurityClick: (id: String, name: String) -> Unit = { _, _ -> },
     onNavigateToMembers: ((repoKey: String, repoName: String, repoFormat: String) -> Unit)? = null,
 ) {
@@ -155,6 +157,9 @@ fun RepositoryDetailScreen(
                 }
             },
             actions = {
+                IconButton(onClick = { onBrowseFiles(repoKey) }) {
+                    Icon(Icons.Default.Folder, contentDescription = "Browse files")
+                }
                 if (!isUploading) {
                     IconButton(onClick = { filePickerLauncher.launch("*/*") }) {
                         Icon(Icons.Default.Upload, contentDescription = "Upload Artifact")
