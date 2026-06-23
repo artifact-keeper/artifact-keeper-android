@@ -6,61 +6,61 @@ SDK module: vendored `:sdk` regenerated from v1.2.1 (openapi-generator 7.21.0, k
 
 ## Status legend
 
-- **exists**: an app screen or ViewModel calls this operation through the SDK (or, for staging, a local interface).
-- **stale**: the app calls a path/operation that no longer matches the 1.2.1 spec and needs migrating. The three staging promotion calls fall here; they move to `api/v1/promotion` in the Staging wave (see #82). Note: a path-only swap is not enough, the request and response bodies were reshaped in 1.2.1.
-- **missing**: in scope for mobile but not yet wired up in the app.
+- **exists**: an app screen or ViewModel calls this operation through the SDK and the call is reachable from a UI screen.
+- **stale**: the app calls a path/operation that no longer matches the 1.2.1 spec and needs migrating. No rows are stale now: the three promotion calls were migrated to `api/v1/promotion` in #85 and are live.
+- **missing**: in scope for mobile but not yet wired up in the app. The Notes column flags honest deferrals (chunked/raw uploads, gate authoring, signing-config write, advanced-search filters UI, SDK-duplicate or empty-body operations).
 - **N/A-on-mobile**: deliberately out of scope for the mobile client. The standard is narrow: ONLY raw identity-provider config (SSO/OIDC/LDAP/SAML create/update/delete/toggle/test under `api/v1/admin/sso`) and lifecycle policy authoring (create/update/delete under `api/v1/admin/lifecycle`). Everything else is in scope, including user and role management, group and permission management, settings reads, SSO login/exchange flows, lifecycle execute/preview, service accounts, plugins, email subscriptions, migration write operations, and chunked upload.
 
 ## Per-section summary
 
 | Section | exists | stale | missing | N/A-on-mobile | Total |
 |---------|-------:|------:|--------:|--------------:|------:|
-| Artifacts | 14 | 0 | 48 | 0 | 62 |
-| Staging | 0 | 3 | 30 | 0 | 33 |
-| Integration | 12 | 0 | 60 | 0 | 72 |
-| Security | 18 | 0 | 54 | 0 | 72 |
-| Operations | 2 | 0 | 21 | 0 | 23 |
+| Artifacts | 28 | 0 | 34 | 0 | 62 |
+| Staging | 3 | 0 | 30 | 0 | 33 |
+| Integration | 14 | 0 | 58 | 0 | 72 |
+| Security | 59 | 0 | 13 | 0 | 72 |
+| Operations | 4 | 0 | 19 | 0 | 23 |
 | Administration | 8 | 0 | 92 | 16 | 116 |
 | Cross-cutting | 8 | 0 | 4 | 0 | 12 |
-| **All** | **62** | **3** | **309** | **16** | **390** |
+| **All** | **124** | **0** | **250** | **16** | **390** |
 
 ## Artifacts
 
 | Tag | Method+Path | operationId | Status | Section | Target file | Notes |
 |-----|-------------|-------------|--------|---------|-------------|-------|
-| artifact-labels | `GET /api/v1/artifacts/{id}/labels` | `list_artifact_labels` | missing | Artifacts |  |  |
+| artifact-labels | `GET /api/v1/artifacts/{id}/labels` | `list_artifact_labels` | exists | Artifacts | `app/src/main/java/com/artifactkeeper/android/ui/screens/artifacts/ArtifactDetailScreen.kt` |  |
 | artifact-labels | `PUT /api/v1/artifacts/{id}/labels` | `set_artifact_labels` | missing | Artifacts |  |  |
-| artifact-labels | `DELETE /api/v1/artifacts/{id}/labels/{label_key}` | `delete_artifact_label` | missing | Artifacts |  |  |
-| artifact-labels | `POST /api/v1/artifacts/{id}/labels/{label_key}` | `add_artifact_label` | missing | Artifacts |  |  |
-| artifacts | `GET /api/v1/artifacts/{id}` | `get_artifact` | missing | Artifacts |  |  |
-| artifacts | `GET /api/v1/artifacts/{id}/metadata` | `get_artifact_metadata` | missing | Artifacts |  |  |
-| artifacts | `GET /api/v1/artifacts/{id}/stats` | `get_artifact_stats` | missing | Artifacts |  |  |
+| artifact-labels | `DELETE /api/v1/artifacts/{id}/labels/{label_key}` | `delete_artifact_label` | exists | Artifacts | `app/src/main/java/com/artifactkeeper/android/ui/screens/artifacts/ArtifactDetailScreen.kt` |  |
+| artifact-labels | `POST /api/v1/artifacts/{id}/labels/{label_key}` | `add_artifact_label` | exists | Artifacts | `app/src/main/java/com/artifactkeeper/android/ui/screens/artifacts/ArtifactDetailScreen.kt` |  |
+| artifacts | `GET /api/v1/artifacts/{id}` | `get_artifact` | exists | Artifacts | `app/src/main/java/com/artifactkeeper/android/ui/screens/artifacts/ArtifactDetailScreen.kt` |  |
+| artifacts | `GET /api/v1/artifacts/{id}/metadata` | `get_artifact_metadata` | exists | Artifacts | `app/src/main/java/com/artifactkeeper/android/ui/screens/artifacts/ArtifactDetailScreen.kt` |  |
+| artifacts | `GET /api/v1/artifacts/{id}/stats` | `get_artifact_stats` | exists | Artifacts | `app/src/main/java/com/artifactkeeper/android/ui/screens/artifacts/ArtifactDetailScreen.kt` |  |
 | builds | `GET /api/v1/builds` | `list_builds` | exists | Artifacts | `app/src/main/java/com/artifactkeeper/android/ui/screens/builds/BuildsScreen.kt` |  |
 | builds | `POST /api/v1/builds` | `create_build` | missing | Artifacts |  |  |
 | builds | `GET /api/v1/builds/diff` | `get_build_diff` | missing | Artifacts |  |  |
 | builds | `GET /api/v1/builds/{id}` | `get_build` | exists | Artifacts | `app/src/main/java/com/artifactkeeper/android/ui/screens/builds/BuildDetailScreen.kt` |  |
 | builds | `PUT /api/v1/builds/{id}` | `update_build` | missing | Artifacts |  |  |
 | builds | `POST /api/v1/builds/{id}/artifacts` | `add_build_artifacts` | missing | Artifacts |  |  |
-| packages | `GET /api/v1/packages` | `list_packages` | exists | Artifacts | `app/src/main/java/com/artifactkeeper/android/ui/screens/search/SearchScreen.kt` |  |
+| packages | `GET /api/v1/packages` | `list_packages` | exists | Artifacts | `app/src/main/java/com/artifactkeeper/android/ui/screens/packages/PackagesScreen.kt` |  |
 | packages | `GET /api/v1/packages/{id}` | `get_package` | exists | Artifacts | `app/src/main/java/com/artifactkeeper/android/ui/screens/packages/PackageDetailScreen.kt` |  |
 | packages | `GET /api/v1/packages/{id}/versions` | `get_package_versions` | exists | Artifacts | `app/src/main/java/com/artifactkeeper/android/ui/screens/packages/PackageDetailScreen.kt` |  |
-| repositories | `GET /api/v1/repositories` | `list_repositories` | exists | Artifacts | `app/src/main/java/com/artifactkeeper/android/ui/screens/settings/SettingsScreen.kt` |  |
+| repositories | `GET /api/v1/repositories` | `list_repositories` | exists | Artifacts | `app/src/main/java/com/artifactkeeper/android/ui/screens/repositories/RepositoriesScreen.kt` |  |
 | repositories | `POST /api/v1/repositories` | `create_repository` | exists | Artifacts | `app/src/main/java/com/artifactkeeper/android/ui/screens/repositories/CreateRepositoryScreen.kt` |  |
 | repositories | `DELETE /api/v1/repositories/{key}` | `delete_repository` | missing | Artifacts |  |  |
 | repositories | `GET /api/v1/repositories/{key}` | `get_repository` | exists | Artifacts | `app/src/main/java/com/artifactkeeper/android/ui/screens/repositories/RepositoryDetailScreen.kt` |  |
 | repositories | `PATCH /api/v1/repositories/{key}` | `update_repository` | exists | Artifacts | `app/src/main/java/com/artifactkeeper/android/ui/screens/repositories/RepositoryDetailScreen.kt` |  |
 | repositories | `GET /api/v1/repositories/{key}/artifacts` | `list_artifacts` | exists | Artifacts | `app/src/main/java/com/artifactkeeper/android/ui/screens/repositories/RepositoryDetailScreen.kt` |  |
-| repositories | `DELETE /api/v1/repositories/{key}/artifacts/{path}` | `delete_artifact` | missing | Artifacts |  |  |
-| repositories | `GET /api/v1/repositories/{key}/artifacts/{path}` | `get_repository_artifact_metadata` | missing | Artifacts |  |  |
-| repositories | `PUT /api/v1/repositories/{key}/artifacts/{path}` | `upload_artifact` | missing | Artifacts |  |  |
+| repositories | `DELETE /api/v1/repositories/{key}/artifacts/{path}` | `delete_artifact` | exists | Artifacts | `app/src/main/java/com/artifactkeeper/android/ui/screens/artifacts/RepositoryBrowseScreen.kt` |  |
+| repositories | `GET /api/v1/repositories/{key}/artifacts/{path}` | `get_repository_artifact_metadata` | exists | Artifacts | `app/src/main/java/com/artifactkeeper/android/ui/screens/artifacts/RepositoryBrowseScreen.kt` |  |
+| repositories | `PUT /api/v1/repositories/{key}/artifacts/{path}` | `upload_artifact` | missing | Artifacts |  | raw upload deferred |
 | repositories | `GET /api/v1/repositories/{key}/cache-ttl` | `get_cache_ttl` | missing | Artifacts |  |  |
 | repositories | `PUT /api/v1/repositories/{key}/cache-ttl` | `set_cache_ttl` | missing | Artifacts |  |  |
 | repositories | `POST /api/v1/repositories/{key}/cache/invalidate` | `invalidate_cache` | missing | Artifacts |  |  |
-| repositories | `GET /api/v1/repositories/{key}/download/{path}` | `download_artifact` | missing | Artifacts |  |  |
-| repositories | `GET /api/v1/repositories/{key}/members` | `list_virtual_members` | exists | Artifacts | `app/src/main/java/com/artifactkeeper/android/ui/screens/repositories/VirtualMembersViewModel.kt` |  |
-| repositories | `POST /api/v1/repositories/{key}/members` | `add_virtual_member` | exists | Artifacts | `app/src/main/java/com/artifactkeeper/android/ui/screens/repositories/VirtualMembersViewModel.kt` |  |
-| repositories | `PUT /api/v1/repositories/{key}/members` | `update_virtual_members` | exists | Artifacts | `app/src/main/java/com/artifactkeeper/android/ui/screens/repositories/VirtualMembersViewModel.kt` |  |
-| repositories | `DELETE /api/v1/repositories/{key}/members/{member_key}` | `remove_virtual_member` | exists | Artifacts | `app/src/main/java/com/artifactkeeper/android/ui/screens/repositories/VirtualMembersViewModel.kt` |  |
+| repositories | `GET /api/v1/repositories/{key}/download/{path}` | `download_artifact` | missing | Artifacts |  | raw download deferred |
+| repositories | `GET /api/v1/repositories/{key}/members` | `list_virtual_members` | exists | Artifacts | `app/src/main/java/com/artifactkeeper/android/ui/screens/repositories/VirtualMembersScreen.kt` |  |
+| repositories | `POST /api/v1/repositories/{key}/members` | `add_virtual_member` | exists | Artifacts | `app/src/main/java/com/artifactkeeper/android/ui/screens/repositories/VirtualMembersScreen.kt` |  |
+| repositories | `PUT /api/v1/repositories/{key}/members` | `update_virtual_members` | exists | Artifacts | `app/src/main/java/com/artifactkeeper/android/ui/screens/repositories/VirtualMembersScreen.kt` |  |
+| repositories | `DELETE /api/v1/repositories/{key}/members/{member_key}` | `remove_virtual_member` | exists | Artifacts | `app/src/main/java/com/artifactkeeper/android/ui/screens/repositories/VirtualMembersScreen.kt` |  |
 | repositories | `GET /api/v1/repositories/{key}/pypi-tracks` | `list_pypi_tracks` | missing | Artifacts |  |  |
 | repositories | `DELETE /api/v1/repositories/{key}/pypi-tracks/{project}` | `delete_pypi_track` | missing | Artifacts |  |  |
 | repositories | `PUT /api/v1/repositories/{key}/pypi-tracks/{project}` | `put_pypi_track` | missing | Artifacts |  |  |
@@ -69,8 +69,8 @@ SDK module: vendored `:sdk` regenerated from v1.2.1 (openapi-generator 7.21.0, k
 | repositories | `POST /api/v1/repositories/{key}/routing-rules` | `set_routing_rules` | missing | Artifacts |  |  |
 | repositories | `POST /api/v1/repositories/{key}/test-upstream` | `test_upstream` | missing | Artifacts |  |  |
 | repositories | `PUT /api/v1/repositories/{key}/upstream-auth` | `set_upstream_auth` | missing | Artifacts |  |  |
-| repositories | `GET /api/v1/tree` | `get_tree` | missing | Artifacts |  |  |
-| repositories | `GET /api/v1/tree/content` | `get_content` | missing | Artifacts |  |  |
+| repositories | `GET /api/v1/tree` | `get_tree` | exists | Artifacts | `app/src/main/java/com/artifactkeeper/android/ui/screens/artifacts/RepositoryBrowseScreen.kt` |  |
+| repositories | `GET /api/v1/tree/content` | `get_content` | missing | Artifacts |  | SDK returns Response<Unit>, no body to render; deferred |
 | repository-labels | `GET /api/v1/repositories/{key}/labels` | `list_repo_labels` | missing | Artifacts |  |  |
 | repository-labels | `PUT /api/v1/repositories/{key}/labels` | `set_repo_labels` | missing | Artifacts |  |  |
 | repository-labels | `DELETE /api/v1/repositories/{key}/labels/{label_key}` | `delete_repo_label` | missing | Artifacts |  |  |
@@ -79,17 +79,17 @@ SDK module: vendored `:sdk` regenerated from v1.2.1 (openapi-generator 7.21.0, k
 | repository_tokens | `POST /api/v1/repositories/{key}/tokens` | `create_repo_token` | missing | Artifacts |  |  |
 | repository_tokens | `DELETE /api/v1/repositories/{key}/tokens/{token_id}` | `revoke_repo_token` | missing | Artifacts |  |  |
 | repository_tokens | `GET /api/v1/repositories/{key}/tokens/{token_id}` | `get_repo_token` | missing | Artifacts |  |  |
-| search | `GET /api/v1/search/advanced` | `advanced_search` | missing | Artifacts |  |  |
-| search | `GET /api/v1/search/checksum` | `checksum_search` | missing | Artifacts |  |  |
-| search | `GET /api/v1/search/quick` | `quick_search` | missing | Artifacts |  |  |
-| search | `GET /api/v1/search/recent` | `recent` | missing | Artifacts |  |  |
-| search | `GET /api/v1/search/suggest` | `suggest` | missing | Artifacts |  |  |
-| search | `GET /api/v1/search/trending` | `trending` | missing | Artifacts |  |  |
-| uploads | `POST /api/v1/uploads` | `create_session` | missing | Artifacts |  |  |
-| uploads | `DELETE /api/v1/uploads/{session_id}` | `cancel` | missing | Artifacts |  |  |
-| uploads | `GET /api/v1/uploads/{session_id}` | `get_session_status` | missing | Artifacts |  |  |
-| uploads | `PATCH /api/v1/uploads/{session_id}` | `upload_chunk` | missing | Artifacts |  |  |
-| uploads | `PUT /api/v1/uploads/{session_id}/complete` | `complete` | missing | Artifacts |  |  |
+| search | `GET /api/v1/search/advanced` | `advanced_search` | missing | Artifacts |  | ViewModel method present but no screen invokes it; filters UI pending |
+| search | `GET /api/v1/search/checksum` | `checksum_search` | exists | Artifacts | `app/src/main/java/com/artifactkeeper/android/ui/screens/search/SearchScreen.kt` |  |
+| search | `GET /api/v1/search/quick` | `quick_search` | exists | Artifacts | `app/src/main/java/com/artifactkeeper/android/ui/screens/search/SearchScreen.kt` |  |
+| search | `GET /api/v1/search/recent` | `recent` | exists | Artifacts | `app/src/main/java/com/artifactkeeper/android/ui/screens/search/SearchScreen.kt` |  |
+| search | `GET /api/v1/search/suggest` | `suggest` | exists | Artifacts | `app/src/main/java/com/artifactkeeper/android/ui/screens/search/SearchScreen.kt` |  |
+| search | `GET /api/v1/search/trending` | `trending` | exists | Artifacts | `app/src/main/java/com/artifactkeeper/android/ui/screens/search/SearchScreen.kt` |  |
+| uploads | `POST /api/v1/uploads` | `create_session` | missing | Artifacts |  | chunked upload deferred |
+| uploads | `DELETE /api/v1/uploads/{session_id}` | `cancel` | missing | Artifacts |  | chunked upload deferred |
+| uploads | `GET /api/v1/uploads/{session_id}` | `get_session_status` | missing | Artifacts |  | chunked upload deferred |
+| uploads | `PATCH /api/v1/uploads/{session_id}` | `upload_chunk` | missing | Artifacts |  | chunked upload deferred |
+| uploads | `PUT /api/v1/uploads/{session_id}/complete` | `complete` | missing | Artifacts |  | chunked upload deferred |
 
 ## Staging
 
@@ -119,10 +119,10 @@ SDK module: vendored `:sdk` regenerated from v1.2.1 (openapi-generator 7.21.0, k
 | promotion | `GET /api/v1/promotion-rules/{id}` | `get_rule` | missing | Staging |  |  |
 | promotion | `PUT /api/v1/promotion-rules/{id}` | `update_rule` | missing | Staging |  |  |
 | promotion | `POST /api/v1/promotion-rules/{id}/evaluate` | `evaluate_rule` | missing | Staging |  |  |
-| promotion | `POST /api/v1/promotion/repositories/{key}/artifacts/{artifact_id}/promote` | `promote_artifact` | stale | Staging | `ui/screens/staging/StagingViewModel.kt` | app calls local StagingApi at api/v1/staging which is absent from 1.2.1; migrate to api/v1/promotion (Staging wave, see #82) |
+| promotion | `POST /api/v1/promotion/repositories/{key}/artifacts/{artifact_id}/promote` | `promote_artifact` | exists | Staging | `app/src/main/java/com/artifactkeeper/android/ui/screens/staging/PromotionDialog.kt` |  |
 | promotion | `POST /api/v1/promotion/repositories/{key}/artifacts/{artifact_id}/reject` | `reject_artifact` | missing | Staging |  |  |
-| promotion | `POST /api/v1/promotion/repositories/{key}/promote` | `promote_artifacts_bulk` | stale | Staging | `ui/screens/staging/StagingViewModel.kt` | app calls local StagingApi at api/v1/staging which is absent from 1.2.1; migrate to api/v1/promotion (Staging wave, see #82) |
-| promotion | `GET /api/v1/promotion/repositories/{key}/promotion-history` | `promotion_history` | stale | Staging | `ui/screens/staging/StagingViewModel.kt` | app calls local StagingApi at api/v1/staging which is absent from 1.2.1; migrate to api/v1/promotion (Staging wave, see #82) |
+| promotion | `POST /api/v1/promotion/repositories/{key}/promote` | `promote_artifacts_bulk` | exists | Staging | `app/src/main/java/com/artifactkeeper/android/ui/screens/staging/StagingListScreen.kt` |  |
+| promotion | `GET /api/v1/promotion/repositories/{key}/promotion-history` | `promotion_history` | exists | Staging | `app/src/main/java/com/artifactkeeper/android/ui/screens/staging/PromotionHistoryScreen.kt` |  |
 | promotion | `GET /api/v1/promotion/repositories/{key}/release-target` | `get_release_target` | missing | Staging |  |  |
 | promotion | `PUT /api/v1/promotion/repositories/{key}/release-target` | `set_release_target` | missing | Staging |  |  |
 | quarantine | `GET /api/v1/quarantine/{artifact_id}` | `get_quarantine_status` | missing | Staging |  |  |
@@ -154,8 +154,8 @@ SDK module: vendored `:sdk` regenerated from v1.2.1 (openapi-generator 7.21.0, k
 | migration | `GET /api/v1/migrations/{id}/stream` | `stream_migration_progress` | missing | Integration |  |  |
 | peer-instance-labels | `GET /api/v1/peers/{id}/labels` | `list_labels` | missing | Integration |  |  |
 | peer-instance-labels | `PUT /api/v1/peers/{id}/labels` | `set_labels` | missing | Integration |  |  |
-| peer-instance-labels | `DELETE /api/v1/peers/{id}/labels/{label_key}` | `delete_label` | missing | Integration |  |  |
-| peer-instance-labels | `POST /api/v1/peers/{id}/labels/{label_key}` | `add_label` | missing | Integration |  |  |
+| peer-instance-labels | `DELETE /api/v1/peers/{id}/labels/{label_key}` | `delete_label` | exists | Integration | `app/src/main/java/com/artifactkeeper/android/ui/screens/artifacts/ArtifactDetailScreen.kt` |  |
+| peer-instance-labels | `POST /api/v1/peers/{id}/labels/{label_key}` | `add_label` | exists | Integration | `app/src/main/java/com/artifactkeeper/android/ui/screens/artifacts/ArtifactDetailScreen.kt` |  |
 | peers | `GET /api/v1/peers` | `list_peers` | exists | Integration | `app/src/main/java/com/artifactkeeper/android/ui/screens/integration/ReplicationScreen.kt` |  |
 | peers | `POST /api/v1/peers` | `register_peer` | exists | Integration | `app/src/main/java/com/artifactkeeper/android/ui/screens/integration/PeersScreen.kt` |  |
 | peers | `POST /api/v1/peers/announce` | `announce_peer` | missing | Integration |  |  |
@@ -210,31 +210,31 @@ SDK module: vendored `:sdk` regenerated from v1.2.1 (openapi-generator 7.21.0, k
 
 | Tag | Method+Path | operationId | Status | Section | Target file | Notes |
 |-----|-------------|-------------|--------|---------|-------------|-------|
-| quality | `GET /api/v1/quality/checks` | `list_checks` | missing | Security |  |  |
-| quality | `POST /api/v1/quality/checks/trigger` | `trigger_checks` | missing | Security |  |  |
-| quality | `GET /api/v1/quality/checks/{id}` | `get_check` | missing | Security |  |  |
-| quality | `GET /api/v1/quality/checks/{id}/issues` | `list_check_issues` | missing | Security |  |  |
-| quality | `GET /api/v1/quality/gates` | `list_gates` | missing | Security |  |  |
-| quality | `POST /api/v1/quality/gates` | `create_gate` | missing | Security |  |  |
-| quality | `POST /api/v1/quality/gates/evaluate/{artifact_id}` | `evaluate_gate` | missing | Security |  |  |
-| quality | `DELETE /api/v1/quality/gates/{id}` | `delete_gate` | missing | Security |  |  |
+| quality | `GET /api/v1/quality/checks` | `list_checks` | exists | Security | `app/src/main/java/com/artifactkeeper/android/ui/screens/security/QualityArtifactScreen.kt` |  |
+| quality | `POST /api/v1/quality/checks/trigger` | `trigger_checks` | exists | Security | `app/src/main/java/com/artifactkeeper/android/ui/screens/security/QualityArtifactScreen.kt` |  |
+| quality | `GET /api/v1/quality/checks/{id}` | `get_check` | exists | Security | `app/src/main/java/com/artifactkeeper/android/ui/screens/security/QualityArtifactScreen.kt` |  |
+| quality | `GET /api/v1/quality/checks/{id}/issues` | `list_check_issues` | exists | Security | `app/src/main/java/com/artifactkeeper/android/ui/screens/security/QualityArtifactScreen.kt` |  |
+| quality | `GET /api/v1/quality/gates` | `list_gates` | exists | Security | `app/src/main/java/com/artifactkeeper/android/ui/screens/security/QualityHealthScreen.kt` |  |
+| quality | `POST /api/v1/quality/gates` | `create_gate` | missing | Security |  | gate authoring deferred to Administration pass |
+| quality | `POST /api/v1/quality/gates/evaluate/{artifact_id}` | `evaluate_gate` | exists | Security | `app/src/main/java/com/artifactkeeper/android/ui/screens/security/QualityArtifactScreen.kt` |  |
+| quality | `DELETE /api/v1/quality/gates/{id}` | `delete_gate` | missing | Security |  | gate authoring deferred to Administration pass |
 | quality | `GET /api/v1/quality/gates/{id}` | `get_gate` | missing | Security |  |  |
-| quality | `PUT /api/v1/quality/gates/{id}` | `update_gate` | missing | Security |  |  |
-| quality | `GET /api/v1/quality/health/artifacts/{artifact_id}` | `get_artifact_health` | missing | Security |  |  |
-| quality | `GET /api/v1/quality/health/dashboard` | `get_health_dashboard` | missing | Security |  |  |
-| quality | `GET /api/v1/quality/health/repositories/{key}` | `get_repo_health` | missing | Security |  |  |
-| quality | `DELETE /api/v1/quality/issues/{id}/suppress` | `unsuppress_issue` | missing | Security |  |  |
-| quality | `POST /api/v1/quality/issues/{id}/suppress` | `suppress_issue` | missing | Security |  |  |
+| quality | `PUT /api/v1/quality/gates/{id}` | `update_gate` | missing | Security |  | gate authoring deferred to Administration pass |
+| quality | `GET /api/v1/quality/health/artifacts/{artifact_id}` | `get_artifact_health` | exists | Security | `app/src/main/java/com/artifactkeeper/android/ui/screens/security/QualityArtifactScreen.kt` |  |
+| quality | `GET /api/v1/quality/health/dashboard` | `get_health_dashboard` | exists | Security | `app/src/main/java/com/artifactkeeper/android/ui/screens/security/QualityHealthScreen.kt` |  |
+| quality | `GET /api/v1/quality/health/repositories/{key}` | `get_repo_health` | exists | Security | `app/src/main/java/com/artifactkeeper/android/ui/screens/security/QualityHealthScreen.kt` |  |
+| quality | `DELETE /api/v1/quality/issues/{id}/suppress` | `unsuppress_issue` | exists | Security | `app/src/main/java/com/artifactkeeper/android/ui/screens/security/QualityArtifactScreen.kt` |  |
+| quality | `POST /api/v1/quality/issues/{id}/suppress` | `suppress_issue` | exists | Security | `app/src/main/java/com/artifactkeeper/android/ui/screens/security/QualityArtifactScreen.kt` |  |
 | sbom | `GET /api/v1/sbom` | `list_sboms` | exists | Security | `app/src/main/java/com/artifactkeeper/android/ui/screens/security/SbomScreen.kt` |  |
 | sbom | `POST /api/v1/sbom` | `generate_sbom` | exists | Security | `app/src/main/java/com/artifactkeeper/android/ui/screens/security/SbomScreen.kt` |  |
 | sbom | `GET /api/v1/sbom/by-artifact/{artifact_id}` | `get_sbom_by_artifact` | exists | Security | `app/src/main/java/com/artifactkeeper/android/ui/screens/security/ArtifactSecurityScreen.kt` |  |
 | sbom | `POST /api/v1/sbom/check-compliance` | `check_license_compliance` | missing | Security |  |  |
 | sbom | `GET /api/v1/sbom/cve/history/by-artifact/{artifact_id}` | `get_cve_history_by_artifact` | exists | Security | `app/src/main/java/com/artifactkeeper/android/ui/screens/security/SbomScreen.kt` |  |
-| sbom | `GET /api/v1/sbom/cve/history/by-cve/{cve_id}` | `get_cve_history_by_cve` | missing | Security |  |  |
+| sbom | `GET /api/v1/sbom/cve/history/by-cve/{cve_id}` | `get_cve_history_by_cve` | exists | Security | `app/src/main/java/com/artifactkeeper/android/ui/screens/security/CveTrackingScreen.kt` |  |
 | sbom | `GET /api/v1/sbom/cve/history/{id}` | `get_cve_history` | missing | Security |  |  |
-| sbom | `POST /api/v1/sbom/cve/status/by-artifact/{artifact_id}/by-cve/{cve_id}` | `update_cve_status_by_artifact_cve` | missing | Security |  |  |
-| sbom | `POST /api/v1/sbom/cve/status/{id}` | `update_cve_status` | missing | Security |  |  |
-| sbom | `GET /api/v1/sbom/cve/trends` | `get_cve_trends` | missing | Security |  |  |
+| sbom | `POST /api/v1/sbom/cve/status/by-artifact/{artifact_id}/by-cve/{cve_id}` | `update_cve_status_by_artifact_cve` | exists | Security | `app/src/main/java/com/artifactkeeper/android/ui/screens/security/CveTrackingScreen.kt` |  |
+| sbom | `POST /api/v1/sbom/cve/status/{id}` | `update_cve_status` | exists | Security | `app/src/main/java/com/artifactkeeper/android/ui/screens/security/CveTrackingScreen.kt` |  |
+| sbom | `GET /api/v1/sbom/cve/trends` | `get_cve_trends` | exists | Security | `app/src/main/java/com/artifactkeeper/android/ui/screens/security/SecurityScreen.kt` |  |
 | sbom | `GET /api/v1/sbom/license-policies` | `list_license_policies` | exists | Security | `app/src/main/java/com/artifactkeeper/android/ui/screens/security/LicensePoliciesScreen.kt` |  |
 | sbom | `POST /api/v1/sbom/license-policies` | `upsert_license_policy` | exists | Security | `app/src/main/java/com/artifactkeeper/android/ui/screens/security/LicensePoliciesScreen.kt` |  |
 | sbom | `DELETE /api/v1/sbom/license-policies/{id}` | `delete_license_policy` | exists | Security | `app/src/main/java/com/artifactkeeper/android/ui/screens/security/LicensePoliciesScreen.kt` |  |
@@ -243,25 +243,25 @@ SDK module: vendored `:sdk` regenerated from v1.2.1 (openapi-generator 7.21.0, k
 | sbom | `GET /api/v1/sbom/{id}` | `get_sbom` | exists | Security | `app/src/main/java/com/artifactkeeper/android/ui/screens/security/SbomScreen.kt` |  |
 | sbom | `GET /api/v1/sbom/{id}/components` | `get_sbom_components` | exists | Security | `app/src/main/java/com/artifactkeeper/android/ui/screens/security/SbomScreen.kt` |  |
 | sbom | `POST /api/v1/sbom/{id}/convert` | `convert_sbom` | missing | Security |  |  |
-| security | `PUT /api/v1/dependency-track/analysis` | `update_analysis` | missing | Security |  |  |
-| security | `GET /api/v1/dependency-track/metrics/portfolio` | `get_portfolio_metrics` | missing | Security |  |  |
-| security | `GET /api/v1/dependency-track/policies` | `list_dependency_track_policies` | missing | Security |  |  |
-| security | `GET /api/v1/dependency-track/projects` | `list_projects` | missing | Security |  |  |
-| security | `GET /api/v1/dependency-track/projects/{project_uuid}` | `get_project` | missing | Security |  |  |
-| security | `GET /api/v1/dependency-track/projects/{project_uuid}/components` | `get_project_components` | missing | Security |  |  |
-| security | `GET /api/v1/dependency-track/projects/{project_uuid}/findings` | `get_project_findings` | missing | Security |  |  |
-| security | `GET /api/v1/dependency-track/projects/{project_uuid}/metrics` | `get_project_metrics` | missing | Security |  |  |
-| security | `GET /api/v1/dependency-track/projects/{project_uuid}/metrics/history` | `get_project_metrics_history` | missing | Security |  |  |
-| security | `GET /api/v1/dependency-track/projects/{project_uuid}/violations` | `get_project_violations` | missing | Security |  |  |
-| security | `GET /api/v1/dependency-track/status` | `dt_status` | missing | Security |  |  |
-| security | `GET /api/v1/repositories/{key}/security` | `get_repo_security` | missing | Security |  |  |
+| security | `PUT /api/v1/dependency-track/analysis` | `update_analysis` | exists | Security | `app/src/main/java/com/artifactkeeper/android/ui/screens/security/DependencyTrackScreen.kt` |  |
+| security | `GET /api/v1/dependency-track/metrics/portfolio` | `get_portfolio_metrics` | exists | Security | `app/src/main/java/com/artifactkeeper/android/ui/screens/security/SecurityScreen.kt` |  |
+| security | `GET /api/v1/dependency-track/policies` | `list_dependency_track_policies` | exists | Security | `app/src/main/java/com/artifactkeeper/android/ui/screens/security/DependencyTrackScreen.kt` |  |
+| security | `GET /api/v1/dependency-track/projects` | `list_projects` | exists | Security | `app/src/main/java/com/artifactkeeper/android/ui/screens/security/DependencyTrackScreen.kt` |  |
+| security | `GET /api/v1/dependency-track/projects/{project_uuid}` | `get_project` | missing | Security |  | SDK duplicate of get_project_findings; not wired |
+| security | `GET /api/v1/dependency-track/projects/{project_uuid}/components` | `get_project_components` | exists | Security | `app/src/main/java/com/artifactkeeper/android/ui/screens/security/DependencyTrackScreen.kt` |  |
+| security | `GET /api/v1/dependency-track/projects/{project_uuid}/findings` | `get_project_findings` | exists | Security | `app/src/main/java/com/artifactkeeper/android/ui/screens/security/DependencyTrackScreen.kt` |  |
+| security | `GET /api/v1/dependency-track/projects/{project_uuid}/metrics` | `get_project_metrics` | exists | Security | `app/src/main/java/com/artifactkeeper/android/ui/screens/security/DependencyTrackScreen.kt` |  |
+| security | `GET /api/v1/dependency-track/projects/{project_uuid}/metrics/history` | `get_project_metrics_history` | exists | Security | `app/src/main/java/com/artifactkeeper/android/ui/screens/security/DependencyTrackScreen.kt` |  |
+| security | `GET /api/v1/dependency-track/projects/{project_uuid}/violations` | `get_project_violations` | exists | Security | `app/src/main/java/com/artifactkeeper/android/ui/screens/security/DependencyTrackScreen.kt` |  |
+| security | `GET /api/v1/dependency-track/status` | `dt_status` | exists | Security | `app/src/main/java/com/artifactkeeper/android/ui/screens/security/SecurityScreen.kt` |  |
+| security | `GET /api/v1/repositories/{key}/security` | `get_repo_security` | exists | Security | `app/src/main/java/com/artifactkeeper/android/ui/screens/security/RepoSecurityScreen.kt` |  |
 | security | `PUT /api/v1/repositories/{key}/security` | `update_repo_security` | missing | Security |  |  |
-| security | `GET /api/v1/repositories/{key}/security/scans` | `list_repo_scans` | missing | Security |  |  |
+| security | `GET /api/v1/repositories/{key}/security/scans` | `list_repo_scans` | exists | Security | `app/src/main/java/com/artifactkeeper/android/ui/screens/security/RepoSecurityScreen.kt` |  |
 | security | `GET /api/v1/security/artifacts/{artifact_id}/scans` | `list_artifact_scans` | exists | Security | `app/src/main/java/com/artifactkeeper/android/ui/screens/security/ArtifactSecurityScreen.kt` |  |
-| security | `GET /api/v1/security/configs` | `list_scan_configs` | missing | Security |  |  |
-| security | `GET /api/v1/security/dashboard` | `get_dashboard` | missing | Security |  |  |
-| security | `DELETE /api/v1/security/findings/{id}/acknowledge` | `revoke_acknowledgment` | missing | Security |  |  |
-| security | `POST /api/v1/security/findings/{id}/acknowledge` | `acknowledge_finding` | missing | Security |  |  |
+| security | `GET /api/v1/security/configs` | `list_scan_configs` | exists | Security | `app/src/main/java/com/artifactkeeper/android/ui/screens/security/SecurityScreen.kt` |  |
+| security | `GET /api/v1/security/dashboard` | `get_dashboard` | exists | Security | `app/src/main/java/com/artifactkeeper/android/ui/screens/security/SecurityScreen.kt` |  |
+| security | `DELETE /api/v1/security/findings/{id}/acknowledge` | `revoke_acknowledgment` | exists | Security | `app/src/main/java/com/artifactkeeper/android/ui/screens/security/ScanDetailScreen.kt` |  |
+| security | `POST /api/v1/security/findings/{id}/acknowledge` | `acknowledge_finding` | exists | Security | `app/src/main/java/com/artifactkeeper/android/ui/screens/security/ScanDetailScreen.kt` |  |
 | security | `GET /api/v1/security/policies` | `list_policies` | exists | Security | `app/src/main/java/com/artifactkeeper/android/ui/screens/security/PoliciesScreen.kt` |  |
 | security | `POST /api/v1/security/policies` | `create_policy` | exists | Security | `app/src/main/java/com/artifactkeeper/android/ui/screens/security/PoliciesScreen.kt` |  |
 | security | `DELETE /api/v1/security/policies/{id}` | `delete_policy` | exists | Security | `app/src/main/java/com/artifactkeeper/android/ui/screens/security/PoliciesScreen.kt` |  |
@@ -269,19 +269,19 @@ SDK module: vendored `:sdk` regenerated from v1.2.1 (openapi-generator 7.21.0, k
 | security | `PUT /api/v1/security/policies/{id}` | `update_policy` | exists | Security | `app/src/main/java/com/artifactkeeper/android/ui/screens/security/PoliciesScreen.kt` |  |
 | security | `POST /api/v1/security/scan` | `trigger_scan` | exists | Security | `app/src/main/java/com/artifactkeeper/android/ui/screens/security/ScansScreen.kt` |  |
 | security | `GET /api/v1/security/scans` | `list_scans` | exists | Security | `app/src/main/java/com/artifactkeeper/android/ui/screens/security/ScansScreen.kt` |  |
-| security | `GET /api/v1/security/scans/{id}` | `get_scan` | exists | Security | `app/src/main/java/com/artifactkeeper/android/ui/screens/security/ScanDetailScreen.kt` |  |
-| security | `GET /api/v1/security/scans/{id}/findings` | `list_findings` | exists | Security | `app/src/main/java/com/artifactkeeper/android/ui/screens/security/ScanDetailScreen.kt` |  |
-| security | `GET /api/v1/security/scores` | `get_all_scores` | missing | Security |  |  |
-| signing | `GET /api/v1/signing/keys` | `list_keys` | missing | Security |  |  |
-| signing | `POST /api/v1/signing/keys` | `create_key` | missing | Security |  |  |
-| signing | `DELETE /api/v1/signing/keys/{key_id}` | `delete_key` | missing | Security |  |  |
-| signing | `GET /api/v1/signing/keys/{key_id}` | `get_key` | missing | Security |  |  |
-| signing | `GET /api/v1/signing/keys/{key_id}/public` | `get_public_key` | missing | Security |  |  |
-| signing | `POST /api/v1/signing/keys/{key_id}/revoke` | `revoke_key` | missing | Security |  |  |
-| signing | `POST /api/v1/signing/keys/{key_id}/rotate` | `rotate_key` | missing | Security |  |  |
-| signing | `GET /api/v1/signing/repositories/{repo_id}/config` | `get_repo_signing_config` | missing | Security |  |  |
-| signing | `POST /api/v1/signing/repositories/{repo_id}/config` | `update_repo_signing_config` | missing | Security |  |  |
-| signing | `GET /api/v1/signing/repositories/{repo_id}/public-key` | `get_repo_public_key` | missing | Security |  |  |
+| security | `GET /api/v1/security/scans/{id}` | `get_scan` | exists | Security | `app/src/main/java/com/artifactkeeper/android/ui/screens/security/ArtifactSecurityScreen.kt` |  |
+| security | `GET /api/v1/security/scans/{id}/findings` | `list_findings` | exists | Security | `app/src/main/java/com/artifactkeeper/android/ui/screens/security/ScanFindingsScreen.kt` |  |
+| security | `GET /api/v1/security/scores` | `get_all_scores` | exists | Security | `app/src/main/java/com/artifactkeeper/android/ui/screens/security/SecurityScreen.kt` |  |
+| signing | `GET /api/v1/signing/keys` | `list_keys` | exists | Security | `app/src/main/java/com/artifactkeeper/android/ui/screens/security/SigningKeysScreen.kt` |  |
+| signing | `POST /api/v1/signing/keys` | `create_key` | exists | Security | `app/src/main/java/com/artifactkeeper/android/ui/screens/security/SigningKeysScreen.kt` |  |
+| signing | `DELETE /api/v1/signing/keys/{key_id}` | `delete_key` | exists | Security | `app/src/main/java/com/artifactkeeper/android/ui/screens/security/SigningKeysScreen.kt` |  |
+| signing | `GET /api/v1/signing/keys/{key_id}` | `get_key` | exists | Security | `app/src/main/java/com/artifactkeeper/android/ui/screens/security/SigningKeysScreen.kt` |  |
+| signing | `GET /api/v1/signing/keys/{key_id}/public` | `get_public_key` | exists | Security | `app/src/main/java/com/artifactkeeper/android/ui/screens/security/SigningKeysScreen.kt` |  |
+| signing | `POST /api/v1/signing/keys/{key_id}/revoke` | `revoke_key` | exists | Security | `app/src/main/java/com/artifactkeeper/android/ui/screens/security/SigningKeysScreen.kt` |  |
+| signing | `POST /api/v1/signing/keys/{key_id}/rotate` | `rotate_key` | exists | Security | `app/src/main/java/com/artifactkeeper/android/ui/screens/security/SigningKeysScreen.kt` |  |
+| signing | `GET /api/v1/signing/repositories/{repo_id}/config` | `get_repo_signing_config` | exists | Security | `app/src/main/java/com/artifactkeeper/android/ui/screens/security/RepoSecurityScreen.kt` |  |
+| signing | `POST /api/v1/signing/repositories/{repo_id}/config` | `update_repo_signing_config` | missing | Security |  | signing config write deferred to Administration pass |
+| signing | `GET /api/v1/signing/repositories/{repo_id}/public-key` | `get_repo_public_key` | exists | Security | `app/src/main/java/com/artifactkeeper/android/ui/screens/security/RepoSecurityScreen.kt` |  |
 
 ## Operations
 
@@ -298,10 +298,10 @@ SDK module: vendored `:sdk` regenerated from v1.2.1 (openapi-generator 7.21.0, k
 | health | `GET /health` | `health_check` | exists | Operations | `app/src/main/java/com/artifactkeeper/android/ui/screens/welcome/WelcomeScreen.kt` |  |
 | health | `GET /livez` | `liveness_check` | missing | Operations |  |  |
 | health | `GET /readyz` | `readiness_check` | missing | Operations |  |  |
-| monitoring | `GET /api/v1/admin/monitoring/alerts` | `get_alert_states` | missing | Operations |  |  |
+| monitoring | `GET /api/v1/admin/monitoring/alerts` | `get_alert_states` | exists | Operations | `app/src/main/java/com/artifactkeeper/android/ui/screens/operations/MonitoringScreen.kt` |  |
 | monitoring | `POST /api/v1/admin/monitoring/alerts/suppress` | `suppress_alert` | missing | Operations |  |  |
 | monitoring | `POST /api/v1/admin/monitoring/check` | `run_health_check` | missing | Operations |  |  |
-| monitoring | `GET /api/v1/admin/monitoring/health-log` | `get_health_log` | missing | Operations |  |  |
+| monitoring | `GET /api/v1/admin/monitoring/health-log` | `get_health_log` | exists | Operations | `app/src/main/java/com/artifactkeeper/android/ui/screens/operations/MonitoringScreen.kt` |  |
 | system | `GET /api/v1/system/config` | `get_system_config` | missing | Operations |  |  |
 | telemetry | `GET /api/v1/admin/telemetry/crashes` | `list_crashes` | missing | Operations |  |  |
 | telemetry | `GET /api/v1/admin/telemetry/crashes/pending` | `list_pending_crashes` | missing | Operations |  |  |
