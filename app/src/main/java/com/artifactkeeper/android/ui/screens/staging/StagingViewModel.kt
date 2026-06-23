@@ -52,6 +52,9 @@ class StagingViewModel @Inject constructor(
         viewModelScope.launch {
             _uiState.update { it.copy(isLoadingRepos = true, reposError = null) }
             try {
+                // TODO(#81): api/v1/staging/repositories was removed in 1.2.1 and has no
+                // direct replacement. Redesign to discover staging repos via list_repositories
+                // (filtered by repo type) as part of the Staging section wave.
                 val response = ApiClient.stagingApi.listStagingRepos().unwrap()
                 _uiState.update { it.copy(stagingRepos = response.items, isLoadingRepos = false) }
             } catch (e: Exception) {
@@ -94,6 +97,10 @@ class StagingViewModel @Inject constructor(
             _uiState.update { it.copy(isLoadingArtifacts = true, artifactsError = null) }
             try {
                 val statusFilter = _uiState.value.filterStatus?.name?.lowercase()
+                // TODO(#81): api/v1/staging/repositories/{key}/artifacts was removed in 1.2.1
+                // and has no direct replacement (no per-artifact policy-status staging listing).
+                // Redesign to discover staging artifacts via list_artifacts as part of the
+                // Staging section wave.
                 val response = ApiClient.stagingApi.listStagingArtifacts(
                     repoKey = repoKey,
                     policyStatus = statusFilter,
