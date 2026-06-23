@@ -22,6 +22,7 @@ import com.artifactkeeper.android.data.models.DtPortfolioMetrics
 import com.artifactkeeper.android.data.models.DtStatus
 import com.artifactkeeper.android.data.models.RepoSecurityScore
 import com.artifactkeeper.android.data.models.Repository
+import com.artifactkeeper.client.models.ScanConfigResponse
 import com.artifactkeeper.android.ui.theme.Critical
 import com.artifactkeeper.android.ui.theme.High
 import com.artifactkeeper.android.ui.theme.Low
@@ -51,7 +52,7 @@ fun SecurityScreen(
             error = uiState.error,
             onRetry = { viewModel.loadData() },
             emptyState = EmptyState(
-                isEmpty = uiState.scores.isEmpty() && uiState.cveTrends == null && uiState.dtStatus?.enabled != true,
+                isEmpty = uiState.scores.isEmpty() && uiState.cveTrends == null && uiState.dtStatus?.enabled != true && uiState.scanConfigs.isEmpty(),
                 message = "No security data available",
             ),
         ) {
@@ -98,6 +99,19 @@ fun SecurityScreen(
                         }
                         items(uiState.scores, key = { it.id }) { score ->
                             SecurityScoreCard(score, uiState.repoMap[score.repositoryId])
+                        }
+                    }
+
+                    if (uiState.scanConfigs.isNotEmpty()) {
+                        item(key = "scan-configs-header") {
+                            Text(
+                                text = "Scan Configuration",
+                                style = MaterialTheme.typography.titleMedium,
+                                modifier = Modifier.padding(top = 4.dp),
+                            )
+                        }
+                        items(uiState.scanConfigs, key = { it.id }) { config ->
+                            ScanConfigCard(config, uiState.repoMap[config.repositoryId])
                         }
                     }
                 }
@@ -273,6 +287,65 @@ private fun DtAuditProgressCard(metrics: DtPortfolioMetrics) {
                 )
             }
         }
+    }
+}
+
+@Composable
+private fun ScanConfigCard(config: ScanConfigResponse, repo: Repository?) {
+    Card(modifier = Modifier.fillMaxWidth()) {
+        Column(modifier = Modifier.padding(16.dp)) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Text(
+                    text = repo?.name ?: repo?.key ?: config.repositoryId.toString(),
+                    style = MaterialTheme.typography.titleMedium,
+                    modifier = Modifier.weight(1f),
+                )
+                val statusColor = if (config.scanEnabled) GradeA else MaterialTheme.colorScheme.onSurfaceVariant
+                Box(
+                    modifier = Modifier
+                        .clip(RoundedCornerShape(12.dp))
+                        .background(statusColor.copy(alpha = 0.15f))
+                        .padding(horizontal = 10.dp, vertical = 4.dp),
+                ) {
+                    Text(
+                        text = if (config.scanEnabled) "Enabled" else "Disabled",
+                        style = MaterialTheme.typography.labelSmall,
+                        fontWeight = FontWeight.SemiBold,
+                        color = statusColor,
+                    )
+                }
+            }
+            Spacer(modifier = Modifier.height(8.dp))
+            ScanConfigRow("Scan on upload", config.scanOnUpload)
+            ScanConfigRow("Scan on proxy", config.scanOnProxy)
+            ScanConfigRow("Block on policy violation", config.blockOnPolicyViolation)
+            Spacer(modifier = Modifier.height(4.dp))
+            Text(
+                text = "Severity threshold: ${config.severityThreshold.replaceFirstChar { it.uppercase() }}",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+        }
+    }
+}
+
+@Composable
+private fun ScanConfigRow(label: String, enabled: Boolean) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.SpaceBetween,
+    ) {
+        Text(text = label, style = MaterialTheme.typography.bodySmall)
+        Text(
+            text = if (enabled) "On" else "Off",
+            style = MaterialTheme.typography.bodySmall,
+            fontWeight = FontWeight.SemiBold,
+            color = if (enabled) GradeA else MaterialTheme.colorScheme.onSurfaceVariant,
+        )
     }
 }
 

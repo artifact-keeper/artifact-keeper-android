@@ -45,12 +45,24 @@ fun ScanDetailScreen(
 ) {
     val state by viewModel.scanDetailState.collectAsState()
     val parsedId = remember(scanId) { runCatching { UUID.fromString(scanId) }.getOrNull() }
+    val snackbarHostState = remember { SnackbarHostState() }
+    var findingToAcknowledge by remember { mutableStateOf<FindingResponse?>(null) }
 
     LaunchedEffect(parsedId) {
         parsedId?.let { viewModel.loadScanDetail(it) }
     }
 
-    Column(modifier = Modifier.fillMaxSize()) {
+    // Surface mutation results (acknowledge / revoke) without blanking the list.
+    LaunchedEffect(state.message, state.error, state.scan) {
+        val text = state.message ?: state.error?.takeIf { state.scan != null }
+        if (text != null) {
+            snackbarHostState.showSnackbar(text)
+            viewModel.clearScanDetailMessage()
+        }
+    }
+
+    Scaffold(snackbarHost = { SnackbarHost(snackbarHostState) }) { padding ->
+    Column(modifier = Modifier.fillMaxSize().padding(padding)) {
         TopAppBar(
             title = { Text("Scan Detail") },
             navigationIcon = {
@@ -77,7 +89,7 @@ fun ScanDetailScreen(
                     CircularProgressIndicator()
                 }
             }
-            state.error != null -> {
+            state.error != null && state.scan == null -> {
                 Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
                         Text(
@@ -119,13 +131,75 @@ fun ScanDetailScreen(
                         }
                     } else {
                         items(state.findings, key = { it.id }) { finding ->
-                            FindingDetailCard(finding)
+                            FindingDetailCard(
+                                finding = finding,
+                                isMutating = state.isMutating,
+                                onAcknowledge = { findingToAcknowledge = finding },
+                                onRevoke = {
+                                    parsedId?.let { viewModel.revokeAcknowledgment(it, finding.id) }
+                                },
+                            )
                         }
                     }
                 }
             }
         }
     }
+    }
+
+    findingToAcknowledge?.let { finding ->
+        AcknowledgeFindingDialog(
+            findingTitle = finding.title,
+            isMutating = state.isMutating,
+            onConfirm = { reason ->
+                parsedId?.let { viewModel.acknowledgeFinding(it, finding.id, reason) }
+                findingToAcknowledge = null
+            },
+            onDismiss = { findingToAcknowledge = null },
+        )
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun AcknowledgeFindingDialog(
+    findingTitle: String,
+    isMutating: Boolean,
+    onConfirm: (reason: String) -> Unit,
+    onDismiss: () -> Unit,
+) {
+    var reason by remember { mutableStateOf("") }
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("Acknowledge finding") },
+        text = {
+            Column {
+                Text(
+                    text = findingTitle,
+                    style = MaterialTheme.typography.bodyMedium,
+                    fontWeight = FontWeight.Medium,
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+                OutlinedTextField(
+                    value = reason,
+                    onValueChange = { reason = it },
+                    label = { Text("Reason") },
+                    modifier = Modifier.fillMaxWidth(),
+                )
+            }
+        },
+        confirmButton = {
+            TextButton(
+                onClick = { onConfirm(reason.trim()) },
+                enabled = !isMutating && reason.isNotBlank(),
+            ) {
+                Text("Acknowledge")
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) { Text("Cancel") }
+        },
+    )
 }
 
 @Composable
@@ -189,7 +263,12 @@ private fun ScanSummaryCard(scan: ScanResponse) {
 }
 
 @Composable
-private fun FindingDetailCard(finding: FindingResponse) {
+private fun FindingDetailCard(
+    finding: FindingResponse,
+    isMutating: Boolean = false,
+    onAcknowledge: () -> Unit = {},
+    onRevoke: () -> Unit = {},
+) {
     val uriHandler = LocalUriHandler.current
     val sevColor = severityColor(finding.severity)
 
@@ -311,6 +390,19 @@ private fun FindingDetailCard(finding: FindingResponse) {
                     maxLines = 3,
                     overflow = TextOverflow.Ellipsis,
                 )
+            }
+
+            Spacer(modifier = Modifier.height(8.dp))
+            Row(horizontalArrangement = Arrangement.End, modifier = Modifier.fillMaxWidth()) {
+                if (finding.isAcknowledged) {
+                    TextButton(onClick = onRevoke, enabled = !isMutating) {
+                        Text("Revoke")
+                    }
+                } else {
+                    TextButton(onClick = onAcknowledge, enabled = !isMutating) {
+                        Text("Acknowledge")
+                    }
+                }
             }
         }
     }

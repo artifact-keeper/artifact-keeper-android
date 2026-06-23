@@ -5,6 +5,7 @@ import com.artifactkeeper.android.ui.screens.security.ArtifactSecurityUiState
 import com.artifactkeeper.android.ui.screens.security.ArtifactSecurityViewModel
 import com.artifactkeeper.client.apis.SbomApi
 import com.artifactkeeper.client.apis.SecurityApi
+import com.artifactkeeper.client.models.AcknowledgeRequest
 import com.artifactkeeper.client.models.ComponentResponse
 import com.artifactkeeper.client.models.FindingListResponse
 import com.artifactkeeper.client.models.FindingResponse
@@ -12,6 +13,7 @@ import com.artifactkeeper.client.models.ScanListResponse
 import com.artifactkeeper.client.models.ScanResponse
 import com.artifactkeeper.client.models.SbomContentResponse
 import io.mockk.coEvery
+import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
 import kotlinx.coroutines.Dispatchers
@@ -260,5 +262,78 @@ class ArtifactSecurityViewModelTest {
 
         val severities = vm.scanDetailState.value.findings.map { it.severity }
         assertEquals(listOf("critical", "medium", "low"), severities)
+    }
+
+    // =========================================================================
+    // acknowledgeFinding / revokeAcknowledgment
+    // =========================================================================
+
+    @Test
+    fun `acknowledgeFinding sends reason and reloads scan detail`() = runTest {
+        val scanId = UUID.randomUUID()
+        val findingId = UUID.randomUUID()
+        coEvery { mockSecurityApi.acknowledgeFinding(findingId, any()) } returns
+            Response.success(finding("high"))
+        coEvery { mockSecurityApi.getScan(scanId) } returns Response.success(scan(id = scanId))
+        coEvery { mockSecurityApi.listFindings(scanId) } returns Response.success(
+            FindingListResponse(items = listOf(finding("high")), total = 1),
+        )
+
+        val vm = ArtifactSecurityViewModel(mockApiClient)
+        vm.acknowledgeFinding(scanId, findingId, "accepted risk")
+
+        coVerify {
+            mockSecurityApi.acknowledgeFinding(findingId, AcknowledgeRequest(reason = "accepted risk"))
+        }
+        coVerify { mockSecurityApi.listFindings(scanId) }
+        assertFalse(vm.scanDetailState.value.isMutating)
+        assertNull(vm.scanDetailState.value.error)
+    }
+
+    @Test
+    fun `acknowledgeFinding sets error on failure`() = runTest {
+        val scanId = UUID.randomUUID()
+        val findingId = UUID.randomUUID()
+        coEvery { mockSecurityApi.acknowledgeFinding(findingId, any()) } returns
+            Response.error(400, okhttp3.ResponseBody.create(null, "bad"))
+
+        val vm = ArtifactSecurityViewModel(mockApiClient)
+        vm.acknowledgeFinding(scanId, findingId, "reason")
+
+        assertNotNull(vm.scanDetailState.value.error)
+        assertFalse(vm.scanDetailState.value.isMutating)
+    }
+
+    @Test
+    fun `revokeAcknowledgment calls api and reloads scan detail`() = runTest {
+        val scanId = UUID.randomUUID()
+        val findingId = UUID.randomUUID()
+        coEvery { mockSecurityApi.revokeAcknowledgment(findingId) } returns
+            Response.success(finding("high"))
+        coEvery { mockSecurityApi.getScan(scanId) } returns Response.success(scan(id = scanId))
+        coEvery { mockSecurityApi.listFindings(scanId) } returns Response.success(
+            FindingListResponse(items = listOf(finding("high")), total = 1),
+        )
+
+        val vm = ArtifactSecurityViewModel(mockApiClient)
+        vm.revokeAcknowledgment(scanId, findingId)
+
+        coVerify { mockSecurityApi.revokeAcknowledgment(findingId) }
+        coVerify { mockSecurityApi.listFindings(scanId) }
+        assertFalse(vm.scanDetailState.value.isMutating)
+    }
+
+    @Test
+    fun `revokeAcknowledgment sets error on failure`() = runTest {
+        val scanId = UUID.randomUUID()
+        val findingId = UUID.randomUUID()
+        coEvery { mockSecurityApi.revokeAcknowledgment(findingId) } returns
+            Response.error(409, okhttp3.ResponseBody.create(null, "conflict"))
+
+        val vm = ArtifactSecurityViewModel(mockApiClient)
+        vm.revokeAcknowledgment(scanId, findingId)
+
+        assertNotNull(vm.scanDetailState.value.error)
+        assertFalse(vm.scanDetailState.value.isMutating)
     }
 }

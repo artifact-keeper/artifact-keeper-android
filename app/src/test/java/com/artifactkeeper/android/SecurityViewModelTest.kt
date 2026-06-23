@@ -10,6 +10,7 @@ import com.artifactkeeper.client.models.DtPortfolioMetrics
 import com.artifactkeeper.client.models.DtStatusResponse
 import com.artifactkeeper.client.models.Pagination
 import com.artifactkeeper.client.models.RepositoryListResponse
+import com.artifactkeeper.client.models.ScanConfigResponse
 import com.artifactkeeper.client.models.ScoreResponse
 import io.mockk.coEvery
 import io.mockk.every
@@ -300,5 +301,39 @@ class SecurityViewModelTest {
         val state = viewModel.uiState.value
         assertFalse(state.isRefreshing)
         assertNull(state.error)
+    }
+
+    // =========================================================================
+    // scan configs
+    // =========================================================================
+
+    @Test
+    fun `loadData populates scan configs`() = runTest {
+        coEvery { mockSecurityApi.getAllScores() } returns Response.success(emptyList())
+        coEvery { mockReposApi.listRepositories(any(), perPage = 100, any(), any(), any()) } returns Response.success(
+            RepositoryListResponse(
+                items = emptyList(),
+                pagination = Pagination(page = 1, perPage = 100, total = 0, totalPages = 1),
+            )
+        )
+        coEvery { mockSbomApi.getCveTrends(any(), any()) } throws RuntimeException("N/A")
+        coEvery { mockSecurityApi.dtStatus() } throws RuntimeException("N/A")
+        val config = ScanConfigResponse(
+            blockOnPolicyViolation = true,
+            createdAt = OffsetDateTime.now(),
+            id = UUID.randomUUID(),
+            repositoryId = UUID.randomUUID(),
+            scanEnabled = true,
+            scanOnProxy = false,
+            scanOnUpload = true,
+            severityThreshold = "high",
+            updatedAt = OffsetDateTime.now(),
+        )
+        coEvery { mockSecurityApi.listScanConfigs() } returns Response.success(listOf(config))
+
+        val viewModel = SecurityViewModel(mockApiClient)
+        viewModel.loadData()
+
+        assertEquals(1, viewModel.uiState.value.scanConfigs.size)
     }
 }

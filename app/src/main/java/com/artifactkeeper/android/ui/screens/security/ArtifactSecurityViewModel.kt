@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.artifactkeeper.android.data.api.ApiClient
 import com.artifactkeeper.android.data.api.unwrap
+import com.artifactkeeper.client.models.AcknowledgeRequest
 import com.artifactkeeper.client.models.ComponentResponse
 import com.artifactkeeper.client.models.FindingResponse
 import com.artifactkeeper.client.models.ScanResponse
@@ -37,7 +38,9 @@ data class ScanDetailUiState(
     val scan: ScanResponse? = null,
     val findings: List<FindingResponse> = emptyList(),
     val isLoading: Boolean = false,
+    val isMutating: Boolean = false,
     val error: String? = null,
+    val message: String? = null,
 )
 
 @HiltViewModel
@@ -117,6 +120,50 @@ class ArtifactSecurityViewModel @Inject constructor(
                 }
             }
         }
+    }
+
+    /**
+     * Acknowledge a finding with a reason, then reload the scan so the finding's
+     * acknowledged state is reflected.
+     */
+    fun acknowledgeFinding(scanId: UUID, findingId: UUID, reason: String) {
+        viewModelScope.launch {
+            _scanDetailState.update { it.copy(isMutating = true, error = null, message = null) }
+            try {
+                apiClient.securityApi.acknowledgeFinding(
+                    findingId,
+                    AcknowledgeRequest(reason = reason),
+                ).unwrap()
+                _scanDetailState.update { it.copy(isMutating = false, message = "Finding acknowledged") }
+                loadScanDetail(scanId)
+            } catch (e: Exception) {
+                _scanDetailState.update {
+                    it.copy(error = e.message ?: "Failed to acknowledge finding", isMutating = false)
+                }
+            }
+        }
+    }
+
+    /**
+     * Revoke a finding's acknowledgment, then reload the scan.
+     */
+    fun revokeAcknowledgment(scanId: UUID, findingId: UUID) {
+        viewModelScope.launch {
+            _scanDetailState.update { it.copy(isMutating = true, error = null, message = null) }
+            try {
+                apiClient.securityApi.revokeAcknowledgment(findingId).unwrap()
+                _scanDetailState.update { it.copy(isMutating = false, message = "Acknowledgment revoked") }
+                loadScanDetail(scanId)
+            } catch (e: Exception) {
+                _scanDetailState.update {
+                    it.copy(error = e.message ?: "Failed to revoke acknowledgment", isMutating = false)
+                }
+            }
+        }
+    }
+
+    fun clearScanDetailMessage() {
+        _scanDetailState.update { it.copy(message = null, error = null) }
     }
 
     companion object {
