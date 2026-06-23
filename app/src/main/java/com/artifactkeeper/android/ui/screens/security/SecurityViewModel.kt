@@ -9,6 +9,7 @@ import com.artifactkeeper.android.data.models.DtPortfolioMetrics
 import com.artifactkeeper.android.data.models.DtStatus
 import com.artifactkeeper.android.data.models.RepoSecurityScore
 import com.artifactkeeper.android.data.models.Repository
+import com.artifactkeeper.client.models.ScanConfigResponse
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -23,6 +24,7 @@ data class SecurityUiState(
     val cveTrends: CveTrends? = null,
     val dtStatus: DtStatus? = null,
     val dtPortfolioMetrics: DtPortfolioMetrics? = null,
+    val scanConfigs: List<ScanConfigResponse> = emptyList(),
     val isLoading: Boolean = false,
     val isRefreshing: Boolean = false,
     val error: String? = null,
@@ -70,6 +72,13 @@ class SecurityViewModel @Inject constructor(
                     // Dependency-Track is optional
                 }
 
+                var scanConfigs: List<ScanConfigResponse> = emptyList()
+                try {
+                    scanConfigs = apiClient.securityApi.listScanConfigs().unwrap()
+                } catch (_: Exception) {
+                    // Scan configs are optional
+                }
+
                 _uiState.update {
                     it.copy(
                         scores = scores,
@@ -77,6 +86,7 @@ class SecurityViewModel @Inject constructor(
                         cveTrends = cveTrends,
                         dtStatus = dtStatus,
                         dtPortfolioMetrics = dtPortfolioMetrics,
+                        scanConfigs = scanConfigs,
                         isLoading = false,
                         isRefreshing = false,
                     )

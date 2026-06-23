@@ -8,7 +8,6 @@ import com.artifactkeeper.client.apis.SbomApi
 import com.artifactkeeper.client.apis.SecurityApi
 import com.artifactkeeper.client.models.CveHistoryEntry
 import com.artifactkeeper.client.models.FindingResponse
-import com.artifactkeeper.client.models.ScanConfigResponse
 import com.artifactkeeper.client.models.UpdateCveStatusRequest
 import io.mockk.coEvery
 import io.mockk.coVerify
@@ -84,18 +83,6 @@ class CveTrackingViewModelTest {
         title = "Some vuln",
     )
 
-    private fun scanConfig() = ScanConfigResponse(
-        blockOnPolicyViolation = true,
-        createdAt = now,
-        id = UUID.randomUUID(),
-        repositoryId = UUID.randomUUID(),
-        scanEnabled = true,
-        scanOnProxy = false,
-        scanOnUpload = true,
-        severityThreshold = "high",
-        updatedAt = now,
-    )
-
     // =========================================================================
     // UI state
     // =========================================================================
@@ -104,7 +91,6 @@ class CveTrackingViewModelTest {
     fun `initial tracking state is empty`() {
         val state = CveTrackingUiState()
         assertTrue(state.entries.isEmpty())
-        assertTrue(state.scanConfigs.isEmpty())
         assertFalse(state.isLoading)
         assertNull(state.error)
     }
@@ -237,22 +223,6 @@ class CveTrackingViewModelTest {
         vm.revokeAcknowledgment(findingId)
 
         coVerify { mockSecurityApi.revokeAcknowledgment(findingId) }
-    }
-
-    // =========================================================================
-    // loadScanConfigs
-    // =========================================================================
-
-    @Test
-    fun `loadScanConfigs populates configs`() = runTest {
-        coEvery { mockSecurityApi.listScanConfigs() } returns Response.success(
-            listOf(scanConfig(), scanConfig()),
-        )
-
-        val vm = CveTrackingViewModel(mockApiClient)
-        vm.loadScanConfigs()
-
-        assertEquals(2, vm.uiState.value.scanConfigs.size)
     }
 
     @Test

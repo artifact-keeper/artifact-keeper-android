@@ -6,7 +6,6 @@ import com.artifactkeeper.android.data.api.ApiClient
 import com.artifactkeeper.android.data.api.unwrap
 import com.artifactkeeper.client.models.AcknowledgeRequest
 import com.artifactkeeper.client.models.CveHistoryEntry
-import com.artifactkeeper.client.models.ScanConfigResponse
 import com.artifactkeeper.client.models.UpdateCveStatusRequest
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -18,12 +17,10 @@ import java.util.UUID
 import javax.inject.Inject
 
 /**
- * State for the CVE tracking list: the CVE history entries for an artifact plus
- * the server's scan configuration.
+ * State for the CVE tracking list: the CVE history entries for an artifact.
  */
 data class CveTrackingUiState(
     val entries: List<CveHistoryEntry> = emptyList(),
-    val scanConfigs: List<ScanConfigResponse> = emptyList(),
     val isLoading: Boolean = false,
     val isRefreshing: Boolean = false,
     val error: String? = null,
@@ -72,17 +69,6 @@ class CveTrackingViewModel @Inject constructor(
                         isRefreshing = false,
                     )
                 }
-            }
-        }
-    }
-
-    fun loadScanConfigs() {
-        viewModelScope.launch {
-            try {
-                val configs = apiClient.securityApi.listScanConfigs().unwrap()
-                _uiState.update { it.copy(scanConfigs = configs) }
-            } catch (e: Exception) {
-                _uiState.update { it.copy(error = e.message ?: "Failed to load scan configs") }
             }
         }
     }
