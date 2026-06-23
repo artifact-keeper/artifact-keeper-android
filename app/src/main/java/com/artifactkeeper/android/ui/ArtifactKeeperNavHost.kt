@@ -47,6 +47,8 @@ import com.artifactkeeper.android.ui.screens.builds.BuildDetailScreen
 import com.artifactkeeper.android.ui.screens.builds.BuildsScreen
 import com.artifactkeeper.android.ui.screens.integration.PeersScreen
 import com.artifactkeeper.android.ui.screens.integration.ReplicationScreen
+import com.artifactkeeper.android.ui.screens.integration.PluginDetailScreen
+import com.artifactkeeper.android.ui.screens.integration.PluginsScreen
 import com.artifactkeeper.android.ui.screens.integration.WebhookDetailScreen
 import com.artifactkeeper.android.ui.screens.integration.WebhooksScreen
 import com.artifactkeeper.android.ui.screens.operations.AnalyticsScreen
@@ -584,15 +586,21 @@ private fun SectionWithTabs(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun IntegrationSection(isCompact: Boolean, accountActions: @Composable () -> Unit) {
-    val subTabs = listOf("Peers", "Replication", "Webhooks")
+    val subTabs = listOf("Peers", "Replication", "Webhooks", "Plugins")
     var selectedTab by remember { mutableIntStateOf(0) }
     var selectedWebhookId by remember { mutableStateOf<String?>(null) }
+    var selectedPluginId by remember { mutableStateOf<String?>(null) }
 
     Column(modifier = Modifier.fillMaxSize()) {
         if (selectedWebhookId != null) {
             WebhookDetailScreen(
                 webhookId = selectedWebhookId!!,
                 onBack = { selectedWebhookId = null },
+            )
+        } else if (selectedPluginId != null) {
+            PluginDetailScreen(
+                pluginId = selectedPluginId!!,
+                onBack = { selectedPluginId = null },
             )
         } else {
             TopAppBar(
@@ -616,6 +624,7 @@ private fun IntegrationSection(isCompact: Boolean, accountActions: @Composable (
                 0 -> PeersScreen()
                 1 -> ReplicationScreen()
                 2 -> WebhooksScreen(onWebhookClick = { selectedWebhookId = it })
+                3 -> PluginsScreen(onPluginClick = { selectedPluginId = it })
             }
         }
     }
