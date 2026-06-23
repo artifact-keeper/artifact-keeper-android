@@ -41,6 +41,7 @@ import com.artifactkeeper.android.ui.components.AccountMenu
 import com.artifactkeeper.android.ui.screens.admin.GroupsScreen
 import com.artifactkeeper.android.ui.screens.admin.SSOScreen
 import com.artifactkeeper.android.ui.screens.admin.UsersScreen
+import com.artifactkeeper.android.ui.screens.artifacts.ArtifactDetailScreen
 import com.artifactkeeper.android.ui.screens.builds.BuildDetailScreen
 import com.artifactkeeper.android.ui.screens.builds.BuildsScreen
 import com.artifactkeeper.android.ui.screens.integration.PeersScreen
@@ -685,12 +686,20 @@ private fun NavGraphBuilder.detailRoutes(navController: NavHostController) {
         RepositoryDetailScreen(
             repoKey = key,
             onBack = { navController.popBackStack() },
+            onArtifactClick = { id -> navController.navigate("artifacts/$id") },
             onArtifactSecurityClick = { id, name ->
                 navController.navigate("artifacts/$id/security?name=$name")
             },
             onNavigateToMembers = { repoKey, repoName, repoFormat ->
                 navController.navigate("repos/$repoKey/members?name=$repoName&format=$repoFormat")
             },
+        )
+    }
+    composable("artifacts/{id}") { backStackEntry ->
+        val id = backStackEntry.arguments?.getString("id") ?: return@composable
+        ArtifactDetailScreen(
+            artifactId = id,
+            onBack = { navController.popBackStack() },
         )
     }
     composable("packages/{id}") { backStackEntry ->
