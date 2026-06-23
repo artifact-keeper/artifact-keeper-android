@@ -8,14 +8,24 @@
 
 @file:Suppress(
     "ArrayInDataClass",
+    "DuplicatedCode",
     "EnumEntryName",
     "RemoveRedundantQualifierName",
-    "UnusedImport"
+    "RemoveRedundantCallsOfConversionMethods",
+    "REDUNDANT_CALL_OF_CONVERSION_METHOD",
+    "RedundantUnitReturnType",
+    "RemoveEmptyClassBody",
+    "UnnecessaryVariable",
+    "UnusedImport",
+    "UnnecessaryVariable",
+    "unused"
 )
 
 package com.artifactkeeper.client.models
 
 import com.artifactkeeper.client.models.ArtifactResponse
+import com.artifactkeeper.client.models.DockerTagResponse
+import com.artifactkeeper.client.models.MavenComponentResponse
 import com.artifactkeeper.client.models.Pagination
 
 import kotlinx.serialization.Serializable
@@ -27,6 +37,8 @@ import kotlinx.serialization.Contextual
  *
  * @param items 
  * @param pagination 
+ * @param components Maven component grouping.  Only present when `group_by=maven_component`.
+ * @param dockerTags Docker tag grouping.  Only present when `group_by=docker_tag`.
  */
 @Serializable
 
@@ -36,7 +48,15 @@ data class ArtifactListResponse (
     val items: kotlin.collections.List<ArtifactResponse>,
 
     @SerialName(value = "pagination")
-    val pagination: Pagination
+    val pagination: Pagination,
+
+    /* Maven component grouping.  Only present when `group_by=maven_component`. */
+    @SerialName(value = "components")
+    val components: kotlin.collections.List<MavenComponentResponse>? = null,
+
+    /* Docker tag grouping.  Only present when `group_by=docker_tag`. */
+    @SerialName(value = "docker_tags")
+    val dockerTags: kotlin.collections.List<DockerTagResponse>? = null
 
 ) {
 

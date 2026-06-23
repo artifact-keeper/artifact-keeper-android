@@ -8,9 +8,17 @@
 
 @file:Suppress(
     "ArrayInDataClass",
+    "DuplicatedCode",
     "EnumEntryName",
     "RemoveRedundantQualifierName",
-    "UnusedImport"
+    "RemoveRedundantCallsOfConversionMethods",
+    "REDUNDANT_CALL_OF_CONVERSION_METHOD",
+    "RedundantUnitReturnType",
+    "RemoveEmptyClassBody",
+    "UnnecessaryVariable",
+    "UnusedImport",
+    "UnnecessaryVariable",
+    "unused"
 )
 
 package com.artifactkeeper.client.models
@@ -23,21 +31,29 @@ import kotlinx.serialization.Contextual
 /**
  * 
  *
- * @param attributeMapping 
+ * @param attributeMapping Partial update for `attribute_mapping`. Keys present in this object overwrite the matching keys in the stored mapping. Keys not present are preserved. To remove a key, set it to `null`. To replace the whole mapping atomically, set `attribute_mapping_replace = true`. (See issue #1191.)
+ * @param attributeMappingReplace When `true`, treat `attribute_mapping` as a wholesale replacement (legacy behavior). Defaults to `false` — partial merge.
  * @param autoCreateUsers 
  * @param clientId 
  * @param clientSecret 
  * @param isEnabled 
  * @param issuerUrl 
+ * @param mapGroupsToGroups 
  * @param name 
+ * @param pkceEnabled 
  * @param scopes 
  */
 @Serializable
 
 data class UpdateOidcConfigRequest (
 
+    /* Partial update for `attribute_mapping`. Keys present in this object overwrite the matching keys in the stored mapping. Keys not present are preserved. To remove a key, set it to `null`. To replace the whole mapping atomically, set `attribute_mapping_replace = true`. (See issue #1191.) */
     @Contextual @SerialName(value = "attribute_mapping")
-    val attributeMapping: kotlinx.serialization.json.JsonElement? = null,
+    val attributeMapping: kotlin.Any? = null,
+
+    /* When `true`, treat `attribute_mapping` as a wholesale replacement (legacy behavior). Defaults to `false` — partial merge. */
+    @SerialName(value = "attribute_mapping_replace")
+    val attributeMappingReplace: kotlin.Boolean? = null,
 
     @SerialName(value = "auto_create_users")
     val autoCreateUsers: kotlin.Boolean? = null,
@@ -54,8 +70,14 @@ data class UpdateOidcConfigRequest (
     @SerialName(value = "issuer_url")
     val issuerUrl: kotlin.String? = null,
 
+    @SerialName(value = "map_groups_to_groups")
+    val mapGroupsToGroups: kotlin.Boolean? = null,
+
     @SerialName(value = "name")
     val name: kotlin.String? = null,
+
+    @SerialName(value = "pkce_enabled")
+    val pkceEnabled: kotlin.Boolean? = null,
 
     @SerialName(value = "scopes")
     val scopes: kotlin.collections.List<kotlin.String>? = null

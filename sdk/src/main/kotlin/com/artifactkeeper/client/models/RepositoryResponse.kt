@@ -8,9 +8,17 @@
 
 @file:Suppress(
     "ArrayInDataClass",
+    "DuplicatedCode",
     "EnumEntryName",
     "RemoveRedundantQualifierName",
-    "UnusedImport"
+    "RemoveRedundantCallsOfConversionMethods",
+    "REDUNDANT_CALL_OF_CONVERSION_METHOD",
+    "RedundantUnitReturnType",
+    "RemoveEmptyClassBody",
+    "UnnecessaryVariable",
+    "UnusedImport",
+    "UnnecessaryVariable",
+    "unused"
 )
 
 package com.artifactkeeper.client.models
@@ -23,21 +31,32 @@ import kotlinx.serialization.Contextual
 /**
  * 
  *
+ * @param allowAnonymousAccess Whether anonymous (unauthenticated) downloads are allowed. This is always equal to `is_public` and provided as a convenience alias so the semantics are clear for remote (pull-through cache) repositories.
  * @param createdAt 
  * @param format 
  * @param id 
  * @param isPublic 
  * @param key 
  * @param name 
+ * @param promotionOnly When true, direct user uploads are rejected; artifacts must be promoted.
  * @param repoType 
  * @param storageUsedBytes 
  * @param updatedAt 
+ * @param upstreamAuthConfigured 
  * @param description 
+ * @param quarantineDurationMinutes Configured quarantine hold duration in minutes, read back from `repository_config` (#1770 B). `None` when unset.
+ * @param quarantineEnabled Whether the Package Age / quarantine policy is enabled for this repository, read back from `repository_config` (#1770 B). `None` when the repository has no explicit setting (the global default applies).
  * @param quotaBytes 
+ * @param upstreamAuthType 
+ * @param upstreamUrl 
  */
 @Serializable
 
 data class RepositoryResponse (
+
+    /* Whether anonymous (unauthenticated) downloads are allowed. This is always equal to `is_public` and provided as a convenience alias so the semantics are clear for remote (pull-through cache) repositories. */
+    @SerialName(value = "allow_anonymous_access")
+    val allowAnonymousAccess: kotlin.Boolean,
 
     @Contextual @SerialName(value = "created_at")
     val createdAt: java.time.OffsetDateTime,
@@ -57,6 +76,10 @@ data class RepositoryResponse (
     @SerialName(value = "name")
     val name: kotlin.String,
 
+    /* When true, direct user uploads are rejected; artifacts must be promoted. */
+    @SerialName(value = "promotion_only")
+    val promotionOnly: kotlin.Boolean,
+
     @SerialName(value = "repo_type")
     val repoType: kotlin.String,
 
@@ -66,11 +89,28 @@ data class RepositoryResponse (
     @Contextual @SerialName(value = "updated_at")
     val updatedAt: java.time.OffsetDateTime,
 
+    @SerialName(value = "upstream_auth_configured")
+    val upstreamAuthConfigured: kotlin.Boolean,
+
     @SerialName(value = "description")
     val description: kotlin.String? = null,
 
+    /* Configured quarantine hold duration in minutes, read back from `repository_config` (#1770 B). `None` when unset. */
+    @SerialName(value = "quarantine_duration_minutes")
+    val quarantineDurationMinutes: kotlin.Long? = null,
+
+    /* Whether the Package Age / quarantine policy is enabled for this repository, read back from `repository_config` (#1770 B). `None` when the repository has no explicit setting (the global default applies). */
+    @SerialName(value = "quarantine_enabled")
+    val quarantineEnabled: kotlin.Boolean? = null,
+
     @SerialName(value = "quota_bytes")
-    val quotaBytes: kotlin.Long? = null
+    val quotaBytes: kotlin.Long? = null,
+
+    @SerialName(value = "upstream_auth_type")
+    val upstreamAuthType: kotlin.String? = null,
+
+    @SerialName(value = "upstream_url")
+    val upstreamUrl: kotlin.String? = null
 
 ) {
 

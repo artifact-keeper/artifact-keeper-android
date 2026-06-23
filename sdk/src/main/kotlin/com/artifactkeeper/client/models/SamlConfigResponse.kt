@@ -8,9 +8,17 @@
 
 @file:Suppress(
     "ArrayInDataClass",
+    "DuplicatedCode",
     "EnumEntryName",
     "RemoveRedundantQualifierName",
-    "UnusedImport"
+    "RemoveRedundantCallsOfConversionMethods",
+    "REDUNDANT_CALL_OF_CONVERSION_METHOD",
+    "RedundantUnitReturnType",
+    "RemoveEmptyClassBody",
+    "UnnecessaryVariable",
+    "UnusedImport",
+    "UnnecessaryVariable",
+    "unused"
 )
 
 package com.artifactkeeper.client.models
@@ -44,7 +52,7 @@ import kotlinx.serialization.Contextual
 data class SamlConfigResponse (
 
     @Contextual @SerialName(value = "attribute_mapping")
-    val attributeMapping: kotlinx.serialization.json.JsonElement,
+    val attributeMapping: kotlin.Any,
 
     @Contextual @SerialName(value = "created_at")
     val createdAt: java.time.OffsetDateTime,

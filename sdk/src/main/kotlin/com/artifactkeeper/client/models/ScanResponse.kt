@@ -8,9 +8,17 @@
 
 @file:Suppress(
     "ArrayInDataClass",
+    "DuplicatedCode",
     "EnumEntryName",
     "RemoveRedundantQualifierName",
-    "UnusedImport"
+    "RemoveRedundantCallsOfConversionMethods",
+    "REDUNDANT_CALL_OF_CONVERSION_METHOD",
+    "RedundantUnitReturnType",
+    "RemoveEmptyClassBody",
+    "UnnecessaryVariable",
+    "UnusedImport",
+    "UnnecessaryVariable",
+    "unused"
 )
 
 package com.artifactkeeper.client.models
@@ -30,6 +38,7 @@ import kotlinx.serialization.Contextual
  * @param highCount 
  * @param id 
  * @param infoCount 
+ * @param isReused True when the row was synthesized by the dedup path (`copy_scan_results`) because a prior scan with the same `(checksum_sha256, scan_type)` pair already existed within the dedup TTL. No scanner was actually invoked for this row; counts and findings were copied from `source_scan_id`.
  * @param lowCount 
  * @param mediumCount 
  * @param repositoryId 
@@ -40,6 +49,7 @@ import kotlinx.serialization.Contextual
  * @param completedAt 
  * @param errorMessage 
  * @param scannerVersion 
+ * @param sourceScanId When `is_reused` is true, the `id` of the source scan whose results were copied. Useful for distinguishing \"fresh scan\" from \"deduped satisfaction\" in release-gate provenance checks. None for original (non-reused) scans.
  * @param startedAt 
  */
 @Serializable
@@ -66,6 +76,10 @@ data class ScanResponse (
 
     @SerialName(value = "info_count")
     val infoCount: kotlin.Int,
+
+    /* True when the row was synthesized by the dedup path (`copy_scan_results`) because a prior scan with the same `(checksum_sha256, scan_type)` pair already existed within the dedup TTL. No scanner was actually invoked for this row; counts and findings were copied from `source_scan_id`. */
+    @SerialName(value = "is_reused")
+    val isReused: kotlin.Boolean,
 
     @SerialName(value = "low_count")
     val lowCount: kotlin.Int,
@@ -96,6 +110,10 @@ data class ScanResponse (
 
     @SerialName(value = "scanner_version")
     val scannerVersion: kotlin.String? = null,
+
+    /* When `is_reused` is true, the `id` of the source scan whose results were copied. Useful for distinguishing \"fresh scan\" from \"deduped satisfaction\" in release-gate provenance checks. None for original (non-reused) scans. */
+    @Contextual @SerialName(value = "source_scan_id")
+    val sourceScanId: java.util.UUID? = null,
 
     @Contextual @SerialName(value = "started_at")
     val startedAt: java.time.OffsetDateTime? = null

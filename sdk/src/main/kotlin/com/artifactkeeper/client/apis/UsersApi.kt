@@ -7,6 +7,7 @@ import okhttp3.RequestBody
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
+import com.artifactkeeper.client.models.AdminUserResponse
 import com.artifactkeeper.client.models.ApiTokenCreatedResponse
 import com.artifactkeeper.client.models.ApiTokenListResponse
 import com.artifactkeeper.client.models.AssignRoleRequest
@@ -14,11 +15,11 @@ import com.artifactkeeper.client.models.ChangePasswordRequest
 import com.artifactkeeper.client.models.CreateApiTokenRequest
 import com.artifactkeeper.client.models.CreateUserRequest
 import com.artifactkeeper.client.models.CreateUserResponse
+import com.artifactkeeper.client.models.ForcePasswordChangeResponse
 import com.artifactkeeper.client.models.ResetPasswordResponse
 import com.artifactkeeper.client.models.RoleListResponse
 import com.artifactkeeper.client.models.UpdateUserRequest
 import com.artifactkeeper.client.models.UserListResponse
-import com.artifactkeeper.client.models.UserResponse
 
 interface UsersApi {
     /**
@@ -99,6 +100,22 @@ interface UsersApi {
     suspend fun deleteUser(@Path("id") id: java.util.UUID): Response<Unit>
 
     /**
+     * POST api/v1/users/{id}/force-password-change
+     * Force a user to change their password on next login (admin only). Sets must_change_password&#x3D;true and invalidates existing sessions so the user is prompted immediately on their next login.
+     * 
+     * Responses:
+     *  - 200: Flag set successfully
+     *  - 403: Only administrators can force password changes
+     *  - 404: User not found
+     *  - 422: Cannot force password change for SSO users
+     *
+     * @param id User ID
+     * @return [ForcePasswordChangeResponse]
+     */
+    @POST("api/v1/users/{id}/force-password-change")
+    suspend fun forcePasswordChange(@Path("id") id: java.util.UUID): Response<ForcePasswordChangeResponse>
+
+    /**
      * GET api/v1/users/{id}
      * Get user details
      * 
@@ -107,10 +124,10 @@ interface UsersApi {
      *  - 404: User not found
      *
      * @param id User ID
-     * @return [UserResponse]
+     * @return [AdminUserResponse]
      */
     @GET("api/v1/users/{id}")
-    suspend fun getUser(@Path("id") id: java.util.UUID): Response<UserResponse>
+    suspend fun getUser(@Path("id") id: java.util.UUID): Response<AdminUserResponse>
 
     /**
      * GET api/v1/users/{id}/roles
@@ -212,9 +229,9 @@ interface UsersApi {
      *
      * @param id User ID
      * @param updateUserRequest 
-     * @return [UserResponse]
+     * @return [AdminUserResponse]
      */
     @PATCH("api/v1/users/{id}")
-    suspend fun updateUser(@Path("id") id: java.util.UUID, @Body updateUserRequest: UpdateUserRequest): Response<UserResponse>
+    suspend fun updateUser(@Path("id") id: java.util.UUID, @Body updateUserRequest: UpdateUserRequest): Response<AdminUserResponse>
 
 }

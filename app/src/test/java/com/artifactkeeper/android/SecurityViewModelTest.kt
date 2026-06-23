@@ -118,6 +118,9 @@ class SecurityViewModelTest {
             storageUsedBytes = 1024,
             createdAt = OffsetDateTime.now(),
             updatedAt = OffsetDateTime.now(),
+            allowAnonymousAccess = false,
+            promotionOnly = false,
+            upstreamAuthConfigured = false,
         )
 
         coEvery { mockSecurityApi.getAllScores() } returns Response.success(listOf(score))

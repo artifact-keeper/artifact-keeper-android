@@ -8,9 +8,17 @@
 
 @file:Suppress(
     "ArrayInDataClass",
+    "DuplicatedCode",
     "EnumEntryName",
     "RemoveRedundantQualifierName",
-    "UnusedImport"
+    "RemoveRedundantCallsOfConversionMethods",
+    "REDUNDANT_CALL_OF_CONVERSION_METHOD",
+    "RedundantUnitReturnType",
+    "RemoveEmptyClassBody",
+    "UnnecessaryVariable",
+    "UnusedImport",
+    "UnnecessaryVariable",
+    "unused"
 )
 
 package com.artifactkeeper.client.models
@@ -81,7 +89,7 @@ data class SbomContentResponse (
     val repositoryId: java.util.UUID,
 
     @Contextual @SerialName(value = "content")
-    val content: kotlinx.serialization.json.JsonElement,
+    val content: kotlin.Any,
 
     @SerialName(value = "generator")
     val generator: kotlin.String? = null,

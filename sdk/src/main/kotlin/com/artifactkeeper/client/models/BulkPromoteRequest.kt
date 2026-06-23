@@ -8,9 +8,17 @@
 
 @file:Suppress(
     "ArrayInDataClass",
+    "DuplicatedCode",
     "EnumEntryName",
     "RemoveRedundantQualifierName",
-    "UnusedImport"
+    "RemoveRedundantCallsOfConversionMethods",
+    "REDUNDANT_CALL_OF_CONVERSION_METHOD",
+    "RedundantUnitReturnType",
+    "RemoveEmptyClassBody",
+    "UnnecessaryVariable",
+    "UnusedImport",
+    "UnnecessaryVariable",
+    "unused"
 )
 
 package com.artifactkeeper.client.models
@@ -24,9 +32,9 @@ import kotlinx.serialization.Contextual
  * 
  *
  * @param artifactIds 
- * @param targetRepository 
  * @param notes 
  * @param skipPolicyCheck 
+ * @param targetRepository Target release repository key. When omitted, the staging repository's linked release target (from `repository_config`) is used instead.
  */
 @Serializable
 
@@ -35,14 +43,15 @@ data class BulkPromoteRequest (
     @SerialName(value = "artifact_ids")
     val artifactIds: kotlin.collections.List<@Contextual java.util.UUID>,
 
-    @SerialName(value = "target_repository")
-    val targetRepository: kotlin.String,
-
     @SerialName(value = "notes")
     val notes: kotlin.String? = null,
 
     @SerialName(value = "skip_policy_check")
-    val skipPolicyCheck: kotlin.Boolean? = null
+    val skipPolicyCheck: kotlin.Boolean? = null,
+
+    /* Target release repository key. When omitted, the staging repository's linked release target (from `repository_config`) is used instead. */
+    @SerialName(value = "target_repository")
+    val targetRepository: kotlin.String? = null
 
 ) {
 

@@ -8,9 +8,17 @@
 
 @file:Suppress(
     "ArrayInDataClass",
+    "DuplicatedCode",
     "EnumEntryName",
     "RemoveRedundantQualifierName",
-    "UnusedImport"
+    "RemoveRedundantCallsOfConversionMethods",
+    "REDUNDANT_CALL_OF_CONVERSION_METHOD",
+    "RedundantUnitReturnType",
+    "RemoveEmptyClassBody",
+    "UnnecessaryVariable",
+    "UnusedImport",
+    "UnnecessaryVariable",
+    "unused"
 )
 
 package com.artifactkeeper.client.models
@@ -44,7 +52,7 @@ data class UpdateSamlConfigRequest (
     val adminGroup: kotlin.String? = null,
 
     @Contextual @SerialName(value = "attribute_mapping")
-    val attributeMapping: kotlinx.serialization.json.JsonElement? = null,
+    val attributeMapping: kotlin.Any? = null,
 
     @SerialName(value = "certificate")
     val certificate: kotlin.String? = null,

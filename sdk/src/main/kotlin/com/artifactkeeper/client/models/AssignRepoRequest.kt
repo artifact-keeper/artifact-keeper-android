@@ -8,9 +8,17 @@
 
 @file:Suppress(
     "ArrayInDataClass",
+    "DuplicatedCode",
     "EnumEntryName",
     "RemoveRedundantQualifierName",
-    "UnusedImport"
+    "RemoveRedundantCallsOfConversionMethods",
+    "REDUNDANT_CALL_OF_CONVERSION_METHOD",
+    "RedundantUnitReturnType",
+    "RemoveEmptyClassBody",
+    "UnnecessaryVariable",
+    "UnusedImport",
+    "UnnecessaryVariable",
+    "unused"
 )
 
 package com.artifactkeeper.client.models
@@ -23,6 +31,7 @@ import kotlinx.serialization.Contextual
 /**
  * 
  *
+ * @param replicationFilter Optional JSONB filter constraining which artifacts in the repository get replicated. Shape: `{\"include_patterns\": [\"^v\\\\d+\\\\.\"], \"exclude_patterns\": [\".*-SNAPSHOT$\"]}`. Null/absent means replicate everything.
  * @param repositoryId 
  * @param replicationMode 
  * @param replicationSchedule 
@@ -31,6 +40,10 @@ import kotlinx.serialization.Contextual
 @Serializable
 
 data class AssignRepoRequest (
+
+    /* Optional JSONB filter constraining which artifacts in the repository get replicated. Shape: `{\"include_patterns\": [\"^v\\\\d+\\\\.\"], \"exclude_patterns\": [\".*-SNAPSHOT$\"]}`. Null/absent means replicate everything. */
+    @Contextual @SerialName(value = "replication_filter")
+    val replicationFilter: kotlin.Any,
 
     @Contextual @SerialName(value = "repository_id")
     val repositoryId: java.util.UUID,

@@ -8,9 +8,17 @@
 
 @file:Suppress(
     "ArrayInDataClass",
+    "DuplicatedCode",
     "EnumEntryName",
     "RemoveRedundantQualifierName",
-    "UnusedImport"
+    "RemoveRedundantCallsOfConversionMethods",
+    "REDUNDANT_CALL_OF_CONVERSION_METHOD",
+    "RedundantUnitReturnType",
+    "RemoveEmptyClassBody",
+    "UnnecessaryVariable",
+    "UnusedImport",
+    "UnnecessaryVariable",
+    "unused"
 )
 
 package com.artifactkeeper.client.models
@@ -24,10 +32,13 @@ import kotlinx.serialization.Contextual
  * 
  *
  * @param blockOnFail 
- * @param blockUnscanned 
  * @param maxSeverity 
  * @param name 
+ * @param blockUnscanned 
+ * @param maxArtifactAgeDays 
+ * @param minStagingHours 
  * @param repositoryId 
+ * @param requireSignature 
  */
 @Serializable
 
@@ -36,17 +47,26 @@ data class CreatePolicyRequest (
     @SerialName(value = "block_on_fail")
     val blockOnFail: kotlin.Boolean,
 
-    @SerialName(value = "block_unscanned")
-    val blockUnscanned: kotlin.Boolean,
-
     @SerialName(value = "max_severity")
     val maxSeverity: kotlin.String,
 
     @SerialName(value = "name")
     val name: kotlin.String,
 
+    @SerialName(value = "block_unscanned")
+    val blockUnscanned: kotlin.Boolean? = null,
+
+    @SerialName(value = "max_artifact_age_days")
+    val maxArtifactAgeDays: kotlin.Int? = null,
+
+    @SerialName(value = "min_staging_hours")
+    val minStagingHours: kotlin.Int? = null,
+
     @Contextual @SerialName(value = "repository_id")
-    val repositoryId: java.util.UUID? = null
+    val repositoryId: java.util.UUID? = null,
+
+    @SerialName(value = "require_signature")
+    val requireSignature: kotlin.Boolean? = null
 
 ) {
 

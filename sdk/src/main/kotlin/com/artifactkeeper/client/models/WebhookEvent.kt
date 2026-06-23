@@ -8,9 +8,17 @@
 
 @file:Suppress(
     "ArrayInDataClass",
+    "DuplicatedCode",
     "EnumEntryName",
     "RemoveRedundantQualifierName",
-    "UnusedImport"
+    "RemoveRedundantCallsOfConversionMethods",
+    "REDUNDANT_CALL_OF_CONVERSION_METHOD",
+    "RedundantUnitReturnType",
+    "RemoveEmptyClassBody",
+    "UnnecessaryVariable",
+    "UnusedImport",
+    "UnnecessaryVariable",
+    "unused"
 )
 
 package com.artifactkeeper.client.models
@@ -19,40 +27,41 @@ package com.artifactkeeper.client.models
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
+
 /**
  * Webhook event types
  *
- * Values: ARTIFACT_UPLOADED,ARTIFACT_DELETED,REPOSITORY_CREATED,REPOSITORY_DELETED,USER_CREATED,USER_DELETED,BUILD_STARTED,BUILD_COMPLETED,BUILD_FAILED
+ * Values: artifact_uploaded,artifact_deleted,repository_created,repository_deleted,user_created,user_deleted,build_started,build_completed,build_failed
  */
 @Serializable
 enum class WebhookEvent(val value: kotlin.String) {
 
     @SerialName(value = "artifact_uploaded")
-    ARTIFACT_UPLOADED("artifact_uploaded"),
+    artifact_uploaded("artifact_uploaded"),
 
     @SerialName(value = "artifact_deleted")
-    ARTIFACT_DELETED("artifact_deleted"),
+    artifact_deleted("artifact_deleted"),
 
     @SerialName(value = "repository_created")
-    REPOSITORY_CREATED("repository_created"),
+    repository_created("repository_created"),
 
     @SerialName(value = "repository_deleted")
-    REPOSITORY_DELETED("repository_deleted"),
+    repository_deleted("repository_deleted"),
 
     @SerialName(value = "user_created")
-    USER_CREATED("user_created"),
+    user_created("user_created"),
 
     @SerialName(value = "user_deleted")
-    USER_DELETED("user_deleted"),
+    user_deleted("user_deleted"),
 
     @SerialName(value = "build_started")
-    BUILD_STARTED("build_started"),
+    build_started("build_started"),
 
     @SerialName(value = "build_completed")
-    BUILD_COMPLETED("build_completed"),
+    build_completed("build_completed"),
 
     @SerialName(value = "build_failed")
-    BUILD_FAILED("build_failed");
+    build_failed("build_failed");
 
     /**
      * Override [toString()] to avoid using the enum variable name as the value, and instead use
@@ -74,10 +83,11 @@ enum class WebhookEvent(val value: kotlin.String) {
          */
         fun decode(data: kotlin.Any?): WebhookEvent? = data?.let {
           val normalizedData = "$it".lowercase()
-          values().firstOrNull { value ->
+          entries.firstOrNull { value ->
             it == value || normalizedData == "$value".lowercase()
           }
         }
     }
 }
+
 

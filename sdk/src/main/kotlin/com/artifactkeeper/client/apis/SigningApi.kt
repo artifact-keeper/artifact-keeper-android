@@ -40,10 +40,10 @@ interface SigningApi {
      *  - 404: Key not found
      *
      * @param keyId Signing key ID
-     * @return [kotlinx.serialization.json.JsonElement]
+     * @return [kotlin.Any]
      */
     @DELETE("api/v1/signing/keys/{key_id}")
-    suspend fun deleteKey(@Path("key_id") keyId: java.util.UUID): Response<kotlinx.serialization.json.JsonElement>
+    suspend fun deleteKey(@Path("key_id") keyId: java.util.UUID): Response<kotlin.Any>
 
     /**
      * GET api/v1/signing/keys/{key_id}
@@ -127,10 +127,10 @@ interface SigningApi {
      *  - 404: Key not found
      *
      * @param keyId Signing key ID
-     * @return [kotlinx.serialization.json.JsonElement]
+     * @return [kotlin.Any]
      */
     @POST("api/v1/signing/keys/{key_id}/revoke")
-    suspend fun revokeKey(@Path("key_id") keyId: java.util.UUID): Response<kotlinx.serialization.json.JsonElement>
+    suspend fun revokeKey(@Path("key_id") keyId: java.util.UUID): Response<kotlin.Any>
 
     /**
      * POST api/v1/signing/keys/{key_id}/rotate

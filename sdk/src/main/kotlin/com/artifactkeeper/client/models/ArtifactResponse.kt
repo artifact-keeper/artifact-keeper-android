@@ -8,9 +8,17 @@
 
 @file:Suppress(
     "ArrayInDataClass",
+    "DuplicatedCode",
     "EnumEntryName",
     "RemoveRedundantQualifierName",
-    "UnusedImport"
+    "RemoveRedundantCallsOfConversionMethods",
+    "REDUNDANT_CALL_OF_CONVERSION_METHOD",
+    "RedundantUnitReturnType",
+    "RemoveEmptyClassBody",
+    "UnnecessaryVariable",
+    "UnusedImport",
+    "UnnecessaryVariable",
+    "unused"
 )
 
 package com.artifactkeeper.client.models
@@ -32,6 +40,8 @@ import kotlinx.serialization.Contextual
  * @param path 
  * @param repositoryKey 
  * @param sizeBytes 
+ * @param cacheCachedAt When the proxy cache entry for this artifact was last written. Only populated for Remote (proxy) repositories whose proxy service is configured AND that have a cache-metadata blob for this path. None for Local / Virtual / Staging repos and for Remote repos whose cache hasn't been populated yet (e.g. an artifact that exists as a DB row from a direct upload but has never been fetched through the proxy). (#1541)
+ * @param cacheExpiresAt When the proxy cache entry for this artifact will expire and be re-validated against upstream. Same gating as `cache_cached_at`. (#1541)
  * @param metadata 
  * @param version 
  */
@@ -66,8 +76,16 @@ data class ArtifactResponse (
     @SerialName(value = "size_bytes")
     val sizeBytes: kotlin.Long,
 
+    /* When the proxy cache entry for this artifact was last written. Only populated for Remote (proxy) repositories whose proxy service is configured AND that have a cache-metadata blob for this path. None for Local / Virtual / Staging repos and for Remote repos whose cache hasn't been populated yet (e.g. an artifact that exists as a DB row from a direct upload but has never been fetched through the proxy). (#1541) */
+    @Contextual @SerialName(value = "cache_cached_at")
+    val cacheCachedAt: java.time.OffsetDateTime? = null,
+
+    /* When the proxy cache entry for this artifact will expire and be re-validated against upstream. Same gating as `cache_cached_at`. (#1541) */
+    @Contextual @SerialName(value = "cache_expires_at")
+    val cacheExpiresAt: java.time.OffsetDateTime? = null,
+
     @Contextual @SerialName(value = "metadata")
-    val metadata: kotlinx.serialization.json.JsonElement? = null,
+    val metadata: kotlin.Any? = null,
 
     @SerialName(value = "version")
     val version: kotlin.String? = null

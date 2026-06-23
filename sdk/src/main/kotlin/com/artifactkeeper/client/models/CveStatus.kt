@@ -8,9 +8,17 @@
 
 @file:Suppress(
     "ArrayInDataClass",
+    "DuplicatedCode",
     "EnumEntryName",
     "RemoveRedundantQualifierName",
-    "UnusedImport"
+    "RemoveRedundantCallsOfConversionMethods",
+    "REDUNDANT_CALL_OF_CONVERSION_METHOD",
+    "RedundantUnitReturnType",
+    "RemoveEmptyClassBody",
+    "UnnecessaryVariable",
+    "UnusedImport",
+    "UnnecessaryVariable",
+    "unused"
 )
 
 package com.artifactkeeper.client.models
@@ -19,25 +27,26 @@ package com.artifactkeeper.client.models
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
+
 /**
  * CVE status for tracking.
  *
- * Values: OPEN,FIXED,ACKNOWLEDGED,FALSE_POSITIVE
+ * Values: `open`,fixed,acknowledged,false_positive
  */
 @Serializable
 enum class CveStatus(val value: kotlin.String) {
 
     @SerialName(value = "open")
-    OPEN("open"),
+    `open`("open"),
 
     @SerialName(value = "fixed")
-    FIXED("fixed"),
+    fixed("fixed"),
 
     @SerialName(value = "acknowledged")
-    ACKNOWLEDGED("acknowledged"),
+    acknowledged("acknowledged"),
 
     @SerialName(value = "false_positive")
-    FALSE_POSITIVE("false_positive");
+    false_positive("false_positive");
 
     /**
      * Override [toString()] to avoid using the enum variable name as the value, and instead use
@@ -59,10 +68,11 @@ enum class CveStatus(val value: kotlin.String) {
          */
         fun decode(data: kotlin.Any?): CveStatus? = data?.let {
           val normalizedData = "$it".lowercase()
-          values().firstOrNull { value ->
+          entries.firstOrNull { value ->
             it == value || normalizedData == "$value".lowercase()
           }
         }
     }
 }
+
 

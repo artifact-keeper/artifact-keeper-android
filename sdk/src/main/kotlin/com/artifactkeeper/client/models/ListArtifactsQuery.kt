@@ -8,9 +8,17 @@
 
 @file:Suppress(
     "ArrayInDataClass",
+    "DuplicatedCode",
     "EnumEntryName",
     "RemoveRedundantQualifierName",
-    "UnusedImport"
+    "RemoveRedundantCallsOfConversionMethods",
+    "REDUNDANT_CALL_OF_CONVERSION_METHOD",
+    "RedundantUnitReturnType",
+    "RemoveEmptyClassBody",
+    "UnnecessaryVariable",
+    "UnusedImport",
+    "UnnecessaryVariable",
+    "unused"
 )
 
 package com.artifactkeeper.client.models
@@ -23,6 +31,7 @@ import kotlinx.serialization.Contextual
 /**
  * 
  *
+ * @param groupBy Server-side artifact grouping.  Supported values: - `maven_component`: Maven/Gradle artifacts are grouped by   groupId, artifactId, and version.  Individual files (jar, pom,   checksums) appear in the `artifact_files` array of each component. - `docker_tag`: Docker/OCI artifacts are grouped by (image, tag),   with `total_size_bytes` summed across the manifest config and   referenced layer blobs.  The grouped rows are returned in the   `docker_tags` array.
  * @param page 
  * @param pathPrefix 
  * @param perPage 
@@ -31,6 +40,10 @@ import kotlinx.serialization.Contextual
 @Serializable
 
 data class ListArtifactsQuery (
+
+    /* Server-side artifact grouping.  Supported values: - `maven_component`: Maven/Gradle artifacts are grouped by   groupId, artifactId, and version.  Individual files (jar, pom,   checksums) appear in the `artifact_files` array of each component. - `docker_tag`: Docker/OCI artifacts are grouped by (image, tag),   with `total_size_bytes` summed across the manifest config and   referenced layer blobs.  The grouped rows are returned in the   `docker_tags` array. */
+    @SerialName(value = "group_by")
+    val groupBy: kotlin.String? = null,
 
     @SerialName(value = "page")
     val page: kotlin.Int? = null,

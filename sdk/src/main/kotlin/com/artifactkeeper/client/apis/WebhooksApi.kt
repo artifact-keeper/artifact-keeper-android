@@ -10,25 +10,28 @@ import kotlinx.serialization.Serializable
 import com.artifactkeeper.client.models.CreateWebhookRequest
 import com.artifactkeeper.client.models.DeliveryListResponse
 import com.artifactkeeper.client.models.DeliveryResponse
+import com.artifactkeeper.client.models.RotateWebhookSecretResponse
 import com.artifactkeeper.client.models.TestWebhookResponse
 import com.artifactkeeper.client.models.WebhookListResponse
 import com.artifactkeeper.client.models.WebhookResponse
+import com.artifactkeeper.client.models.WebhookSecretCreatedResponse
 
 interface WebhooksApi {
     /**
      * POST api/v1/webhooks
-     * Create webhook
-     * 
+     * Create webhook.
+     * Generates a fresh signing secret (or accepts a caller-supplied one), encrypts it at rest, and returns the raw secret in the response body **once**. After this call, GET on the webhook returns only &#x60;secret_digest&#x60;, never the raw secret.
      * Responses:
-     *  - 200: Webhook created successfully
+     *  - 200: Webhook created. Body includes the raw secret exactly once (omitted when created unsigned).
      *  - 422: Validation error
      *  - 500: Internal server error
+     *  - 503: A secret was supplied but AK_WEBHOOK_SECRET_KEY is not configured, so the secret cannot be encrypted at rest
      *
      * @param createWebhookRequest 
-     * @return [WebhookResponse]
+     * @return [WebhookSecretCreatedResponse]
      */
     @POST("api/v1/webhooks")
-    suspend fun createWebhook(@Body createWebhookRequest: CreateWebhookRequest): Response<WebhookResponse>
+    suspend fun createWebhook(@Body createWebhookRequest: CreateWebhookRequest): Response<WebhookSecretCreatedResponse>
 
     /**
      * DELETE api/v1/webhooks/{id}
@@ -134,6 +137,22 @@ interface WebhooksApi {
      */
     @POST("api/v1/webhooks/{id}/deliveries/{delivery_id}/redeliver")
     suspend fun redeliver(@Path("id") id: java.util.UUID, @Path("delivery_id") deliveryId: java.util.UUID): Response<DeliveryResponse>
+
+    /**
+     * POST api/v1/webhooks/{id}/rotate-secret
+     * Rotate the signing secret for a webhook.
+     * Generates a new raw secret, encrypts it, moves the existing &#x60;secret_encrypted&#x60; into &#x60;secret_previous_encrypted&#x60;, and stamps an expiry 24 hours in the future. The new raw secret is returned in the response body **once**. The HMAC signing path (added in a later ticket) signs deliveries with both secrets while the previous one is within its expiry window so consumers can rotate without dropped events.  If a previous-secret window is still active when the rotate request arrives, the request is REJECTED with HTTP 409 Conflict. This prevents two near-simultaneous rotations from clobbering the original &#x60;secret_previous_encrypted&#x60; material before the operator has finished distributing the previous new key. The 409 body is structured: &#x60;{\&quot;error\&quot;: \&quot;rotation_already_in_progress\&quot;, \&quot;expires_at\&quot;: \&quot;&lt;RFC3339&gt;\&quot;}&#x60;.
+     * Responses:
+     *  - 200: Secret rotated. Body includes the new raw secret exactly once.
+     *  - 404: Webhook not found
+     *  - 409: A previous rotation overlap window is still active
+     *  - 500: Encryption key not configured
+     *
+     * @param id Webhook ID
+     * @return [RotateWebhookSecretResponse]
+     */
+    @POST("api/v1/webhooks/{id}/rotate-secret")
+    suspend fun rotateWebhookSecret(@Path("id") id: java.util.UUID): Response<RotateWebhookSecretResponse>
 
     /**
      * POST api/v1/webhooks/{id}/test

@@ -8,9 +8,17 @@
 
 @file:Suppress(
     "ArrayInDataClass",
+    "DuplicatedCode",
     "EnumEntryName",
     "RemoveRedundantQualifierName",
-    "UnusedImport"
+    "RemoveRedundantCallsOfConversionMethods",
+    "REDUNDANT_CALL_OF_CONVERSION_METHOD",
+    "RedundantUnitReturnType",
+    "RemoveEmptyClassBody",
+    "UnnecessaryVariable",
+    "UnusedImport",
+    "UnnecessaryVariable",
+    "unused"
 )
 
 package com.artifactkeeper.client.models
@@ -24,6 +32,7 @@ import kotlinx.serialization.Contextual
  * 
  *
  * @param artifactId 
+ * @param bypassDedup Skip the hash-based scan dedup short-circuit when running this scan.  Defaults to `false`. Normal trigger calls dedup against prior completed scans for the same checksum + scan_type so a freshly uploaded byte-identical artifact reuses the existing result instead of re-running the scanner. When `true`, that dedup is skipped: the scanner runs against the bytes again and writes a fresh `scan_results` row. Use this to recover from a silently-broken prior scan (e.g. an extraction bug producing a completed, zero-finding row that masks the real findings until the dedup TTL expires; see #1469). Costs an extra scan run, so leave it unset for routine trigger calls.  **Admin only.** Setting this to `true` bypasses the dedup short- circuit and fans out unbounded scanner work per artifact. The `trigger_scan` handler rejects this field with 403 for non-admin callers, since a non-admin force-rescan path would be a DoS amplifier (the pre-existing `force=true` was naturally rate-limited by dedup; `bypass_dedup` removes that safety).
  * @param repositoryId 
  */
 @Serializable
@@ -32,6 +41,10 @@ data class TriggerScanRequest (
 
     @Contextual @SerialName(value = "artifact_id")
     val artifactId: java.util.UUID? = null,
+
+    /* Skip the hash-based scan dedup short-circuit when running this scan.  Defaults to `false`. Normal trigger calls dedup against prior completed scans for the same checksum + scan_type so a freshly uploaded byte-identical artifact reuses the existing result instead of re-running the scanner. When `true`, that dedup is skipped: the scanner runs against the bytes again and writes a fresh `scan_results` row. Use this to recover from a silently-broken prior scan (e.g. an extraction bug producing a completed, zero-finding row that masks the real findings until the dedup TTL expires; see #1469). Costs an extra scan run, so leave it unset for routine trigger calls.  **Admin only.** Setting this to `true` bypasses the dedup short- circuit and fans out unbounded scanner work per artifact. The `trigger_scan` handler rejects this field with 403 for non-admin callers, since a non-admin force-rescan path would be a DoS amplifier (the pre-existing `force=true` was naturally rate-limited by dedup; `bypass_dedup` removes that safety). */
+    @SerialName(value = "bypass_dedup")
+    val bypassDedup: kotlin.Boolean? = null,
 
     @Contextual @SerialName(value = "repository_id")
     val repositoryId: java.util.UUID? = null

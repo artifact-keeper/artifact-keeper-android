@@ -8,9 +8,17 @@
 
 @file:Suppress(
     "ArrayInDataClass",
+    "DuplicatedCode",
     "EnumEntryName",
     "RemoveRedundantQualifierName",
-    "UnusedImport"
+    "RemoveRedundantCallsOfConversionMethods",
+    "REDUNDANT_CALL_OF_CONVERSION_METHOD",
+    "RedundantUnitReturnType",
+    "RemoveEmptyClassBody",
+    "UnnecessaryVariable",
+    "UnusedImport",
+    "UnnecessaryVariable",
+    "unused"
 )
 
 package com.artifactkeeper.client.models
@@ -21,32 +29,44 @@ import kotlinx.serialization.SerialName
 import kotlinx.serialization.Contextual
 
 /**
- * 
+ * Partial-update payload for `PUT /security/policies/{id}`.  Every field is `Option<T>` so clients can send any subset of mutable columns; omitted fields leave the existing row value untouched. The previous shape required all of `name`, `max_severity`, `block_unscanned`, `block_on_fail`, `is_enabled` on every call. That was incompatible with the release-gate `scan-policy-crud` test (and external callers) which PATCH a subset like `{max_severity, is_enabled}`; under the strict shape the request was rejected as a 422 and the boolean toggle silently never took effect on a follow-up GET. See #1374.  For `min_staging_hours` / `max_artifact_age_days` the field is the inner nullable `i32`; \"not provided\" leaves the column untouched. Explicit `null` to clear those columns is not currently supported; the release gate only mutates the bool/enum fields, so the narrower semantics are sufficient and we avoid an ambiguous JSON contract.
  *
  * @param blockOnFail 
  * @param blockUnscanned 
  * @param isEnabled 
+ * @param maxArtifactAgeDays 
  * @param maxSeverity 
+ * @param minStagingHours 
  * @param name 
+ * @param requireSignature 
  */
 @Serializable
 
 data class UpdatePolicyRequest (
 
     @SerialName(value = "block_on_fail")
-    val blockOnFail: kotlin.Boolean,
+    val blockOnFail: kotlin.Boolean? = null,
 
     @SerialName(value = "block_unscanned")
-    val blockUnscanned: kotlin.Boolean,
+    val blockUnscanned: kotlin.Boolean? = null,
 
     @SerialName(value = "is_enabled")
-    val isEnabled: kotlin.Boolean,
+    val isEnabled: kotlin.Boolean? = null,
+
+    @SerialName(value = "max_artifact_age_days")
+    val maxArtifactAgeDays: kotlin.Int? = null,
 
     @SerialName(value = "max_severity")
-    val maxSeverity: kotlin.String,
+    val maxSeverity: kotlin.String? = null,
+
+    @SerialName(value = "min_staging_hours")
+    val minStagingHours: kotlin.Int? = null,
 
     @SerialName(value = "name")
-    val name: kotlin.String
+    val name: kotlin.String? = null,
+
+    @SerialName(value = "require_signature")
+    val requireSignature: kotlin.Boolean? = null
 
 ) {
 

@@ -100,7 +100,7 @@ fun SbomScreen(
 
                 // Load CVE history
                 try {
-                    cveHistory = ApiClient.sbomApi.getCveHistory(java.util.UUID.fromString(artifactId)).unwrap()
+                    cveHistory = ApiClient.sbomApi.getCveHistoryByArtifact(java.util.UUID.fromString(artifactId)).unwrap()
                 } catch (_: Exception) {
                     cveHistory = emptyList()
                 }

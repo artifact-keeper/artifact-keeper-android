@@ -8,9 +8,17 @@
 
 @file:Suppress(
     "ArrayInDataClass",
+    "DuplicatedCode",
     "EnumEntryName",
     "RemoveRedundantQualifierName",
-    "UnusedImport"
+    "RemoveRedundantCallsOfConversionMethods",
+    "REDUNDANT_CALL_OF_CONVERSION_METHOD",
+    "RedundantUnitReturnType",
+    "RemoveEmptyClassBody",
+    "UnnecessaryVariable",
+    "UnusedImport",
+    "UnnecessaryVariable",
+    "unused"
 )
 
 package com.artifactkeeper.client.models
@@ -23,7 +31,6 @@ import kotlinx.serialization.Contextual
 /**
  * 
  *
- * @param apiKey 
  * @param endpointUrl 
  * @param name 
  * @param peerId 
@@ -31,9 +38,6 @@ import kotlinx.serialization.Contextual
 @Serializable
 
 data class IdentityResponse (
-
-    @SerialName(value = "api_key")
-    val apiKey: kotlin.String,
 
     @SerialName(value = "endpoint_url")
     val endpointUrl: kotlin.String,

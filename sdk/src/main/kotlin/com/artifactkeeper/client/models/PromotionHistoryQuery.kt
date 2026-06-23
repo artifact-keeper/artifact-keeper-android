@@ -8,9 +8,17 @@
 
 @file:Suppress(
     "ArrayInDataClass",
+    "DuplicatedCode",
     "EnumEntryName",
     "RemoveRedundantQualifierName",
-    "UnusedImport"
+    "RemoveRedundantCallsOfConversionMethods",
+    "REDUNDANT_CALL_OF_CONVERSION_METHOD",
+    "RedundantUnitReturnType",
+    "RemoveEmptyClassBody",
+    "UnnecessaryVariable",
+    "UnusedImport",
+    "UnnecessaryVariable",
+    "unused"
 )
 
 package com.artifactkeeper.client.models
@@ -26,6 +34,7 @@ import kotlinx.serialization.Contextual
  * @param artifactId 
  * @param page 
  * @param perPage 
+ * @param status 
  */
 @Serializable
 
@@ -38,7 +47,10 @@ data class PromotionHistoryQuery (
     val page: kotlin.Int? = null,
 
     @SerialName(value = "per_page")
-    val perPage: kotlin.Int? = null
+    val perPage: kotlin.Int? = null,
+
+    @SerialName(value = "status")
+    val status: kotlin.String? = null
 
 ) {
 

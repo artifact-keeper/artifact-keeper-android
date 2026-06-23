@@ -41,6 +41,7 @@ interface SecurityApi {
      * 
      * Responses:
      *  - 200: Finding acknowledged
+     *  - 403: Admin privileges required
      *  - 404: Finding not found
      *
      * @param id Finding ID
@@ -73,10 +74,10 @@ interface SecurityApi {
      *  - 404: Policy not found
      *
      * @param id Policy ID
-     * @return [kotlinx.serialization.json.JsonElement]
+     * @return [kotlin.Any]
      */
     @DELETE("api/v1/security/policies/{id}")
-    suspend fun deletePolicy(@Path("id") id: java.util.UUID): Response<kotlinx.serialization.json.JsonElement>
+    suspend fun deletePolicy(@Path("id") id: java.util.UUID): Response<kotlin.Any>
 
     /**
      * GET api/v1/dependency-track/status
@@ -96,6 +97,7 @@ interface SecurityApi {
      * 
      * Responses:
      *  - 200: All repository security scores
+     *  - 403: Admin privileges required
      *
      * @return [kotlin.collections.List<ScoreResponse>]
      */
@@ -108,6 +110,7 @@ interface SecurityApi {
      * 
      * Responses:
      *  - 200: Security dashboard summary
+     *  - 403: Admin privileges required
      *
      * @return [DashboardResponse]
      */
@@ -369,6 +372,7 @@ interface SecurityApi {
      * 
      * Responses:
      *  - 200: Acknowledgment revoked
+     *  - 403: Admin privileges required
      *  - 404: Finding not found
      *
      * @param id Finding ID
@@ -384,7 +388,8 @@ interface SecurityApi {
      * Responses:
      *  - 200: Scan triggered successfully
      *  - 400: Validation error
-     *  - 500: Scanner service not configured
+     *  - 403: bypass_dedup requested by non-admin caller
+     *  - 503: Scanner service not configured
      *
      * @param triggerScanRequest 
      * @return [TriggerScanResponse]

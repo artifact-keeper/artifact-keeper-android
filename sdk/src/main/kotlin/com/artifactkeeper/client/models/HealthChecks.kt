@@ -8,9 +8,17 @@
 
 @file:Suppress(
     "ArrayInDataClass",
+    "DuplicatedCode",
     "EnumEntryName",
     "RemoveRedundantQualifierName",
-    "UnusedImport"
+    "RemoveRedundantCallsOfConversionMethods",
+    "REDUNDANT_CALL_OF_CONVERSION_METHOD",
+    "RedundantUnitReturnType",
+    "RemoveEmptyClassBody",
+    "UnnecessaryVariable",
+    "UnusedImport",
+    "UnnecessaryVariable",
+    "unused"
 )
 
 package com.artifactkeeper.client.models
@@ -26,7 +34,8 @@ import kotlinx.serialization.Contextual
  *
  * @param database 
  * @param storage 
- * @param meilisearch 
+ * @param ldap 
+ * @param opensearch 
  * @param securityScanner 
  */
 @Serializable
@@ -39,8 +48,11 @@ data class HealthChecks (
     @SerialName(value = "storage")
     val storage: CheckStatus,
 
-    @SerialName(value = "meilisearch")
-    val meilisearch: CheckStatus? = null,
+    @SerialName(value = "ldap")
+    val ldap: CheckStatus? = null,
+
+    @SerialName(value = "opensearch")
+    val opensearch: CheckStatus? = null,
 
     @SerialName(value = "security_scanner")
     val securityScanner: CheckStatus? = null

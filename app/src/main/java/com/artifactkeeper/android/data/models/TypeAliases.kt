@@ -42,7 +42,7 @@ typealias UserInfo = com.artifactkeeper.client.models.UserResponse
 typealias ChangePasswordRequest = com.artifactkeeper.client.models.ChangePasswordRequest
 
 // --- Admin: Users ---
-typealias AdminUser = com.artifactkeeper.client.models.UserResponse
+typealias AdminUser = com.artifactkeeper.client.models.AdminUserResponse
 typealias AdminUserListResponse = com.artifactkeeper.client.models.UserListResponse
 typealias CreateUserRequest = com.artifactkeeper.client.models.CreateUserRequest
 typealias CreateUserResponse = com.artifactkeeper.client.models.CreateUserResponse

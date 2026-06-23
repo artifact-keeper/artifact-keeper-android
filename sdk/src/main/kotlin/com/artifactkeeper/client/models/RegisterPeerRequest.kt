@@ -8,9 +8,17 @@
 
 @file:Suppress(
     "ArrayInDataClass",
+    "DuplicatedCode",
     "EnumEntryName",
     "RemoveRedundantQualifierName",
-    "UnusedImport"
+    "RemoveRedundantCallsOfConversionMethods",
+    "REDUNDANT_CALL_OF_CONVERSION_METHOD",
+    "RedundantUnitReturnType",
+    "RemoveEmptyClassBody",
+    "UnnecessaryVariable",
+    "UnusedImport",
+    "UnnecessaryVariable",
+    "unused"
 )
 
 package com.artifactkeeper.client.models
@@ -44,7 +52,7 @@ data class RegisterPeerRequest (
     val name: kotlin.String,
 
     @Contextual @SerialName(value = "sync_filter")
-    val syncFilter: kotlinx.serialization.json.JsonElement,
+    val syncFilter: kotlin.Any,
 
     @SerialName(value = "cache_size_bytes")
     val cacheSizeBytes: kotlin.Long? = null,

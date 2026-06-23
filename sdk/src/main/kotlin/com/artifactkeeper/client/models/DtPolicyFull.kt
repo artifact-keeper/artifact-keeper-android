@@ -8,9 +8,17 @@
 
 @file:Suppress(
     "ArrayInDataClass",
+    "DuplicatedCode",
     "EnumEntryName",
     "RemoveRedundantQualifierName",
-    "UnusedImport"
+    "RemoveRedundantCallsOfConversionMethods",
+    "REDUNDANT_CALL_OF_CONVERSION_METHOD",
+    "RedundantUnitReturnType",
+    "RemoveEmptyClassBody",
+    "UnnecessaryVariable",
+    "UnusedImport",
+    "UnnecessaryVariable",
+    "unused"
 )
 
 package com.artifactkeeper.client.models
@@ -47,7 +55,7 @@ data class DtPolicyFull (
     val projects: kotlin.collections.List<DtProject>,
 
     @SerialName(value = "tags")
-    val tags: kotlin.collections.List<@Contextual kotlinx.serialization.json.JsonElement>,
+    val tags: kotlin.collections.List<@Contextual kotlin.Any>,
 
     @SerialName(value = "uuid")
     val uuid: kotlin.String,
