@@ -58,6 +58,8 @@ import com.artifactkeeper.android.ui.screens.repositories.RepositoryDetailScreen
 import com.artifactkeeper.android.ui.screens.repositories.VirtualMembersScreen
 import com.artifactkeeper.android.ui.screens.search.SearchScreen
 import com.artifactkeeper.android.ui.screens.security.ArtifactSecurityScreen
+import com.artifactkeeper.android.ui.screens.security.DependencyTrackScreen
+import com.artifactkeeper.android.ui.screens.security.DtProjectDetailScreen
 import com.artifactkeeper.android.ui.screens.security.LicensePoliciesScreen
 import com.artifactkeeper.android.ui.screens.security.PoliciesScreen
 import com.artifactkeeper.android.ui.screens.security.ScanDetailScreen
@@ -590,15 +592,22 @@ private fun IntegrationSection(isCompact: Boolean, accountActions: @Composable (
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun SecuritySection(isCompact: Boolean, accountActions: @Composable () -> Unit) {
-    val subTabs = listOf("Dashboard", "Scans", "Policies", "Licenses")
+    val subTabs = listOf("Dashboard", "Scans", "Dep-Track", "Policies", "Licenses")
     var selectedTab by remember { mutableIntStateOf(0) }
     var selectedScanId by remember { mutableStateOf<String?>(null) }
+    var selectedDtProject by remember { mutableStateOf<Pair<String, String>?>(null) }
 
     Column(modifier = Modifier.fillMaxSize()) {
         if (selectedScanId != null) {
             ScanDetailScreen(
                 scanId = selectedScanId!!,
                 onBack = { selectedScanId = null },
+            )
+        } else if (selectedDtProject != null) {
+            DtProjectDetailScreen(
+                projectUuid = selectedDtProject!!.first,
+                projectName = selectedDtProject!!.second,
+                onBack = { selectedDtProject = null },
             )
         } else {
             TopAppBar(
@@ -621,8 +630,11 @@ private fun SecuritySection(isCompact: Boolean, accountActions: @Composable () -
             when (selectedTab) {
                 0 -> SecurityScreen()
                 1 -> ScansScreen(onScanClick = { selectedScanId = it })
-                2 -> PoliciesScreen()
-                3 -> LicensePoliciesScreen()
+                2 -> DependencyTrackScreen(
+                    onProjectClick = { uuid, name -> selectedDtProject = uuid to name },
+                )
+                3 -> PoliciesScreen()
+                4 -> LicensePoliciesScreen()
             }
         }
     }
