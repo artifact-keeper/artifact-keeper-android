@@ -51,6 +51,7 @@ fun ArtifactSecurityScreen(
     onScanClick: (String) -> Unit,
     onBack: () -> Unit,
     onViewCves: () -> Unit = {},
+    onViewQuality: () -> Unit = {},
     viewModel: ArtifactSecurityViewModel = hiltViewModel(),
 ) {
     val state by viewModel.uiState.collectAsState()
@@ -72,6 +73,9 @@ fun ArtifactSecurityScreen(
                 }
             },
             actions = {
+                TextButton(onClick = onViewQuality) {
+                    Text("Quality")
+                }
                 TextButton(onClick = onViewCves) {
                     Text("CVEs")
                 }

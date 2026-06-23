@@ -13,6 +13,7 @@ import com.artifactkeeper.client.apis.MonitoringApi
 import com.artifactkeeper.client.apis.PackagesApi
 import com.artifactkeeper.client.apis.PeersApi
 import com.artifactkeeper.client.apis.PromotionApi
+import com.artifactkeeper.client.apis.QualityApi
 import com.artifactkeeper.client.apis.RepositoriesApi
 import com.artifactkeeper.client.apis.SbomApi
 import com.artifactkeeper.client.apis.SecurityApi
@@ -68,6 +69,7 @@ object ApiClient {
     lateinit var signingApi: SigningApi private set
     lateinit var ssoApi: SsoApi private set
     lateinit var promotionApi: PromotionApi private set
+    lateinit var qualityApi: QualityApi private set
     lateinit var stagingApi: StagingApi private set
 
     // Keep a raw OkHttpClient for cases that need direct HTTP access
@@ -133,6 +135,7 @@ object ApiClient {
         signingApi = client.createService(SigningApi::class.java)
         ssoApi = client.createService(SsoApi::class.java)
         promotionApi = client.createService(PromotionApi::class.java)
+        qualityApi = client.createService(QualityApi::class.java)
         stagingApi = client.createService(StagingApi::class.java)
     }
 
