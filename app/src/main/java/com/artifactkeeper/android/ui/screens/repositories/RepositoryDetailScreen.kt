@@ -52,6 +52,7 @@ fun RepositoryDetailScreen(
     onBrowseFiles: (repoKey: String) -> Unit = { },
     onArtifactSecurityClick: (id: String, name: String) -> Unit = { _, _ -> },
     onNavigateToMembers: ((repoKey: String, repoName: String, repoFormat: String) -> Unit)? = null,
+    onNavigateToRepoSecurity: ((repoKey: String, repoName: String) -> Unit)? = null,
 ) {
     var repository by remember { mutableStateOf<Repository?>(null) }
     var artifacts by remember { mutableStateOf<List<Artifact>>(emptyList()) }
@@ -228,6 +229,17 @@ fun RepositoryDetailScreen(
                                     VirtualMembersCard(
                                         onClick = {
                                             onNavigateToMembers?.invoke(repo.key, repo.name, repo.format)
+                                        },
+                                    )
+                                }
+                            }
+
+                            // Repository security card
+                            if (onNavigateToRepoSecurity != null) {
+                                item(key = "repo-security") {
+                                    RepoSecurityCard(
+                                        onClick = {
+                                            onNavigateToRepoSecurity.invoke(repo.key, repo.name)
                                         },
                                     )
                                 }
@@ -544,6 +556,46 @@ private fun VirtualMembersCard(onClick: () -> Unit) {
                 )
                 Text(
                     text = "Manage local and remote repositories included in this virtual repository",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
+            Icon(
+                Icons.AutoMirrored.Filled.ArrowForward,
+                contentDescription = "Navigate",
+                tint = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+        }
+    }
+}
+
+@Composable
+private fun RepoSecurityCard(onClick: () -> Unit) {
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable(onClick = onClick),
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Icon(
+                Icons.Default.Shield,
+                contentDescription = "Security",
+                modifier = Modifier.size(24.dp),
+                tint = MaterialTheme.colorScheme.primary,
+            )
+            Spacer(modifier = Modifier.width(12.dp))
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = "Security",
+                    style = MaterialTheme.typography.titleMedium,
+                )
+                Text(
+                    text = "View this repository's security score, scan configuration, and scans",
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )

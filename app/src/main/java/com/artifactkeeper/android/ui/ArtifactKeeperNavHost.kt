@@ -65,6 +65,7 @@ import com.artifactkeeper.android.ui.screens.security.DependencyTrackScreen
 import com.artifactkeeper.android.ui.screens.security.DtProjectDetailScreen
 import com.artifactkeeper.android.ui.screens.security.LicensePoliciesScreen
 import com.artifactkeeper.android.ui.screens.security.PoliciesScreen
+import com.artifactkeeper.android.ui.screens.security.RepoSecurityScreen
 import com.artifactkeeper.android.ui.screens.security.ScanDetailScreen
 import com.artifactkeeper.android.ui.screens.security.ScansScreen
 import com.artifactkeeper.android.ui.screens.security.SecurityScreen
@@ -709,6 +710,18 @@ private fun NavGraphBuilder.detailRoutes(navController: NavHostController) {
             onNavigateToMembers = { repoKey, repoName, repoFormat ->
                 navController.navigate("repos/$repoKey/members?name=$repoName&format=$repoFormat")
             },
+            onNavigateToRepoSecurity = { repoKey, repoName ->
+                navController.navigate("repos/$repoKey/security?name=$repoName")
+            },
+        )
+    }
+    composable("repos/{key}/security?name={name}") { backStackEntry ->
+        val key = backStackEntry.arguments?.getString("key") ?: return@composable
+        val name = backStackEntry.arguments?.getString("name") ?: key
+        RepoSecurityScreen(
+            repoKey = key,
+            repoName = name,
+            onBack = { navController.popBackStack() },
         )
     }
     composable("repos/{key}/browse") { backStackEntry ->
