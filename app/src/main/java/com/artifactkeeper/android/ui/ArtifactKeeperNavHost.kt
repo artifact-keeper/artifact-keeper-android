@@ -48,6 +48,7 @@ import com.artifactkeeper.android.ui.screens.builds.BuildsScreen
 import com.artifactkeeper.android.ui.screens.integration.PeerDetailScreen
 import com.artifactkeeper.android.ui.screens.integration.PeersScreen
 import com.artifactkeeper.android.ui.screens.integration.ReplicationScreen
+import com.artifactkeeper.android.ui.screens.integration.SyncPoliciesScreen
 import com.artifactkeeper.android.ui.screens.integration.PluginDetailScreen
 import com.artifactkeeper.android.ui.screens.integration.PluginsScreen
 import com.artifactkeeper.android.ui.screens.integration.WebhookDetailScreen
@@ -587,7 +588,7 @@ private fun SectionWithTabs(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun IntegrationSection(isCompact: Boolean, accountActions: @Composable () -> Unit) {
-    val subTabs = listOf("Peers", "Replication", "Webhooks", "Plugins")
+    val subTabs = listOf("Peers", "Replication", "Policies", "Webhooks", "Plugins")
     var selectedTab by remember { mutableIntStateOf(0) }
     var selectedWebhookId by remember { mutableStateOf<String?>(null) }
     var selectedPluginId by remember { mutableStateOf<String?>(null) }
@@ -630,8 +631,9 @@ private fun IntegrationSection(isCompact: Boolean, accountActions: @Composable (
             when (selectedTab) {
                 0 -> PeersScreen(onPeerClick = { selectedPeerId = it })
                 1 -> ReplicationScreen()
-                2 -> WebhooksScreen(onWebhookClick = { selectedWebhookId = it })
-                3 -> PluginsScreen(onPluginClick = { selectedPluginId = it })
+                2 -> SyncPoliciesScreen()
+                3 -> WebhooksScreen(onWebhookClick = { selectedWebhookId = it })
+                4 -> PluginsScreen(onPluginClick = { selectedPluginId = it })
             }
         }
     }
