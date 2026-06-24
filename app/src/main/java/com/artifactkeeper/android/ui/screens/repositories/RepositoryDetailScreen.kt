@@ -16,6 +16,8 @@ import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Folder
 import androidx.compose.material.icons.filled.Groups
 import androidx.compose.material.icons.filled.Info
+import androidx.compose.material.icons.filled.Key
+import androidx.compose.material.icons.filled.Label
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Shield
 import androidx.compose.material.icons.filled.Upload
@@ -53,6 +55,8 @@ fun RepositoryDetailScreen(
     onArtifactSecurityClick: (id: String, name: String) -> Unit = { _, _ -> },
     onNavigateToMembers: ((repoKey: String, repoName: String, repoFormat: String) -> Unit)? = null,
     onNavigateToRepoSecurity: ((repoKey: String, repoName: String) -> Unit)? = null,
+    onNavigateToLabels: ((repoKey: String) -> Unit)? = null,
+    onNavigateToTokens: ((repoKey: String) -> Unit)? = null,
 ) {
     var repository by remember { mutableStateOf<Repository?>(null) }
     var artifacts by remember { mutableStateOf<List<Artifact>>(emptyList()) }
@@ -241,6 +245,30 @@ fun RepositoryDetailScreen(
                                         onClick = {
                                             onNavigateToRepoSecurity.invoke(repo.key, repo.name)
                                         },
+                                    )
+                                }
+                            }
+
+                            // Labels card
+                            if (onNavigateToLabels != null) {
+                                item(key = "repo-labels") {
+                                    RepoNavCard(
+                                        icon = Icons.Default.Label,
+                                        title = "Labels",
+                                        subtitle = "View and manage this repository's labels",
+                                        onClick = { onNavigateToLabels.invoke(repo.key) },
+                                    )
+                                }
+                            }
+
+                            // Tokens card
+                            if (onNavigateToTokens != null) {
+                                item(key = "repo-tokens") {
+                                    RepoNavCard(
+                                        icon = Icons.Default.Key,
+                                        title = "Access tokens",
+                                        subtitle = "Create and revoke repository access tokens",
+                                        onClick = { onNavigateToTokens.invoke(repo.key) },
                                     )
                                 }
                             }
@@ -596,6 +624,48 @@ private fun RepoSecurityCard(onClick: () -> Unit) {
                 )
                 Text(
                     text = "View this repository's security score, scan configuration, and scans",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
+            Icon(
+                Icons.AutoMirrored.Filled.ArrowForward,
+                contentDescription = "Navigate",
+                tint = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+        }
+    }
+}
+
+@Composable
+private fun RepoNavCard(
+    icon: androidx.compose.ui.graphics.vector.ImageVector,
+    title: String,
+    subtitle: String,
+    onClick: () -> Unit,
+) {
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable(onClick = onClick),
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Icon(
+                icon,
+                contentDescription = title,
+                modifier = Modifier.size(24.dp),
+                tint = MaterialTheme.colorScheme.primary,
+            )
+            Spacer(modifier = Modifier.width(12.dp))
+            Column(modifier = Modifier.weight(1f)) {
+                Text(text = title, style = MaterialTheme.typography.titleMedium)
+                Text(
+                    text = subtitle,
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
