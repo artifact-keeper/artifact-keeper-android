@@ -9,6 +9,7 @@ import com.artifactkeeper.client.apis.AuthApi
 import com.artifactkeeper.client.apis.BuildsApi
 import com.artifactkeeper.client.apis.GroupsApi
 import com.artifactkeeper.client.apis.HealthApi
+import com.artifactkeeper.client.apis.MigrationApi
 import com.artifactkeeper.client.apis.MonitoringApi
 import com.artifactkeeper.client.apis.PackagesApi
 import com.artifactkeeper.client.apis.PeerInstanceLabelsApi
@@ -68,6 +69,7 @@ object ApiClient {
     lateinit var pluginsApi: PluginsApi private set
     lateinit var webhooksApi: WebhooksApi private set
     lateinit var analyticsApi: AnalyticsApi private set
+    lateinit var migrationApi: MigrationApi private set
     lateinit var monitoringApi: MonitoringApi private set
     lateinit var healthApi: HealthApi private set
     lateinit var sbomApi: SbomApi private set
@@ -137,6 +139,7 @@ object ApiClient {
         pluginsApi = client.createService(PluginsApi::class.java)
         webhooksApi = client.createService(WebhooksApi::class.java)
         analyticsApi = client.createService(AnalyticsApi::class.java)
+        migrationApi = client.createService(MigrationApi::class.java)
         monitoringApi = client.createService(MonitoringApi::class.java)
         healthApi = client.createService(HealthApi::class.java)
         sbomApi = client.createService(SbomApi::class.java)
