@@ -18,6 +18,8 @@ import com.artifactkeeper.client.apis.PluginsApi
 import com.artifactkeeper.client.apis.PromotionApi
 import com.artifactkeeper.client.apis.QualityApi
 import com.artifactkeeper.client.apis.RepositoriesApi
+import com.artifactkeeper.client.apis.RepositoryLabelsApi
+import com.artifactkeeper.client.apis.RepositoryTokensApi
 import com.artifactkeeper.client.apis.SbomApi
 import com.artifactkeeper.client.apis.SearchApi
 import com.artifactkeeper.client.apis.SecurityApi
@@ -58,6 +60,8 @@ object ApiClient {
     lateinit var artifactsApi: ArtifactsApi private set
     lateinit var artifactLabelsApi: ArtifactLabelsApi private set
     lateinit var reposApi: RepositoriesApi private set
+    lateinit var repositoryLabelsApi: RepositoryLabelsApi private set
+    lateinit var repositoryTokensApi: RepositoryTokensApi private set
     lateinit var packagesApi: PackagesApi private set
     lateinit var buildsApi: BuildsApi private set
     lateinit var securityApi: SecurityApi private set
@@ -128,6 +132,8 @@ object ApiClient {
         artifactsApi = client.createService(ArtifactsApi::class.java)
         artifactLabelsApi = client.createService(ArtifactLabelsApi::class.java)
         reposApi = client.createService(RepositoriesApi::class.java)
+        repositoryLabelsApi = client.createService(RepositoryLabelsApi::class.java)
+        repositoryTokensApi = client.createService(RepositoryTokensApi::class.java)
         packagesApi = client.createService(PackagesApi::class.java)
         buildsApi = client.createService(BuildsApi::class.java)
         securityApi = client.createService(SecurityApi::class.java)

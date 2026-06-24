@@ -61,6 +61,8 @@ import com.artifactkeeper.android.ui.screens.operations.TelemetryScreen
 import com.artifactkeeper.android.ui.screens.packages.PackageDetailScreen
 import com.artifactkeeper.android.ui.screens.packages.PackagesScreen
 import com.artifactkeeper.android.ui.screens.repositories.CreateRepositoryScreen
+import com.artifactkeeper.android.ui.screens.repositories.RepoLabelsScreen
+import com.artifactkeeper.android.ui.screens.repositories.RepoTokensScreen
 import com.artifactkeeper.android.ui.screens.repositories.RepositoriesScreen
 import com.artifactkeeper.android.ui.screens.repositories.RepositoryDetailScreen
 import com.artifactkeeper.android.ui.screens.repositories.VirtualMembersScreen
@@ -770,6 +772,26 @@ private fun NavGraphBuilder.detailRoutes(navController: NavHostController) {
             onNavigateToRepoSecurity = { repoKey, repoName ->
                 navController.navigate("repos/$repoKey/security?name=$repoName")
             },
+            onNavigateToLabels = { repoKey ->
+                navController.navigate("repos/$repoKey/labels")
+            },
+            onNavigateToTokens = { repoKey ->
+                navController.navigate("repos/$repoKey/tokens")
+            },
+        )
+    }
+    composable("repos/{key}/labels") { backStackEntry ->
+        val key = backStackEntry.arguments?.getString("key") ?: return@composable
+        RepoLabelsScreen(
+            repoKey = key,
+            onBack = { navController.popBackStack() },
+        )
+    }
+    composable("repos/{key}/tokens") { backStackEntry ->
+        val key = backStackEntry.arguments?.getString("key") ?: return@composable
+        RepoTokensScreen(
+            repoKey = key,
+            onBack = { navController.popBackStack() },
         )
     }
     composable("repos/{key}/security?name={name}") { backStackEntry ->
