@@ -4,7 +4,11 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.artifactkeeper.android.data.api.ApiClient
 import com.artifactkeeper.android.data.api.unwrap
+import com.artifactkeeper.client.models.AddPeerLabelRequest
 import com.artifactkeeper.client.models.PeerInstanceResponse
+import com.artifactkeeper.client.models.PeerLabelEntrySchema
+import com.artifactkeeper.client.models.PeerLabelResponse
+import com.artifactkeeper.client.models.SetPeerLabelsRequest
 import com.artifactkeeper.client.models.SyncTaskResponse
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -23,6 +27,7 @@ data class PeerDetailUiState(
     val peer: PeerInstanceResponse? = null,
     val syncTasks: List<SyncTaskResponse> = emptyList(),
     val assignedRepoIds: List<UUID> = emptyList(),
+    val labels: List<PeerLabelResponse> = emptyList(),
     val isLoading: Boolean = false,
     val isMutating: Boolean = false,
     val error: String? = null,
@@ -61,11 +66,19 @@ class PeerDetailViewModel @Inject constructor(
                     // No assigned repositories available.
                 }
 
+                var labels: List<PeerLabelResponse> = emptyList()
+                try {
+                    labels = apiClient.peerInstanceLabelsApi.listLabels(peerId).unwrap().items
+                } catch (_: Exception) {
+                    // No labels available.
+                }
+
                 _uiState.update {
                     it.copy(
                         peer = peer,
                         syncTasks = tasks,
                         assignedRepoIds = assignedRepoIds,
+                        labels = labels.sortedBy { label -> label.key },
                         isLoading = false,
                     )
                 }
@@ -106,6 +119,58 @@ class PeerDetailViewModel @Inject constructor(
             } catch (e: Exception) {
                 _uiState.update {
                     it.copy(error = e.message ?: "Failed to run subscription", isMutating = false)
+                }
+            }
+        }
+    }
+
+    /** Add or update a single label on the peer, then reload. */
+    fun addLabel(peerId: UUID, key: String, value: String) {
+        viewModelScope.launch {
+            _uiState.update { it.copy(isMutating = true, error = null, message = null) }
+            try {
+                apiClient.peerInstanceLabelsApi
+                    .addLabel(peerId, key, AddPeerLabelRequest(value = value.ifBlank { null }))
+                    .unwrap()
+                _uiState.update { it.copy(isMutating = false, message = "Label \"$key\" saved") }
+                load(peerId)
+            } catch (e: Exception) {
+                _uiState.update {
+                    it.copy(error = e.message ?: "Failed to add label", isMutating = false)
+                }
+            }
+        }
+    }
+
+    /** Delete a single label by key, then reload. */
+    fun deleteLabel(peerId: UUID, key: String) {
+        viewModelScope.launch {
+            _uiState.update { it.copy(isMutating = true, error = null, message = null) }
+            try {
+                apiClient.peerInstanceLabelsApi.deleteLabel(peerId, key).unwrap()
+                _uiState.update { it.copy(isMutating = false, message = "Label \"$key\" removed") }
+                load(peerId)
+            } catch (e: Exception) {
+                _uiState.update {
+                    it.copy(error = e.message ?: "Failed to delete label", isMutating = false)
+                }
+            }
+        }
+    }
+
+    /** Replace the peer's full label set in one call, then reload. */
+    fun setLabels(peerId: UUID, labels: List<PeerLabelEntrySchema>) {
+        viewModelScope.launch {
+            _uiState.update { it.copy(isMutating = true, error = null, message = null) }
+            try {
+                apiClient.peerInstanceLabelsApi
+                    .setLabels(peerId, SetPeerLabelsRequest(labels = labels))
+                    .unwrap()
+                _uiState.update { it.copy(isMutating = false, message = "Labels replaced") }
+                load(peerId)
+            } catch (e: Exception) {
+                _uiState.update {
+                    it.copy(error = e.message ?: "Failed to set labels", isMutating = false)
                 }
             }
         }

@@ -18,8 +18,11 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Close
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.artifactkeeper.client.models.PeerInstanceResponse
+import com.artifactkeeper.client.models.PeerLabelResponse
 import com.artifactkeeper.client.models.SyncTaskResponse
 import java.util.UUID
 
@@ -46,6 +49,8 @@ fun PeerDetailScreen(
     val state by viewModel.uiState.collectAsState()
     val parsedId = remember(peerId) { runCatching { UUID.fromString(peerId) }.getOrNull() }
     val snackbarHostState = remember { SnackbarHostState() }
+    var showAddLabel by remember { mutableStateOf(false) }
+    var labelToDelete by remember { mutableStateOf<PeerLabelResponse?>(null) }
 
     LaunchedEffect(parsedId) {
         parsedId?.let { viewModel.load(it) }
@@ -72,6 +77,10 @@ fun PeerDetailScreen(
                     }
                 },
                 actions = {
+                    TextButton(
+                        onClick = { showAddLabel = true },
+                        enabled = parsedId != null && !state.isMutating,
+                    ) { Text("Add label") }
                     TextButton(
                         onClick = { parsedId?.let { viewModel.triggerSync(it) } },
                         enabled = parsedId != null && !state.isMutating,
@@ -106,6 +115,32 @@ fun PeerDetailScreen(
                     ) {
                         state.peer?.let { peer ->
                             item { PeerStatusCard(peer) }
+                        }
+
+                        item {
+                            Text(
+                                text = "Labels (${state.labels.size})",
+                                style = MaterialTheme.typography.titleMedium,
+                                fontWeight = FontWeight.SemiBold,
+                                modifier = Modifier.padding(top = 4.dp),
+                            )
+                        }
+                        if (state.labels.isEmpty()) {
+                            item {
+                                Text(
+                                    text = "No labels. Use Add label to set one.",
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                )
+                            }
+                        } else {
+                            items(state.labels, key = { it.key }) { label ->
+                                PeerLabelCard(
+                                    label = label,
+                                    isMutating = state.isMutating,
+                                    onDelete = { labelToDelete = label },
+                                )
+                            }
                         }
 
                         if (state.assignedRepoIds.isNotEmpty()) {
@@ -154,6 +189,115 @@ fun PeerDetailScreen(
             }
         }
     }
+
+    if (showAddLabel) {
+        AddLabelDialog(
+            isMutating = state.isMutating,
+            onDismiss = { showAddLabel = false },
+            onConfirm = { key, value ->
+                parsedId?.let { viewModel.addLabel(it, key, value) }
+                showAddLabel = false
+            },
+        )
+    }
+
+    labelToDelete?.let { label ->
+        AlertDialog(
+            onDismissRequest = { labelToDelete = null },
+            title = { Text("Remove label") },
+            text = { Text("Remove label \"${label.key}\" from this peer?") },
+            confirmButton = {
+                TextButton(onClick = {
+                    parsedId?.let { viewModel.deleteLabel(it, label.key) }
+                    labelToDelete = null
+                }) { Text("Remove") }
+            },
+            dismissButton = {
+                TextButton(onClick = { labelToDelete = null }) { Text("Cancel") }
+            },
+        )
+    }
+}
+
+@Composable
+private fun PeerLabelCard(
+    label: PeerLabelResponse,
+    isMutating: Boolean,
+    onDelete: () -> Unit,
+) {
+    Card(modifier = Modifier.fillMaxWidth()) {
+        Row(
+            modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = label.key,
+                    style = MaterialTheme.typography.bodyMedium,
+                    fontWeight = FontWeight.SemiBold,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                )
+                if (label.`value`.isNotBlank()) {
+                    Text(
+                        text = label.`value`,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                    )
+                }
+            }
+            IconButton(onClick = onDelete, enabled = !isMutating) {
+                Icon(Icons.Default.Close, contentDescription = "Remove label ${label.key}")
+            }
+        }
+    }
+}
+
+@Composable
+private fun AddLabelDialog(
+    isMutating: Boolean,
+    onDismiss: () -> Unit,
+    onConfirm: (key: String, value: String) -> Unit,
+) {
+    var key by remember { mutableStateOf("") }
+    var value by remember { mutableStateOf("") }
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("Add label") },
+        icon = { Icon(Icons.Default.Add, contentDescription = null) },
+        text = {
+            Column {
+                OutlinedTextField(
+                    value = key,
+                    onValueChange = { key = it },
+                    label = { Text("Key") },
+                    singleLine = true,
+                    modifier = Modifier.fillMaxWidth(),
+                )
+                Spacer(modifier = Modifier.height(12.dp))
+                OutlinedTextField(
+                    value = value,
+                    onValueChange = { value = it },
+                    label = { Text("Value (optional)") },
+                    singleLine = true,
+                    modifier = Modifier.fillMaxWidth(),
+                )
+            }
+        },
+        confirmButton = {
+            TextButton(
+                onClick = { onConfirm(key.trim(), value.trim()) },
+                enabled = !isMutating && key.isNotBlank(),
+            ) { Text("Save") }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) { Text("Cancel") }
+        },
+    )
 }
 
 @Composable
