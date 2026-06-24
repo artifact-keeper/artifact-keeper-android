@@ -17,16 +17,21 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.FilterList
 import androidx.compose.material.icons.filled.Inventory2
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.TrendingUp
+import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.ModalBottomSheet
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.SegmentedButton
 import androidx.compose.material3.SegmentedButtonDefaults
@@ -58,6 +63,7 @@ fun SearchScreen(
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
     var query by remember { mutableStateOf("") }
+    var showFilters by remember { mutableStateOf(false) }
 
     LaunchedEffect(Unit) { viewModel.loadInitial() }
 
@@ -74,27 +80,35 @@ fun SearchScreen(
     }
 
     Column(modifier = Modifier.fillMaxSize()) {
-        SingleChoiceSegmentedButtonRow(
+        Row(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(horizontal = 16.dp, vertical = 8.dp),
+            verticalAlignment = Alignment.CenterVertically,
         ) {
-            SegmentedButton(
-                selected = state.mode == SearchMode.TEXT,
-                onClick = {
-                    viewModel.setMode(SearchMode.TEXT)
-                    query = ""
-                },
-                shape = SegmentedButtonDefaults.itemShape(index = 0, count = 2),
-            ) { Text("Text") }
-            SegmentedButton(
-                selected = state.mode == SearchMode.CHECKSUM,
-                onClick = {
-                    viewModel.setMode(SearchMode.CHECKSUM)
-                    query = ""
-                },
-                shape = SegmentedButtonDefaults.itemShape(index = 1, count = 2),
-            ) { Text("Checksum") }
+            SingleChoiceSegmentedButtonRow(modifier = Modifier.weight(1f)) {
+                SegmentedButton(
+                    selected = state.mode == SearchMode.TEXT,
+                    onClick = {
+                        viewModel.setMode(SearchMode.TEXT)
+                        query = ""
+                    },
+                    shape = SegmentedButtonDefaults.itemShape(index = 0, count = 2),
+                ) { Text("Text") }
+                SegmentedButton(
+                    selected = state.mode == SearchMode.CHECKSUM,
+                    onClick = {
+                        viewModel.setMode(SearchMode.CHECKSUM)
+                        query = ""
+                    },
+                    shape = SegmentedButtonDefaults.itemShape(index = 1, count = 2),
+                ) { Text("Checksum") }
+            }
+            if (state.mode == SearchMode.TEXT) {
+                IconButton(onClick = { showFilters = true }) {
+                    Icon(Icons.Default.FilterList, contentDescription = "Advanced filters")
+                }
+            }
         }
 
         OutlinedTextField(
@@ -150,6 +164,148 @@ fun SearchScreen(
                 !state.hasSearched -> InitialContent(state.recent, state.trending)
                 state.results.isEmpty() -> CenteredMessage("No results for \"$query\"")
                 else -> ResultList(state.results)
+            }
+        }
+    }
+
+    if (showFilters) {
+        SearchFiltersSheet(
+            initialQuery = query,
+            onDismiss = { showFilters = false },
+            onApply = { q, format, repositoryKey, minSize, maxSize ->
+                query = q
+                viewModel.advancedSearch(
+                    query = q.ifBlank { null },
+                    format = format,
+                    repositoryKey = repositoryKey,
+                    minSize = minSize,
+                    maxSize = maxSize,
+                )
+                showFilters = false
+            },
+        )
+    }
+}
+
+/** Formats offered in the advanced filter sheet. */
+private val SearchFilterFormats = listOf("maven", "npm", "pypi", "docker", "nuget", "gem", "cargo", "go")
+
+/**
+ * Parse a human-entered size into bytes. Accepts a bare number (bytes) or a
+ * number with a KB/MB/GB suffix (case-insensitive). Returns null for blank or
+ * unparseable input so the filter is simply omitted.
+ */
+internal fun parseSizeToBytes(input: String): Long? {
+    val trimmed = input.trim().lowercase()
+    if (trimmed.isBlank()) return null
+    val match = Regex("""^([0-9]*\.?[0-9]+)\s*(b|kb|mb|gb)?$""").find(trimmed) ?: return null
+    val value = match.groupValues[1].toDoubleOrNull() ?: return null
+    val multiplier = when (match.groupValues[2]) {
+        "kb" -> 1_024.0
+        "mb" -> 1_024.0 * 1_024
+        "gb" -> 1_024.0 * 1_024 * 1_024
+        else -> 1.0
+    }
+    return (value * multiplier).toLong()
+}
+
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
+@Composable
+private fun SearchFiltersSheet(
+    initialQuery: String,
+    onDismiss: () -> Unit,
+    onApply: (query: String, format: String?, repositoryKey: String?, minSize: Long?, maxSize: Long?) -> Unit,
+) {
+    var query by remember { mutableStateOf(initialQuery) }
+    var format by remember { mutableStateOf<String?>(null) }
+    var repositoryKey by remember { mutableStateOf("") }
+    var minSizeText by remember { mutableStateOf("") }
+    var maxSizeText by remember { mutableStateOf("") }
+
+    ModalBottomSheet(onDismissRequest = onDismiss) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp)
+                .padding(bottom = 24.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp),
+        ) {
+            Text("Advanced filters", style = MaterialTheme.typography.titleLarge)
+
+            OutlinedTextField(
+                value = query,
+                onValueChange = { query = it },
+                label = { Text("Query (optional)") },
+                singleLine = true,
+                modifier = Modifier.fillMaxWidth(),
+            )
+
+            Text("Format", style = MaterialTheme.typography.labelMedium)
+            FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                FilterChip(
+                    selected = format == null,
+                    onClick = { format = null },
+                    label = { Text("Any") },
+                )
+                SearchFilterFormats.forEach { f ->
+                    FilterChip(
+                        selected = format == f,
+                        onClick = { format = if (format == f) null else f },
+                        label = { Text(f) },
+                    )
+                }
+            }
+
+            OutlinedTextField(
+                value = repositoryKey,
+                onValueChange = { repositoryKey = it },
+                label = { Text("Repository key (optional)") },
+                singleLine = true,
+                modifier = Modifier.fillMaxWidth(),
+            )
+
+            Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                OutlinedTextField(
+                    value = minSizeText,
+                    onValueChange = { minSizeText = it },
+                    label = { Text("Min size") },
+                    placeholder = { Text("e.g. 10kb") },
+                    singleLine = true,
+                    modifier = Modifier.weight(1f),
+                )
+                OutlinedTextField(
+                    value = maxSizeText,
+                    onValueChange = { maxSizeText = it },
+                    label = { Text("Max size") },
+                    placeholder = { Text("e.g. 5mb") },
+                    singleLine = true,
+                    modifier = Modifier.weight(1f),
+                )
+            }
+
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                OutlinedButton(
+                    onClick = {
+                        query = ""
+                        format = null
+                        repositoryKey = ""
+                        minSizeText = ""
+                        maxSizeText = ""
+                    },
+                    modifier = Modifier.weight(1f),
+                ) { Text("Reset") }
+                Button(
+                    onClick = {
+                        onApply(
+                            query.trim(),
+                            format,
+                            repositoryKey.trim().ifBlank { null },
+                            parseSizeToBytes(minSizeText),
+                            parseSizeToBytes(maxSizeText),
+                        )
+                    },
+                    modifier = Modifier.weight(1f),
+                ) { Text("Apply") }
             }
         }
     }
