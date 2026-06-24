@@ -1,5 +1,6 @@
 package com.artifactkeeper.android
 
+import com.artifactkeeper.android.ui.screens.search.parseSizeToBytes
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
@@ -244,5 +245,48 @@ class SearchScreenLogicTest {
         val artifactResults = emptyList<String>()
         assertFalse(repoResults.isNotEmpty())
         assertFalse(artifactResults.isNotEmpty())
+    }
+
+    // =========================================================================
+    // Advanced filter size parsing (parseSizeToBytes)
+    // =========================================================================
+
+    @Test
+    fun `blank size parses to null`() {
+        assertNull(parseSizeToBytes(""))
+        assertNull(parseSizeToBytes("   "))
+    }
+
+    @Test
+    fun `bare number parses as bytes`() {
+        assertEquals(1024L, parseSizeToBytes("1024"))
+    }
+
+    @Test
+    fun `kb suffix multiplies by 1024`() {
+        assertEquals(10L * 1024, parseSizeToBytes("10kb"))
+        assertEquals(10L * 1024, parseSizeToBytes("10 KB"))
+    }
+
+    @Test
+    fun `mb suffix multiplies by 1024 squared`() {
+        assertEquals(5L * 1024 * 1024, parseSizeToBytes("5mb"))
+    }
+
+    @Test
+    fun `gb suffix multiplies by 1024 cubed`() {
+        assertEquals(2L * 1024 * 1024 * 1024, parseSizeToBytes("2gb"))
+    }
+
+    @Test
+    fun `decimal value with suffix is supported`() {
+        assertEquals((1.5 * 1024 * 1024).toLong(), parseSizeToBytes("1.5mb"))
+    }
+
+    @Test
+    fun `unparseable input returns null`() {
+        assertNull(parseSizeToBytes("abc"))
+        assertNull(parseSizeToBytes("10tb"))
+        assertNull(parseSizeToBytes("ten"))
     }
 }
