@@ -47,6 +47,8 @@ import com.artifactkeeper.android.ui.screens.builds.BuildDetailScreen
 import com.artifactkeeper.android.ui.screens.builds.BuildsScreen
 import com.artifactkeeper.android.ui.screens.integration.PeerDetailScreen
 import com.artifactkeeper.android.ui.screens.integration.PeersScreen
+import com.artifactkeeper.android.ui.screens.integration.MigrationScreen
+import com.artifactkeeper.android.ui.screens.integration.MigrationDetailScreen
 import com.artifactkeeper.android.ui.screens.integration.ReplicationScreen
 import com.artifactkeeper.android.ui.screens.integration.SyncPoliciesScreen
 import com.artifactkeeper.android.ui.screens.integration.PluginDetailScreen
@@ -588,11 +590,12 @@ private fun SectionWithTabs(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun IntegrationSection(isCompact: Boolean, accountActions: @Composable () -> Unit) {
-    val subTabs = listOf("Peers", "Replication", "Policies", "Webhooks", "Plugins")
+    val subTabs = listOf("Peers", "Replication", "Policies", "Webhooks", "Plugins", "Migration")
     var selectedTab by remember { mutableIntStateOf(0) }
     var selectedWebhookId by remember { mutableStateOf<String?>(null) }
     var selectedPluginId by remember { mutableStateOf<String?>(null) }
     var selectedPeerId by remember { mutableStateOf<String?>(null) }
+    var selectedMigrationId by remember { mutableStateOf<String?>(null) }
 
     Column(modifier = Modifier.fillMaxSize()) {
         if (selectedWebhookId != null) {
@@ -609,6 +612,11 @@ private fun IntegrationSection(isCompact: Boolean, accountActions: @Composable (
             PeerDetailScreen(
                 peerId = selectedPeerId!!,
                 onBack = { selectedPeerId = null },
+            )
+        } else if (selectedMigrationId != null) {
+            MigrationDetailScreen(
+                jobId = selectedMigrationId!!,
+                onBack = { selectedMigrationId = null },
             )
         } else {
             TopAppBar(
@@ -634,6 +642,7 @@ private fun IntegrationSection(isCompact: Boolean, accountActions: @Composable (
                 2 -> SyncPoliciesScreen()
                 3 -> WebhooksScreen(onWebhookClick = { selectedWebhookId = it })
                 4 -> PluginsScreen(onPluginClick = { selectedPluginId = it })
+                5 -> MigrationScreen(onJobClick = { selectedMigrationId = it })
             }
         }
     }
