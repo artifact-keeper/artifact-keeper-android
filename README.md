@@ -1,5 +1,9 @@
 # Artifact Keeper — Android
 
+<p align="center">
+  <img alt="Artifact Keeper" src="https://raw.githubusercontent.com/artifact-keeper/.github/main/brand/banners/github-readme_1600x600.png" width="100%">
+</p>
+
 Native Android app for Artifact Keeper, built with Jetpack Compose and targeting Android 9+.
 
 ## Tech Stack
